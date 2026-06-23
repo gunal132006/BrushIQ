@@ -2,6 +2,12 @@ const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const dns = require('dns');
+
+// Force IPv4 resolution preference in Node.js to avoid Render's lack of IPv6 egress support
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
@@ -576,6 +582,31 @@ async function mockQuery(text, params = []) {
 
 // Setup real PG Pool if not bypassed
 if (!demoModeEnabled) {
+  console.log('=============================================');
+  console.log('   Database Connection Diagnostics');
+  console.log('   DB_HOST:', dbConfig.host);
+  console.log('   DB_PORT:', dbConfig.port);
+  console.log('   DB_DATABASE:', dbConfig.database);
+  console.log('   DB_USER:', dbConfig.user);
+  
+  // Resolve DNS to diagnose IPv4 vs IPv6
+  dns.lookup(dbConfig.host, { all: true }, (err, addresses) => {
+    if (err) {
+      console.warn('   DNS Diagnostics Error:', err.message);
+    } else {
+      console.log('   Resolved DNS Addresses:', addresses.map(addr => `${addr.address} (IPv${addr.family})`));
+    }
+  });
+
+  dns.lookup(dbConfig.host, (err, address, family) => {
+    if (err) {
+      console.warn('   Primary DNS Lookup failed:', err.message);
+    } else {
+      console.log(`   Node.js Selected Primary IP: ${address} (IPv${family})`);
+    }
+  });
+  console.log('=============================================');
+
   try {
     pgPool = new Pool(dbConfig);
     // Simple verification check asynchronously
