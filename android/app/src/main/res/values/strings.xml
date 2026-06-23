@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">BrushIQ</string>
+
+    <string name="google_web_client_id">
+        534843148727-ernb5gqgo6pf1cobmmvjbsl7d4f5026s.apps.googleusercontent.com
+    </string>
+</resources>
