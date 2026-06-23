@@ -1,3 +1,8 @@
+const dns = require('dns');
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
 const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
@@ -9,6 +14,9 @@ const dbConfig = {
   user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'postgrespassword',
   database: process.env.DB_DATABASE || 'brushiq',
+  ssl: (process.env.DB_HOST && process.env.DB_HOST !== 'localhost' && process.env.DB_HOST !== '127.0.0.1')
+    ? { rejectUnauthorized: false }
+    : false
 };
 
 console.log('Initializing database connection with config:', {

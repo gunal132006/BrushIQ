@@ -17,6 +17,9 @@ const dbConfig = {
   user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'postgrespassword',
   database: process.env.DB_DATABASE || 'brushiq',
+  ssl: (process.env.DB_HOST && process.env.DB_HOST !== 'localhost' && process.env.DB_HOST !== '127.0.0.1')
+    ? { rejectUnauthorized: false }
+    : false
 };
 
 // Database mode: 'postgresql' or 'demo-json'
@@ -584,20 +587,32 @@ async function mockQuery(text, params = []) {
 if (!demoModeEnabled) {
   console.log('=============================================');
   console.log('   Database Connection Diagnostics');
+  console.log('   Node.js Version:', process.version);
   console.log('   DB_HOST:', dbConfig.host);
   console.log('   DB_PORT:', dbConfig.port);
   console.log('   DB_DATABASE:', dbConfig.database);
   console.log('   DB_USER:', dbConfig.user);
+  console.log('   DNS defaultResultOrder preference: ipv4first');
   
-  // Resolve DNS to diagnose IPv4 vs IPv6
-  dns.lookup(dbConfig.host, { all: true }, (err, addresses) => {
+  // Resolve IPv4 DNS
+  dns.resolve4(dbConfig.host, (err, ipv4s) => {
     if (err) {
-      console.warn('   DNS Diagnostics Error:', err.message);
+      console.warn('   IPv4 DNS Resolution failed:', err.message);
     } else {
-      console.log('   Resolved DNS Addresses:', addresses.map(addr => `${addr.address} (IPv${addr.family})`));
+      console.log('   Resolved IPv4 Addresses:', ipv4s);
     }
   });
 
+  // Resolve IPv6 DNS
+  dns.resolve6(dbConfig.host, (err, ipv6s) => {
+    if (err) {
+      console.warn('   IPv6 DNS Resolution failed (possibly none):', err.message);
+    } else {
+      console.log('   Resolved IPv6 Addresses:', ipv6s);
+    }
+  });
+
+  // Perform standard lookup
   dns.lookup(dbConfig.host, (err, address, family) => {
     if (err) {
       console.warn('   Primary DNS Lookup failed:', err.message);
