@@ -51,12 +51,14 @@ describe('Toothbrush AI Wear Analysis Service', () => {
 
     // Verify condition matches wear boundaries
     const wear = report.wearPercentage;
-    if (wear < 20) {
-      expect(report.condition).toBe('Good');
-    } else if (wear >= 20 && wear < 45) {
+    if (wear <= 10) {
+      expect(report.condition).toBe('New');
+    } else if (wear > 10 && wear <= 25) {
+      expect(report.condition).toBe('Light Wear');
+    } else if (wear > 25 && wear <= 50) {
       expect(report.condition).toBe('Moderate Wear');
-    } else if (wear >= 45 && wear < 70) {
-      expect(report.condition).toBe('Replace Soon');
+    } else if (wear > 50 && wear <= 75) {
+      expect(report.condition).toBe('Heavy Wear');
     } else {
       expect(report.condition).toBe('Replace Immediately');
     }

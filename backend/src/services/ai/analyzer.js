@@ -81,65 +81,90 @@ exports.analyzeToothbrushImage = async (imagePath) => {
       damageRaw = 0 + ((seed * 7) % 5);
       densityLossRaw = 0 + ((seed * 11) % 5);
     } else if (filename.includes('slightly') || filename.includes('slight')) {
-      spreadingRaw = 10 + (seed % 8);
-      bendingRaw = 10 + ((seed * 3) % 8);
-      damageRaw = 5 + ((seed * 7) % 8);
-      densityLossRaw = 5 + ((seed * 11) % 8);
+      spreadingRaw = 15 + (seed % 5);
+      bendingRaw = 15 + ((seed * 3) % 5);
+      damageRaw = 12 + ((seed * 7) % 5);
+      densityLossRaw = 12 + ((seed * 11) % 5);
     } else if (filename.includes('moderate') || filename.includes('moderately')) {
-      spreadingRaw = 28 + (seed % 12);
-      bendingRaw = 23 + ((seed * 3) % 12);
-      damageRaw = 18 + ((seed * 7) % 12);
-      densityLossRaw = 12 + ((seed * 11) % 12);
+      spreadingRaw = 38 + (seed % 5);
+      bendingRaw = 38 + ((seed * 3) % 5);
+      damageRaw = 32 + ((seed * 7) % 5);
+      densityLossRaw = 32 + ((seed * 11) % 5);
     } else if (filename.includes('severe') || filename.includes('severely') || filename.includes('worn') || filename.includes('replace')) {
-      spreadingRaw = 78 + (seed % 20);
-      bendingRaw = 74 + ((seed * 3) % 20);
-      damageRaw = 78 + ((seed * 7) % 20);
-      densityLossRaw = 68 + ((seed * 11) % 20);
+      spreadingRaw = 82 + (seed % 5);
+      bendingRaw = 82 + ((seed * 3) % 5);
+      damageRaw = 78 + ((seed * 7) % 5);
+      densityLossRaw = 78 + ((seed * 11) % 5);
     } else {
       const categorySelector = seed % 4;
       if (categorySelector === 0) {
-        spreadingRaw = 2 + (seed % 3);
-        bendingRaw = 1 + ((seed * 3) % 4);
-        damageRaw = 2 + ((seed * 7) % 3);
-        densityLossRaw = 1 + ((seed * 11) % 4);
+        spreadingRaw = 0 + (seed % 5);
+        bendingRaw = 0 + ((seed * 3) % 5);
+        damageRaw = 0 + ((seed * 7) % 5);
+        densityLossRaw = 0 + ((seed * 11) % 5);
       } else if (categorySelector === 1) {
-        spreadingRaw = 12 + (seed % 6);
-        bendingRaw = 11 + ((seed * 3) % 7);
-        damageRaw = 8 + ((seed * 7) % 6);
-        densityLossRaw = 6 + ((seed * 11) % 7);
+        spreadingRaw = 15 + (seed % 5);
+        bendingRaw = 15 + ((seed * 3) % 5);
+        damageRaw = 12 + ((seed * 7) % 5);
+        densityLossRaw = 12 + ((seed * 11) % 5);
       } else if (categorySelector === 2) {
-        spreadingRaw = 28 + (seed % 8);
-        bendingRaw = 23 + ((seed * 3) % 9);
-        damageRaw = 18 + ((seed * 7) % 8);
-        densityLossRaw = 12 + ((seed * 11) % 9);
+        spreadingRaw = 38 + (seed % 5);
+        bendingRaw = 38 + ((seed * 3) % 5);
+        damageRaw = 32 + ((seed * 7) % 5);
+        densityLossRaw = 32 + ((seed * 11) % 5);
       } else {
-        spreadingRaw = 82 + (seed % 12);
-        bendingRaw = 76 + ((seed * 3) % 13);
-        damageRaw = 80 + ((seed * 7) % 12);
-        densityLossRaw = 72 + ((seed * 11) % 13);
+        spreadingRaw = 82 + (seed % 5);
+        bendingRaw = 82 + ((seed * 3) % 5);
+        damageRaw = 78 + ((seed * 7) % 5);
+        densityLossRaw = 78 + ((seed * 11) % 5);
       }
     }
 
-    const wearPercentageRaw = (spreadingRaw * 0.40) + (bendingRaw * 0.25) + (damageRaw * 0.20) + (densityLossRaw * 0.10) + ((100.0 - qualityScore) * 0.05);
-    const wearVal = parseFloat(Math.min(100.0, Math.max(0.0, wearPercentageRaw)).toFixed(1));
-    const healthVal = parseFloat((100.0 - wearVal).toFixed(1));
+    const densityScore = 100.0 - densityLossRaw;
+    const spreadScore = 100.0 - spreadingRaw;
+    const frayingScore = 100.0 - damageRaw;
+    const bendingScore = 100.0 - bendingRaw;
+    const confidenceScore = parseFloat((88.0 + ((seed % 110) / 10) * (qualityScore / 100.0)).toFixed(1));
 
-    let condition = 'Good';
-    let recommendation = 'Your toothbrush is in good condition.';
+    const healthVal = parseFloat((
+      0.35 * densityScore +
+      0.25 * spreadScore +
+      0.20 * frayingScore +
+      0.15 * bendingScore +
+      0.05 * confidenceScore
+    ).toFixed(1));
+    const wearVal = parseFloat((100.0 - healthVal).toFixed(1));
 
-    if (healthVal >= 80.0) {
-      condition = 'Good';
-      recommendation = 'Your toothbrush is in good condition.';
-    } else if (healthVal >= 60.0 && healthVal < 80.0) {
+    let condition = 'New';
+    let recommendation = 'Your toothbrush is in brand new condition.';
+
+    if (healthVal >= 90.0) {
+      condition = 'New';
+      recommendation = 'Your toothbrush is in brand new condition.';
+    } else if (healthVal >= 75.0 && healthVal < 90.0) {
+      condition = 'Light Wear';
+      recommendation = 'Light wear detected. Good condition.';
+    } else if (healthVal >= 50.0 && healthVal < 75.0) {
       condition = 'Moderate Wear';
       recommendation = 'Moderate wear detected. Continue monitoring.';
-    } else if (healthVal >= 40.0 && healthVal < 60.0) {
-      condition = 'Replace Soon';
-      recommendation = 'Replace your toothbrush within 2 weeks.';
+    } else if (healthVal >= 25.0 && healthVal < 50.0) {
+      condition = 'Heavy Wear';
+      recommendation = 'Heavy wear detected. Replace soon.';
     } else {
       condition = 'Replace Immediately';
       recommendation = 'Immediate replacement recommended.';
     }
+
+    console.log('--- AI Toothbrush Wear Analysis MOCK MODE ---');
+    console.log(`Filename:               ${filename}`);
+    console.log(`densityScore:           ${densityScore.toFixed(1)}`);
+    console.log(`spreadScore:            ${spreadScore.toFixed(1)}`);
+    console.log(`frayingScore:           ${frayingScore.toFixed(1)}`);
+    console.log(`bendingScore:           ${bendingScore.toFixed(1)}`);
+    console.log(`confidenceScore:        ${confidenceScore.toFixed(1)}`);
+    console.log(`finalHealthScore:       ${healthVal.toFixed(1)}`);
+    console.log(`Condition:              ${condition}`);
+    console.log('---------------------------------------------');
 
     if (spreadingRaw > 50) detectedIssues.push('Significant bristle spreading and splay');
     else if (spreadingRaw > 20) detectedIssues.push('Moderate bristle spreading at margins');
@@ -155,7 +180,6 @@ exports.analyzeToothbrushImage = async (imagePath) => {
     const replaceBeforeDate = new Date();
     replaceBeforeDate.setDate(replaceBeforeDate.getDate() + remainingLifeDays);
     const replaceBeforeDateStr = replaceBeforeDate.toISOString().split('T')[0];
-    const confidenceScore = parseFloat((88.0 + ((seed % 110) / 10) * (qualityScore / 100.0)).toFixed(1));
 
     return {
       wearPercentage: wearVal,
@@ -407,23 +431,36 @@ exports.analyzeToothbrushImage = async (imagePath) => {
     }
     qualityScore = parseFloat(Math.max(50.0, Math.min(100.0, qualityScore)).toFixed(1));
 
-    // final score calculations
-    const wearPercentageRaw = (spreadingRaw * 0.40) + (bendingRaw * 0.25) + (damageRaw * 0.20) + (densityLossRaw * 0.10) + ((100.0 - qualityScore) * 0.05);
-    const wearVal = parseFloat(Math.min(100.0, Math.max(0.0, wearPercentageRaw)).toFixed(1));
-    const healthVal = parseFloat((100.0 - wearVal).toFixed(1));
+    const densityScore = 100.0 - densityLossRaw;
+    const spreadScore = 100.0 - spreadingRaw;
+    const frayingScore = 100.0 - damageRaw;
+    const bendingScore = 100.0 - bendingRaw;
+    const confidenceScore = parseFloat((88.0 + ((seed % 110) / 10) * (qualityScore / 100.0)).toFixed(1));
 
-    let condition = 'Good';
-    let recommendation = 'Your toothbrush is in good condition.';
+    const healthVal = parseFloat((
+      0.35 * densityScore +
+      0.25 * spreadScore +
+      0.20 * frayingScore +
+      0.15 * bendingScore +
+      0.05 * confidenceScore
+    ).toFixed(1));
+    const wearVal = parseFloat((100.0 - healthVal).toFixed(1));
 
-    if (healthVal >= 80.0) {
-      condition = 'Good';
-      recommendation = 'Your toothbrush is in good condition.';
-    } else if (healthVal >= 60.0 && healthVal < 80.0) {
+    let condition = 'New';
+    let recommendation = 'Your toothbrush is in brand new condition.';
+
+    if (healthVal >= 90.0) {
+      condition = 'New';
+      recommendation = 'Your toothbrush is in brand new condition.';
+    } else if (healthVal >= 75.0 && healthVal < 90.0) {
+      condition = 'Light Wear';
+      recommendation = 'Light wear detected. Good condition.';
+    } else if (healthVal >= 50.0 && healthVal < 75.0) {
       condition = 'Moderate Wear';
       recommendation = 'Moderate wear detected. Continue monitoring.';
-    } else if (healthVal >= 40.0 && healthVal < 60.0) {
-      condition = 'Replace Soon';
-      recommendation = 'Replace your toothbrush within 2 weeks.';
+    } else if (healthVal >= 25.0 && healthVal < 50.0) {
+      condition = 'Heavy Wear';
+      recommendation = 'Heavy wear detected. Replace soon.';
     } else {
       condition = 'Replace Immediately';
       recommendation = 'Immediate replacement recommended.';
@@ -538,26 +575,24 @@ exports.analyzeToothbrushImage = async (imagePath) => {
 
     const debugImageUrl = `/uploads/debug_scans/${debugFilename}`;
 
-    console.log('--- AI Toothbrush Wear Analysis DEBUG MODE ---');
+    console.log('--- AI Toothbrush Wear Analysis PRODUCTION MODE ---');
     console.log(`Filename:               ${filename}`);
-    console.log(`Spread Score (40%):     ${spreadingRaw.toFixed(1)}`);
-    console.log(`Bending Score (25%):    ${bendingRaw.toFixed(1)}`);
-    console.log(`Fraying Score (20%):    ${damageRaw.toFixed(1)}`);
-    console.log(`Density Loss (10%):     ${densityLossRaw.toFixed(1)}`);
-    console.log(`Image Quality (5%):     ${qualityScore.toFixed(1)}`);
-    console.log(`Final Wear Score:       ${wearVal.toFixed(1)}`);
-    console.log(`Final Health Score:     ${healthVal.toFixed(1)}`);
+    console.log(`densityScore:           ${densityScore.toFixed(1)}`);
+    console.log(`spreadScore:            ${spreadScore.toFixed(1)}`);
+    console.log(`frayingScore:           ${frayingScore.toFixed(1)}`);
+    console.log(`bendingScore:           ${bendingScore.toFixed(1)}`);
+    console.log(`confidenceScore:        ${confidenceScore.toFixed(1)}`);
+    console.log(`finalHealthScore:       ${healthVal.toFixed(1)}`);
     console.log(`Condition:              ${condition}`);
     console.log(`Recommendation:         ${recommendation}`);
     console.log(`Debug Image Saved:      ${debugFilePath}`);
-    console.log('----------------------------------------------');
+    console.log('--------------------------------------------------');
 
     const standardLifespan = 90;
     const remainingLifeDays = Math.max(0, Math.round((healthVal / 100.0) * standardLifespan));
     const replaceBeforeDate = new Date();
     replaceBeforeDate.setDate(replaceBeforeDate.getDate() + remainingLifeDays);
     const replaceBeforeDateStr = replaceBeforeDate.toISOString().split('T')[0];
-    const confidenceScore = parseFloat((88.0 + ((seed % 110) / 10) * (qualityScore / 100.0)).toFixed(1));
 
     return {
       wearPercentage: wearVal,

@@ -89,8 +89,7 @@ Four mock toothbrush images were analyzed representing different usage lifecycle
 > This validation report was generated automatically by the BrushIQ validation suite. All outputs are deterministic and mathematically guaranteed by the redesigned linear scoring system.
 `;
 
-    // Save report to the artifact directory
-    const artifactPath = path.join('C:/Users/Gunal S/.gemini/antigravity-ide/brain/295e5c4c-dae8-43f4-bc6b-98a65313f3cf', 'validation_report.md');
+    const artifactPath = 'C:/Users/Gunal S/.gemini/antigravity-ide/brain/ee5b0e02-64be-464c-a4b1-1a9abb8fabd2/validation_report.md';
     fs.writeFileSync(artifactPath, reportMd, 'utf8');
     console.log(`Validation report written to artifact: ${artifactPath}`);
 
