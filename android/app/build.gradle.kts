@@ -24,7 +24,7 @@ android {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "DEV_BASE_URL", "\"http://10.156.109.108:5000/api/\"")
+        buildConfigField("String", "DEV_BASE_URL", "\"https://brushiq-backend.onrender.com/api/\"")
         buildConfigField("String", "PROD_BASE_URL", "\"https://brushiq-backend.onrender.com/api/\"")
     }
 
