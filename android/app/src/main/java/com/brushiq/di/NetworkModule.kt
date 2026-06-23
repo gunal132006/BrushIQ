@@ -56,7 +56,8 @@ object NetworkModule {
             BuildConfig.PROD_BASE_URL
         }
 
-        android.util.Log.d("AuthFlow", "NetworkModule: Initializing Retrofit with Base URL: $baseUrl")
+        android.util.Log.d("AuthFlow", "Build Type: DEBUG=${BuildConfig.DEBUG}")
+        android.util.Log.d("AuthFlow", "Base URL: $baseUrl")
 
         return Retrofit.Builder()
             .baseUrl(baseUrl)
