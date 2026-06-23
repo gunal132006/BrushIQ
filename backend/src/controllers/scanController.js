@@ -24,6 +24,9 @@ exports.analyzeScan = async (req, res) => {
     });
   } catch (err) {
     console.error('Error in scan analysis:', err.message);
+    if (err.message && err.message.startsWith('CV_ERROR:')) {
+      return res.status(400).json({ message: err.message.substring(9) });
+    }
     res.status(500).json({ message: 'Error processing toothbrush scan' });
   }
 };
