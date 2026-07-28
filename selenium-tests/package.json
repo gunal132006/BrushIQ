@@ -1,0 +1,36 @@
+{
+  "name": "brushiq-selenium-tests",
+  "version": "1.0.0",
+  "description": "Production-ready Selenium E2E testing framework for BrushIQ",
+  "main": "run-tests.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node run-tests.js",
+    "test:login": "node run-tests.js --suite=login",
+    "test:register": "node run-tests.js --suite=register",
+    "test:dashboard": "node run-tests.js --suite=dashboard",
+    "test:scan": "node run-tests.js --suite=scan",
+    "test:history": "node run-tests.js --suite=history",
+    "test:profile": "node run-tests.js --suite=profile",
+    "test:settings": "node run-tests.js --suite=settings",
+    "test:reminders": "node run-tests.js --suite=reminder",
+    "test:toothbrush": "node run-tests.js --suite=toothbrush",
+    "test:analytics": "node run-tests.js --suite=analytics",
+    "generate-cases": "node utils/generateTestCasesExcel.js"
+  },
+  "keywords": [
+    "selenium",
+    "e2e",
+    "brushiq",
+    "testing",
+    "pom"
+  ],
+  "author": "BrushIQ QA Team",
+  "license": "ISC",
+  "dependencies": {
+    "chromedriver": "^131.0.0",
+    "exceljs": "^4.4.0",
+    "fs-extra": "^11.2.0",
+    "selenium-webdriver": "^4.20.0"
+  }
+}

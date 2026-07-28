@@ -362,7 +362,7 @@ const HistoryModule = () => {
                     {/* Thumbnail */}
                     <div className="w-16 h-16 rounded-xl overflow-hidden border dark:border-slate-850 border-slate-100 shrink-0 bg-slate-950 flex items-center justify-center">
                       <img 
-                        src={scan.imageUrl.startsWith('/') ? `http://localhost:5000${scan.imageUrl}` : scan.imageUrl} 
+                        src={scan.imageUrl.startsWith('/') ? `${import.meta.env.VITE_BASE_URL || 'https://brushiq-backend.onrender.com'}${scan.imageUrl}` : scan.imageUrl} 
                         alt="Scan Thumbnail" 
                         className="w-full h-full object-cover" 
                       />

@@ -294,8 +294,8 @@ const ResultScreen = () => {
             <img 
               src={
                 showDebugVisual && analysis.debugImageUrl
-                  ? (analysis.debugImageUrl.startsWith('/') ? `http://localhost:5000${analysis.debugImageUrl}` : analysis.debugImageUrl)
-                  : (analysis.imageUrl.startsWith('/') ? `http://localhost:5000${analysis.imageUrl}` : analysis.imageUrl)
+                  ? (analysis.debugImageUrl.startsWith('/') ? `${import.meta.env.VITE_BASE_URL || 'https://brushiq-backend.onrender.com'}${analysis.debugImageUrl}` : analysis.debugImageUrl)
+                  : (analysis.imageUrl.startsWith('/') ? `${import.meta.env.VITE_BASE_URL || 'https://brushiq-backend.onrender.com'}${analysis.imageUrl}` : analysis.imageUrl)
               } 
               alt={showDebugVisual ? "AI Diagnostic Overlay" : "Scan capture"} 
               className="w-full h-full object-cover" 

@@ -1,0 +1,7 @@
+node_modules/
+reports/screenshots/*
+!reports/screenshots/.gitkeep
+reports/logs/*
+!reports/logs/.gitkeep
+.env
+*.log
