@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { Mail, Lock, AlertCircle, Sun, Moon } from 'lucide-react';
 
 const Login = () => {
-  const { login, loginWithGoogle } = useAuth();
+  const { login } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
 
@@ -31,10 +31,6 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setError('Google Sign-In is not configured for this environment. Please sign in using your registered email and password.');
   };
 
   return (
@@ -140,33 +136,6 @@ const Login = () => {
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
-
-          <div className="relative flex items-center justify-center my-6">
-            <div className="border-t border-slate-200 dark:border-slate-850 w-full"></div>
-            <span className={`absolute px-3.5 text-[9px] font-bold uppercase tracking-widest ${
-              darkMode ? 'bg-[#0b0f19] text-slate-400' : 'bg-slate-50 text-slate-400'
-            }`}>
-              Or Continue With
-            </span>
-          </div>
-
-          <button
-            onClick={handleGoogleSignIn}
-            className={`w-full py-2.5 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] cursor-pointer ${
-              darkMode 
-                ? 'border-slate-850 hover:bg-slate-800 bg-slate-950 text-white' 
-                : 'border-slate-200 hover:bg-slate-100 bg-white text-slate-700'
-            }`}
-            disabled={loading}
-          >
-            <svg className="w-4.5 h-4.5" viewBox="0 0 24 24">
-              <path
-                fill="#EA4335"
-                d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114-3.48 0-6.3-2.82-6.3-6.3s2.82-6.3 6.3-6.3c1.64 0 3.09.63 4.22 1.66l3.1-3.1C19.12 2.215 15.93 1 12.24 1 5.67 1 1.05 5.62 1.05 12.2s4.62 11.2 11.19 11.2c7.53 0 11.08-5.385 10.2-11.2h-10.2z"
-              />
-            </svg>
-            Google Sign In
-          </button>
         </div>
 
         <p className="text-center text-xs font-semibold text-slate-400 dark:text-slate-400 mt-6 shrink-0">

@@ -23,9 +23,12 @@ function getLocalIpAddress() {
   return 'localhost';
 }
 
+const { ensureSchema } = require('./db/migrate');
+
 console.log("SERVER STARTING");
-const server = app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', async () => {
   console.log("SERVER LISTENING ON PORT", PORT);
+  await ensureSchema();
   const localIp = getLocalIpAddress();
   console.log(`=============================================`);
   console.log(`   BrushIQ REST API Service Booted Successful`);
