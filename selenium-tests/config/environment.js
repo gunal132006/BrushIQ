@@ -2,8 +2,8 @@
  * Environment configuration for BrushIQ E2E Test Suite
  */
 module.exports = {
-  baseUrl: process.env.TEST_BASE_URL || 'http://localhost:5173',
-  apiBaseUrl: process.env.TEST_API_URL || 'http://localhost:5000/api',
+  baseUrl: process.env.TEST_BASE_URL || 'https://brush-iq.vercel.app',
+  apiBaseUrl: process.env.TEST_API_URL || 'https://brushiq-backend.onrender.com/api',
   timeout: 10000,
   pageLoadTimeout: 30000,
   implicitWait: 5000,
