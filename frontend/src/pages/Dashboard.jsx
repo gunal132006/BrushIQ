@@ -88,7 +88,7 @@ const Dashboard = () => {
       {/* Mini Gradient Banner */}
       <div className="rounded-2xl bg-gradient-to-tr from-primary to-secondary p-5 text-white shadow-lg shadow-primary/10 relative overflow-hidden shrink-0">
         <div className="relative z-10">
-          <h2 className="text-xl font-black m-0 text-white">Hello, {user?.fullName?.split(' ')[0]}! 👋</h2>
+          <h2 className="text-xl font-black m-0 text-white">Hello, {user?.fullName ? user.fullName.split(' ')[0] : 'User'}! 👋</h2>
           <p className="text-white/80 text-xs mt-1.5 leading-relaxed">
             Ready to analyze your toothbrush health today? Capture a photo to check bristle bending and wear.
           </p>
