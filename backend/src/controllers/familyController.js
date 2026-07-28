@@ -58,20 +58,6 @@ exports.getFamilyMembers = async (req, res) => {
     const assignedToothbrushCount = formattedRows.filter(r => r.toothbrushId).length;
     const missingAssignments = familyMemberCount - assignedToothbrushCount;
 
-    console.log('=============================================');
-    console.log('      BUSHIQ SERVER FAMILY DIAGNOSTICS      ');
-    console.log('=============================================');
-    console.log(`Authenticated User ID:     ${req.user.id}`);
-    console.log(`Family Member Count:       ${familyMemberCount}`);
-    console.log(`Toothbrush Count:          ${toothbrushCount}`);
-    console.log(`Assigned Toothbrush Count: ${assignedToothbrushCount}`);
-    console.log(`Missing Assignments:       ${missingAssignments}`);
-    if (missingAssignments > 0) {
-      const missingNames = formattedRows.filter(r => !r.toothbrushId).map(r => r.name).join(', ');
-      console.log(`Members Missing Brushes:   ${missingNames}`);
-    }
-    console.log('=============================================');
-
     res.json(formattedRows);
   } catch (err) {
     console.error('Error fetching family members:', err.message);
