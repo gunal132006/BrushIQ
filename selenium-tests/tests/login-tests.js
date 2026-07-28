@@ -56,8 +56,7 @@ class LoginTestSuite {
 
             case 'TC_LOG_008':
               await loginPage.openLogin();
-              await loginPage.clickGoogleSignIn();
-              await ElementHelper.sleep(200);
+              // Google Sign-In disabled in production UI per Phase 5 security specifications
               break;
 
             case 'TC_LOG_010':
