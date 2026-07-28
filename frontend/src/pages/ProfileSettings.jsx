@@ -21,7 +21,7 @@ import { BookMarked } from 'lucide-react';
 
 
 const ProfileSettings = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, changePassword } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
 
@@ -32,9 +32,14 @@ const ProfileSettings = () => {
   });
   
   const [remindersEnabled, setRemindersEnabled] = useState(true);
-  const [tipsEnabled, setTipsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [activeModal, setActiveModal] = useState(null);
+
+  // Password state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordMsg, setPasswordMsg] = useState({ type: '', text: '' });
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
 
   useEffect(() => {
@@ -60,6 +65,25 @@ const ProfileSettings = () => {
     navigate('/login');
   };
 
+  const handleChangePasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (!currentPassword || !newPassword) {
+      return setPasswordMsg({ type: 'error', text: 'Please fill in both fields.' });
+    }
+    setPasswordMsg({ type: '', text: '' });
+    setPasswordLoading(true);
+    try {
+      const msg = await changePassword(currentPassword, newPassword);
+      setPasswordMsg({ type: 'success', text: msg || 'Password updated successfully!' });
+      setCurrentPassword('');
+      setNewPassword('');
+    } catch (err) {
+      setPasswordMsg({ type: 'error', text: err || 'Failed to update password.' });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-2">
@@ -77,9 +101,9 @@ const ProfileSettings = () => {
         darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-sm'
       }`}>
         <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white text-2xl font-black shadow shadow-primary/20 mb-3">
-          {user?.fullName?.charAt(0).toUpperCase()}
+          {user?.fullName?.charAt(0).toUpperCase() || 'U'}
         </div>
-        <h3 className="text-base font-bold m-0 leading-tight">{user?.fullName}</h3>
+        <h3 className="text-base font-bold m-0 leading-tight">{user?.fullName || 'User Profile'}</h3>
         <p className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider mt-1.5">Primary Account</p>
 
         <div className="w-full space-y-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-850 text-left text-xs font-semibold text-slate-500">
@@ -170,8 +194,11 @@ const ProfileSettings = () => {
         <h4 className="font-bold text-xs uppercase text-slate-400 mb-3 tracking-wider">Account actions</h4>
         
         <button
-          onClick={() => alert('Mock password recovery action.')}
-          className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-50 dark:border-slate-850 hover:border-primary text-xs font-bold transition-all text-left"
+          onClick={() => {
+            setPasswordMsg({ type: '', text: '' });
+            setActiveModal('password');
+          }}
+          className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-50 dark:border-slate-850 hover:border-primary text-xs font-bold transition-all text-left cursor-pointer"
         >
           <div className="flex items-center gap-2.5">
             <Shield className="w-4 h-4 text-slate-450" />
@@ -190,7 +217,7 @@ const ProfileSettings = () => {
         <div className="space-y-2">
           <button
             onClick={() => setActiveModal('about')}
-            className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-50 dark:border-slate-850 hover:border-primary text-xs font-bold transition-all text-left"
+            className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-50 dark:border-slate-850 hover:border-primary text-xs font-bold transition-all text-left cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
               <Info className="w-4 h-4 text-slate-450" />
@@ -201,7 +228,7 @@ const ProfileSettings = () => {
 
           <button
             onClick={() => setActiveModal('privacy')}
-            className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-50 dark:border-slate-850 hover:border-primary text-xs font-bold transition-all text-left"
+            className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-50 dark:border-slate-850 hover:border-primary text-xs font-bold transition-all text-left cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
               <Shield className="w-4 h-4 text-slate-450" />
@@ -212,7 +239,7 @@ const ProfileSettings = () => {
 
           <button
             onClick={() => setActiveModal('terms')}
-            className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-50 dark:border-slate-850 hover:border-primary text-xs font-bold transition-all text-left"
+            className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-50 dark:border-slate-850 hover:border-primary text-xs font-bold transition-all text-left cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
               <FileText className="w-4 h-4 text-slate-450" />
@@ -226,13 +253,13 @@ const ProfileSettings = () => {
       {/* Logout button */}
       <button
         onClick={handleLogout}
-        className="w-full py-3.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-955/20 text-rose-500 font-extrabold rounded-xl text-xs transition-all flex items-center justify-center gap-2 cursor-pointer border border-rose-100/40 dark:border-rose-900/30"
+        className="w-full py-3.5 bg-rose-50 dark:bg-rose-955/20 hover:bg-rose-100 dark:hover:bg-rose-950/40 text-rose-500 font-extrabold text-xs rounded-2xl transition-all duration-200 active:scale-[0.98] border border-rose-100 dark:border-rose-900/40 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
       >
         <LogOut className="w-4 h-4 stroke-[2.5px]" />
         Log Out Account
       </button>
 
-      {/* Slide-over Policy Modals (Centered inside mockup container) */}
+      {/* Slide-over Policy & Password Modals */}
       {activeModal && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-5">
           <div className={`w-full max-w-[390px] max-h-[680px] rounded-2xl border p-5 shadow-2xl relative flex flex-col ${
@@ -246,64 +273,94 @@ const ProfileSettings = () => {
             </button>
 
             <h3 className="text-base font-black mb-4 pr-6 leading-none capitalize">
+              {activeModal === 'password' && 'Update Password'}
               {activeModal === 'about' && 'About BrushIQ'}
               {activeModal === 'privacy' && 'Privacy Policy'}
               {activeModal === 'terms' && 'Terms & Conditions'}
             </h3>
 
             <div className="flex-1 overflow-y-auto pr-1 text-xs font-semibold text-slate-500 dark:text-slate-400 space-y-3.5 text-left leading-relaxed">
+              {activeModal === 'password' && (
+                <form onSubmit={handleChangePasswordSubmit} className="space-y-4">
+                  {passwordMsg.text && (
+                    <div className={`p-3 rounded-xl text-xs font-semibold ${
+                      passwordMsg.type === 'error' ? 'bg-rose-50 text-rose-500 border border-rose-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                    }`}>
+                      {passwordMsg.text}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Current Password</label>
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className={`w-full p-2.5 rounded-xl border outline-none font-semibold text-xs ${
+                        darkMode ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                      }`}
+                      disabled={passwordLoading}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">New Password</label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="•••••••• (Min 6 chars)"
+                      className={`w-full p-2.5 rounded-xl border outline-none font-semibold text-xs ${
+                        darkMode ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                      }`}
+                      disabled={passwordLoading}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={passwordLoading}
+                    className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white font-bold text-xs shadow cursor-pointer disabled:opacity-50"
+                  >
+                    {passwordLoading ? 'Updating...' : 'Update Password'}
+                  </button>
+                </form>
+              )}
+
               {activeModal === 'about' && (
                 <>
                   <div className="flex flex-col items-center py-4">
                     <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-extrabold text-2xl shadow-md mb-2.5">
                       B
                     </div>
-                    <span className="text-sm font-black text-slate-800 dark:text-slate-200">BrushIQ App</span>
-                    <span className="text-[9px] text-slate-400 font-bold uppercase mt-1">Version 1.0.0 (Demo Mode Active)</span>
+                    <span className="text-sm font-black text-slate-800 dark:text-slate-200">BrushIQ SaaS</span>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase mt-1">Version 1.0.0 Production</span>
                   </div>
                   <p>
-                    BrushIQ is an AI-powered toothbrush splay wear diagnostic platform. It leverages advanced computer vision logic to calculate bristle spreading, bending, and density parameters from captured images.
-                  </p>
-                  <p>
-                    By providing quantitative health scores and linear degradation projections, BrushIQ helps household families optimize their brushing efficiency and replace brush heads precisely when their plaque removal efficiency drops below acceptable margins.
+                    BrushIQ is an AI-powered oral healthcare platform. It provides quantitative bristle degradation analytics from uploaded images to help users optimize brushing hygiene.
                   </p>
                   <p className="border-t border-slate-100 dark:border-slate-850 pt-3 font-mono text-[9px] text-slate-400 dark:text-slate-500">
-                    Developers: BrushIQ Capstone Dev Team<br />
-                    Release Reference: #BIQ-2026-V1.0
+                    Engineered for Production SaaS environment.<br />
+                    Platform Reference: #BIQ-2026-PROD
                   </p>
                 </>
               )}
 
               {activeModal === 'privacy' && (
                 <>
-                  <p className="font-bold text-slate-700 dark:text-slate-350">1. Data Minimization & Privacy</p>
+                  <p className="font-bold text-slate-700 dark:text-slate-350">1. Privacy First Architecture</p>
                   <p>
-                    Your oral hygiene privacy is central to our design. BrushIQ does not transmit raw toothbrush images outside your browser/device context. All classification calculations occur locally.
-                  </p>
-                  <p className="font-bold text-slate-700 dark:text-slate-350">2. Metric Storage</p>
-                  <p>
-                    Calculated diagnostic reports (wear percentages, health indices, and next checkup dates) are stored in your localized database fallback or secure PostgreSQL hosting environment. We never sell or share metrics with third-party tracking networks.
-                  </p>
-                  <p className="font-bold text-slate-700 dark:text-slate-350">3. Compliance</p>
-                  <p>
-                    All storage guidelines align with personal hygiene data standards and conform to localized privacy laws.
+                    BrushIQ ensures all personal data and uploaded scans are securely handled with encrypted JWT auth and database isolation.
                   </p>
                 </>
               )}
 
               {activeModal === 'terms' && (
                 <>
-                  <p className="font-bold text-slate-700 dark:text-slate-350">1. Advisory Disclaimers</p>
+                  <p className="font-bold text-slate-700 dark:text-slate-350">1. Usage Policy</p>
                   <p>
-                    BrushIQ diagnostics are provided via computer vision simulation parameters. Wear scores represent toothbrush structural hygiene and do not substitute for clinical checks, gum evaluations, or orthodontic consultations.
-                  </p>
-                  <p className="font-bold text-slate-700 dark:text-slate-350">2. Replacement Intervals</p>
-                  <p>
-                    While BrushIQ charts splay indices, clinical guidelines suggest replacing toothbrush heads at least once every 90 days, or immediately following recovery from bacterial/viral infections.
-                  </p>
-                  <p className="font-bold text-slate-700 dark:text-slate-350">3. Usage Terms</p>
-                  <p>
-                    Tapping scan signifies agreement to capture images top-down in dry, well-illuminated environments to maximize bristle segment accuracy.
+                    BrushIQ recommendations supplement routine dental care and hygiene maintenance.
                   </p>
                 </>
               )}
@@ -313,7 +370,7 @@ const ProfileSettings = () => {
               onClick={() => setActiveModal(null)}
               className="w-full mt-4 py-2.5 rounded-xl bg-primary hover:bg-primary-dark text-white font-extrabold text-xs uppercase tracking-wider shadow cursor-pointer transition-all"
             >
-              Close Document
+              Close
             </button>
           </div>
         </div>

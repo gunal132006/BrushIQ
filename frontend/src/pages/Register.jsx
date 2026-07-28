@@ -94,7 +94,7 @@ const Register = () => {
                 <input
                   id="fullName"
                   type="text"
-                  placeholder="John Doe"
+                  placeholder="Enter full name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   className={`w-full pl-9 pr-4 py-2.5 rounded-xl border outline-none font-semibold text-xs transition-all focus:ring-2 focus:ring-primary/20 ${
