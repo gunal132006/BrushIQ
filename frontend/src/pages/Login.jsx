@@ -34,18 +34,7 @@ const Login = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      const mockGoogleId = 'g_' + Math.random().toString(36).substring(2, 11);
-      const mockEmail = 'user.' + Math.random().toString(36).substring(2, 7) + '@gmail.com';
-      await loginWithGoogle(mockGoogleId, mockEmail, 'John Doe', '');
-      navigate('/');
-    } catch (err) {
-      setError(err || 'Google Login failed');
-    } finally {
-      setLoading(false);
-    }
+    setError('Google Sign-In is not configured for this environment. Please sign in using your registered email and password.');
   };
 
   return (

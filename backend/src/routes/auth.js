@@ -23,6 +23,11 @@ router.post('/google', authController.googleLogin);
 // @access  Public
 router.post('/forgot-password', authController.forgotPassword);
 
+// @route   POST api/auth/change-password
+// @desc    Update current user password
+// @access  Private
+router.post('/change-password', authMiddleware, authController.changePassword);
+
 // @route   GET api/auth/me
 // @desc    Get current user details
 // @access  Private

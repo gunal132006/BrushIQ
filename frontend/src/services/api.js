@@ -33,6 +33,8 @@ export const authService = {
     api.post('/auth/google', { googleId, email, fullName, photoUrl }),
   forgotPassword: (email, phone) => 
     api.post('/auth/forgot-password', { email, phone }),
+  changePassword: (currentPassword, newPassword) =>
+    api.post('/auth/change-password', { currentPassword, newPassword }),
   getMe: () => 
     api.get('/auth/me'),
 };

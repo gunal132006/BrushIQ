@@ -77,8 +77,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const changePassword = async (currentPassword, newPassword) => {
+    try {
+      const res = await authService.changePassword(currentPassword, newPassword);
+      return res.data.message;
+    } catch (err) {
+      throw err.response?.data?.message || 'Password update failed';
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout, triggerForgotPassword }}>
+    <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout, triggerForgotPassword, changePassword }}>
       {children}
     </AuthContext.Provider>
   );
