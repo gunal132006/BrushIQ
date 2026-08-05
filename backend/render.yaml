@@ -24,3 +24,6 @@ services:
         sync: false
       - key: DB_DATABASE
         value: postgres
+      - key: GOOGLE_CLIENT_ID
+        value: "534843148727-ernb5gqgo6pf1cobmmvjbsl7d4f5026s.apps.googleusercontent.com"
+

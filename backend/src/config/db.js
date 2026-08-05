@@ -330,8 +330,28 @@ async function query(text, params) {
   }
 }
 
+async function queryPgOnly(text, params) {
+  if (!pgConnected) {
+    const err = new Error('PostgreSQL database service unavailable');
+    err.code = 'PG_UNAVAILABLE';
+    throw err;
+  }
+  try {
+    return await pool.query(text, params);
+  } catch (err) {
+    pgConnected = false;
+    const customErr = new Error('PostgreSQL database query failed: ' + err.message);
+    customErr.code = 'PG_UNAVAILABLE';
+    throw customErr;
+  }
+}
+
+
 module.exports = {
   query,
+  queryPgOnly,
+  isPgConnected: () => pgConnected,
+  setPgConnected: (val) => { pgConnected = val; },
   pool: {
     query,
     connect: async () => {
@@ -352,3 +372,4 @@ module.exports = {
   getDbMode: () => (pgConnected ? 'postgresql' : 'embedded-sql'),
   setDbMode: () => {}
 };
+
