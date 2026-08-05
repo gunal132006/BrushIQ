@@ -219,19 +219,20 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  const { username, password } = req.body; // username can be email or phone
+  const { username, email, password } = req.body;
+  const loginIdentifier = username || email;
 
-  if (!username || !password) {
+  if (!loginIdentifier || !password) {
     return res.status(400).json({ message: 'Please enter all fields' });
   }
 
   try {
-    const sanitizedUsername = username.trim().toLowerCase();
+    const sanitizedUsername = loginIdentifier.trim().toLowerCase();
 
     // Find user by email or phone
     const result = await db.query(
       'SELECT * FROM users WHERE LOWER(email) = $1 OR phone = $2',
-      [sanitizedUsername, username.trim()]
+      [sanitizedUsername, loginIdentifier.trim()]
     );
 
     if (result.rows.length === 0) {
