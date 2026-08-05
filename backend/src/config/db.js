@@ -10,7 +10,28 @@ if (typeof dns.setDefaultResultOrder === 'function') {
 
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
-const connectionString = process.env.DATABASE_URL;
+function sanitizeDbHost(rawHost) {
+  if (!rawHost) return 'localhost';
+  let host = rawHost.trim();
+  if (host.startsWith('postgres.') && !host.includes('.supabase.')) {
+    const ref = host.replace('postgres.', '');
+    host = `db.${ref}.supabase.co`;
+  } else if (!host.includes('.') && host !== 'localhost') {
+    host = `db.${host}.supabase.co`;
+  }
+  return host;
+}
+
+function sanitizeConnectionString(url) {
+  if (!url) return null;
+  let s = url.trim();
+  s = s.replace(/@postgres\.([a-z0-9]+)(:\d+)?\//i, '@db.$1.supabase.co$2/');
+  return s;
+}
+
+const rawConnectionString = process.env.DATABASE_URL;
+const connectionString = sanitizeConnectionString(rawConnectionString);
+const dbHost = sanitizeDbHost(process.env.DB_HOST);
 
 const dbConfig = connectionString
   ? {
@@ -18,12 +39,12 @@ const dbConfig = connectionString
       ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false }
     }
   : {
-      host: process.env.DB_HOST || 'localhost',
+      host: dbHost,
       port: parseInt(process.env.DB_PORT || '5432'),
       user: process.env.DB_USER || 'postgres',
       password: process.env.DB_PASSWORD || 'postgrespassword',
       database: process.env.DB_DATABASE || 'brushiq',
-      ssl: (process.env.DB_HOST && process.env.DB_HOST !== 'localhost' && process.env.DB_HOST !== '127.0.0.1')
+      ssl: (dbHost && dbHost !== 'localhost' && dbHost !== '127.0.0.1')
         ? { rejectUnauthorized: false }
         : false
     };
@@ -85,7 +106,7 @@ function saveEmbeddedStore() {
 pool.query('SELECT 1')
   .then(() => {
     pgConnected = true;
-    console.log('Successfully connected to remote PostgreSQL database.');
+    console.log('Connected to PostgreSQL successfully.');
   })
   .catch((err) => {
     pgConnected = false;
