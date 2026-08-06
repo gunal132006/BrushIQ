@@ -51,9 +51,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const loginWithGoogle = async (googleId, email, fullName, photoUrl) => {
+  const loginWithGoogle = async (idToken) => {
     try {
-      const res = await authService.googleLogin(googleId, email, fullName, photoUrl);
+      const res = await authService.googleLogin(idToken);
       const { token, user: userData } = res.data;
       localStorage.setItem('brushiq_token', token);
       setUser(userData);

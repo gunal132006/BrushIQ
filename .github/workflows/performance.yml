@@ -1,0 +1,56 @@
+name: k6 Baseline & Load Performance Workflow
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  performance-test:
+    name: Run k6 Load & Performance Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D66431CD
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      - name: Install Report Generator Dependencies
+        run: |
+          cd performance-tests
+          npm install
+
+      - name: Execute k6 Baseline Performance Test
+        run: |
+          cd performance-tests
+          k6 run k6/baseline-test.js --summary-export=reports/raw-results.json || true
+
+      - name: Generate Markdown & Excel Summary Reports
+        run: |
+          cd performance-tests
+          node generate-report.js
+
+      - name: Upload Performance Test Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-test-reports
+          path: |
+            performance-tests/reports/
+            performance-tests/reports/performance-summary.xlsx
+            performance-tests/reports/performance-summary.md
+            performance-tests/reports/raw-results.json

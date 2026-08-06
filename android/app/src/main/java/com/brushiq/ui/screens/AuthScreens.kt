@@ -93,34 +93,34 @@ fun LoginScreen(
                     .padding(Dimensions.PaddingExtraLarge),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Logo Header
                 Surface(
-                    modifier = Modifier.size(80.dp),
+                    modifier = Modifier.size(64.dp),
                     color = PrimaryMain,
                     shape = BrushIQShapes.large,
                     tonalElevation = 4.dp
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text("B", color = Color.White, style = MaterialTheme.typography.displayLarge.copy(fontSize = 44.sp))
+                        Text("B", color = Color.White, style = MaterialTheme.typography.displayLarge.copy(fontSize = 36.sp))
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 
                 Text(
                     text = "Welcome Back",
-                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 32.sp)
+                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 28.sp)
                 )
                 Text(
                     text = "Sign in to continue your clinical routine",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
                 )
                 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 // Input Fields
                 OutlinedTextField(
@@ -147,7 +147,7 @@ fun LoginScreen(
                     )
                 )
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedTextField(
                     value = password,
@@ -178,7 +178,7 @@ fun LoginScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 12.dp),
+                        .padding(top = 4.dp),
                     contentAlignment = Alignment.CenterEnd
                 ) {
                     Text(
@@ -189,7 +189,7 @@ fun LoginScreen(
                     )
                 }
                 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Sign In Button
                 PrimaryButton(
@@ -219,12 +219,37 @@ fun LoginScreen(
                     }
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    )
+                    Text(
+                        text = " OR ",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Google Button (Interactive Sign-In)
                 OutlinedButton(
                     onClick = { 
-                        viewModel?.loginWithGoogleInteractive(context)
+                        android.util.Log.d("AuthFlow", "Google Sign-In button clicked")
+                        viewModel?.loginWithGoogle(context)
                     },
                     enabled = authState !is AuthState.Loading,
                     modifier = Modifier
@@ -241,14 +266,13 @@ fun LoginScreen(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Sign in with Google",
+                            text = "Continue with Google",
                             style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Row(horizontalArrangement = Arrangement.Center) {
                     Text(

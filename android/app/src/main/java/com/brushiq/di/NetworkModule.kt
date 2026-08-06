@@ -41,9 +41,15 @@ object NetworkModule {
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
             .addInterceptor(NetworkDebugInterceptor())
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(90, TimeUnit.SECONDS)
+            .readTimeout(90, TimeUnit.SECONDS)
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder()
+                    .header("User-Agent", "BrushIQ-Android/1.0.0")
+                    .header("Accept", "application/json")
+                    .build()
+                chain.proceed(request)
+            }
             .build()
     }
 

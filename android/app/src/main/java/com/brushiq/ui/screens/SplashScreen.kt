@@ -83,7 +83,7 @@ fun SplashScreen(
             delay(800)
         }
         
-        // Verify credentials with local storage or silent sign-in
+        // Verify credentials with local storage
         val isLoggedIn = authViewModel?.isUserLoggedIn?.value ?: false
         android.util.Log.d("AuthFlow", "Splash: Local session isLoggedIn = $isLoggedIn")
         
@@ -93,32 +93,9 @@ fun SplashScreen(
                 popUpTo("splash") { inclusive = true }
             }
         } else {
-            android.util.Log.d("AuthFlow", "Splash: No active local session. Attempting silent sign-in...")
-            progressMessage.value = "Attempting silent sign-in..."
-            
-            val silentSuccess = try {
-                withTimeoutOrNull(2000) {
-                    authViewModel?.silentSignIn(context)
-                } ?: false
-            } catch (e: Exception) {
-                android.util.Log.e("AuthFlow", "Splash: Silent sign-in exception", e)
-                false
-            }
-            
-            android.util.Log.d("AuthFlow", "Splash: Silent sign-in success = $silentSuccess")
-            
-            if (silentSuccess) {
-                android.util.Log.d("AuthFlow", "Splash: Silent sign-in success. Navigating to Dashboard...")
-                progressMessage.value = "Welcome back!"
-                delay(500)
-                navController.navigate("dashboard") {
-                    popUpTo("splash") { inclusive = true }
-                }
-            } else {
-                android.util.Log.d("AuthFlow", "Splash: Silent sign-in failed/timeout. Navigating to LoginScreen...")
-                navController.navigate("login") {
-                    popUpTo("splash") { inclusive = true }
-                }
+            android.util.Log.d("AuthFlow", "Splash: No active local session. Navigating to LoginScreen...")
+            navController.navigate("login") {
+                popUpTo("splash") { inclusive = true }
             }
         }
     }

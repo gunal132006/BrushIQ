@@ -1,0 +1,33 @@
+{
+  "users": [
+    {
+      "id": "fcef00bf-6723-45c0-8e1e-c55b23164246",
+      "full_name": "Production HA User",
+      "email": "ha.user@brushiq.com",
+      "phone": null,
+      "password_hash": "$2a$10$s7Of2sQpH2G/j0PCUcTsaeTzVieUj5foWS92DCFI9wGifhzUDPB8G",
+      "created_at": "2026-07-28T16:03:17.091Z",
+      "updated_at": "2026-07-28T16:03:17.091Z"
+    }
+  ],
+  "family_members": [],
+  "toothbrushes": [],
+  "scans": [],
+  "reminders": [],
+  "tips": [
+    {
+      "id": "cbcfadeb-22b5-4f1c-891a-07491dff7e7e",
+      "category": "Dental Hygiene",
+      "title": "Proper Brushing Technique",
+      "content": "Brush twice daily for two minutes using soft circular motions angled at 45 degrees toward your gumline.",
+      "created_at": "2026-07-28T16:03:16.958Z"
+    },
+    {
+      "id": "eda5c192-c469-4820-b564-d046628fe5cd",
+      "category": "Brush Maintenance",
+      "title": "Toothbrush Replacement Schedule",
+      "content": "Replace your toothbrush head every 3 months or sooner if bristles become frayed, bent, or discolored.",
+      "created_at": "2026-07-28T16:03:16.960Z"
+    }
+  ]
+}

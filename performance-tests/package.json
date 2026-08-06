@@ -1,0 +1,16 @@
+{
+  "name": "brushiq-performance-tests",
+  "version": "1.0.0",
+  "description": "k6 Load and Baseline Performance Testing Suite for BrushIQ REST API",
+  "main": "generate-report.js",
+  "scripts": {
+    "test:baseline": "k6 run k6/baseline-test.js --summary-export=reports/raw-results.json",
+    "test:auth": "k6 run k6/auth-test.js",
+    "test:scan": "k6 run k6/scan-test.js",
+    "test:dashboard": "k6 run k6/dashboard-test.js",
+    "generate-report": "node generate-report.js"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
+}

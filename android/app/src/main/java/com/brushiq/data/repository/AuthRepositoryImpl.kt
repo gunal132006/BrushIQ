@@ -58,7 +58,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun login(username: String, password: String): Resource<User> {
         android.util.Log.d("AuthFlow", "AuthRepositoryImpl.login: sending request to API for username '$username'")
         val res = safeApiCall {
-            authApi.login(LoginRequest(username, password))
+            authApi.login(LoginRequest(username = username, email = username, password = password))
         }
         android.util.Log.d("AuthFlow", "AuthRepositoryImpl.login: received response result: $res")
         return when (res) {
@@ -80,27 +80,22 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun googleLogin(
-        googleId: String,
-        email: String,
-        fullName: String,
-        photoUrl: String?
-    ): Resource<User> {
+    override suspend fun googleLogin(idToken: String): Resource<User> {
         val res = safeApiCall {
-            authApi.googleLogin(GoogleLoginRequest(googleId, email, fullName, photoUrl))
+            authApi.googleLogin(GoogleLoginRequest(idToken))
         }
         return when (res) {
             is Resource.Success -> {
                 val authRes = res.data
                 preferenceManager.saveToken(authRes.token)
                 authRes.refreshToken?.let { preferenceManager.saveRefreshToken(it) }
-                
+
                 val userDto = authRes.user
                 preferenceManager.saveUserSession(userDto.id)
-                
+
                 val userEntity = UserEntity(userDto.id, userDto.fullName, userDto.email, userDto.phone, userDto.createdAt)
                 userDao.insert(userEntity)
-                
+
                 Resource.Success(User(userDto.id, userDto.fullName, userDto.email, userDto.phone, userDto.createdAt))
             }
             is Resource.Error -> Resource.Error(res.exception, res.message)
@@ -136,6 +131,15 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun checkHealth(): Resource<String> {
         val res = safeApiCall { authApi.healthCheck() }
+        return when (res) {
+            is Resource.Success -> Resource.Success(res.data.message)
+            is Resource.Error -> Resource.Error(res.exception, res.message)
+            is Resource.Loading -> Resource.Loading
+        }
+    }
+
+    override suspend fun checkDatabaseStatus(): Resource<String> {
+        val res = safeApiCall { authApi.getDatabaseStatus() }
         return when (res) {
             is Resource.Success -> Resource.Success(res.data.message)
             is Resource.Error -> Resource.Error(res.exception, res.message)

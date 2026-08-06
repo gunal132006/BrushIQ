@@ -41,10 +41,6 @@ class BrushIQRepositoryImpl @Inject constructor(
         return authRepository.login(username, password).getOrThrow()
     }
 
-    override suspend fun googleLogin(googleId: String, email: String, fullName: String, photoUrl: String?): User {
-        return authRepository.googleLogin(googleId, email, fullName, photoUrl).getOrThrow()
-    }
-
     override suspend fun forgotPassword(email: String?, phone: String?): String {
         return authRepository.forgotPassword(email, phone).getOrThrow()
     }

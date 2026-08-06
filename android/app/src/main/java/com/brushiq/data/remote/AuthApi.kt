@@ -3,9 +3,9 @@ package com.brushiq.data.remote
 import retrofit2.http.Body
 import retrofit2.http.POST
 
-data class LoginRequest(val username: String, val password: String)
+data class LoginRequest(val username: String, val email: String, val password: String)
 data class RegisterRequest(val fullName: String, val email: String?, val phone: String?, val password: String)
-data class GoogleLoginRequest(val googleId: String, val email: String, val fullName: String, val photoUrl: String?)
+data class GoogleLoginRequest(val idToken: String)
 data class ForgotPasswordRequest(val email: String?, val phone: String?)
 
 data class AuthResponse(
@@ -29,4 +29,7 @@ interface AuthApi {
 
     @retrofit2.http.GET("health")
     suspend fun healthCheck(): GenericMessageResponse
+
+    @retrofit2.http.GET("system/database-status")
+    suspend fun getDatabaseStatus(): GenericMessageResponse
 }

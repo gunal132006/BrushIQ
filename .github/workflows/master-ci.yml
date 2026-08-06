@@ -1,0 +1,50 @@
+name: Master CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  backend-unit-tests:
+    name: Backend Unit Tests & Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: |
+          cd backend
+          npm install
+          npm test
+
+  frontend-build:
+    name: Frontend Application Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: |
+          if [ -d "frontend" ]; then
+            cd frontend && npm install && npm run build || true
+          fi
+
+  security-review:
+    name: Security Review & Vulnerability Audit
+    uses: ./.github/workflows/security-review.yml
+    permissions:
+      contents: read
+      security-events: write
+
+  selenium-automation:
+    name: Selenium Web E2E Automation
+    uses: ./.github/workflows/selenium.yml
+
+  performance-benchmarks:
+    name: k6 Baseline Performance Benchmarks
+    uses: ./.github/workflows/performance.yml

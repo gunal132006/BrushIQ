@@ -13,17 +13,12 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import android.content.Context
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlinx.coroutines.suspendCancellableCoroutine
 import com.brushiq.R
+import androidx.credentials.exceptions.GetCredentialException
 
 sealed class AuthState {
     object Idle : AuthState()
@@ -46,6 +41,18 @@ class AuthViewModel @Inject constructor(
 
     init {
         checkUserLoggedIn()
+        performDiagnostics()
+    }
+
+    private fun performDiagnostics() {
+        viewModelScope.launch {
+            android.util.Log.d("NetworkDiag", "Starting connectivity diagnostics...")
+            val health = authRepository.checkHealth()
+            android.util.Log.d("NetworkDiag", "Health check result: $health")
+            
+            val dbStatus = authRepository.checkDatabaseStatus()
+            android.util.Log.d("NetworkDiag", "Database status result: $dbStatus")
+        }
     }
 
     private fun checkUserLoggedIn() {
@@ -135,178 +142,50 @@ class AuthViewModel @Inject constructor(
         _authState.value = AuthState.Idle
     }
 
-    fun loginWithGoogle(googleId: String, email: String, fullName: String, photoUrl: String?) {
-        viewModelScope.launch {
-            _authState.value = AuthState.Loading
-            val res = authRepository.googleLogin(googleId, email, fullName, photoUrl)
-            when (res) {
-                is Resource.Success -> {
-                    _isUserLoggedIn.value = true
-                    _authState.value = AuthState.Success(res.data)
-                }
-                is Resource.Error -> {
-                    _authState.value = AuthState.Error(res.message ?: "Google Login failed")
-                }
-                is Resource.Loading -> {
-                    _authState.value = AuthState.Loading
-                }
-            }
-        }
-    }
-
-    fun loginWithGoogleInteractive(context: Context) {
+    fun loginWithGoogle(context: Context) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
-                android.util.Log.d("AuthFlow", "loginWithGoogleInteractive: Initializing Credential Manager...")
                 val credentialManager = CredentialManager.create(context)
                 val googleIdOption = GetGoogleIdOption.Builder()
                     .setFilterByAuthorizedAccounts(false)
                     .setServerClientId(context.getString(R.string.google_web_client_id).trim())
                     .setAutoSelectEnabled(false)
                     .build()
-                
+
                 val request = GetCredentialRequest.Builder()
                     .addCredentialOption(googleIdOption)
                     .build()
-                
-                android.util.Log.d("AuthFlow", "loginWithGoogleInteractive: Launching Google sign-in picker...")
+
                 val result = credentialManager.getCredential(context, request)
-                android.util.Log.d("AuthFlow", "loginWithGoogleInteractive: Received Credential Manager response")
-                
                 val credential = GoogleIdTokenCredential.createFrom(result.credential.data)
                 val idToken = credential.idToken
-                
-                // Sign in to Firebase Auth
-                val authCredential = GoogleAuthProvider.getCredential(idToken, null)
-                val authResult = FirebaseAuth.getInstance().signInWithCredential(authCredential).awaitTask()
-                val firebaseUser = authResult.user
-                
-                if (firebaseUser != null) {
-                    val googleId = firebaseUser.uid
-                    val email = firebaseUser.email ?: ""
-                    val fullName = firebaseUser.displayName ?: firebaseUser.email ?: "Google User"
-                    val photoUrl = firebaseUser.photoUrl?.toString()
-                    
-                    android.util.Log.d("AuthFlow", "loginWithGoogleInteractive: Firebase Auth success. Syncing with backend...")
-                    val backendRes = authRepository.googleLogin(googleId, email, fullName, photoUrl)
-                    when (backendRes) {
-                        is Resource.Success -> {
-                            _isUserLoggedIn.value = true
-                            _authState.value = AuthState.Success(backendRes.data)
-                        }
-                        is Resource.Error -> {
-                            _authState.value = AuthState.Error(backendRes.message ?: "Failed to sync user with BrushIQ backend")
-                        }
-                        is Resource.Loading -> {
-                            _authState.value = AuthState.Loading
-                        }
+
+                val res = authRepository.googleLogin(idToken)
+                when (res) {
+                    is Resource.Success -> {
+                        _isUserLoggedIn.value = true
+                        _authState.value = AuthState.Success(res.data)
                     }
-                } else {
-                    _authState.value = AuthState.Error("Firebase Auth failed: user is null")
+                    is Resource.Error -> {
+                        _authState.value = AuthState.Error(res.message ?: "Google Sign-In failed")
+                    }
+                    is Resource.Loading -> {
+                        _authState.value = AuthState.Loading
+                    }
                 }
             } catch (e: GetCredentialException) {
-                android.util.Log.e("AuthFlow", "loginWithGoogleInteractive: Credential Manager exception", e)
-                _authState.value = AuthState.Error("Google Sign-In canceled or failed")
+                android.util.Log.e("AuthFlow", "Google Sign-In cancelled or failed", e)
+                _authState.value = AuthState.Error("Google Sign-In cancelled")
             } catch (e: Exception) {
-                android.util.Log.e("AuthFlow", "loginWithGoogleInteractive: Unexpected error during Google Sign-In", e)
-                _authState.value = AuthState.Error(e.message ?: "Google Sign-In failed")
+                android.util.Log.e("AuthFlow", "Unexpected error during Google Sign-In", e)
+                _authState.value = AuthState.Error(e.localizedMessage ?: "An unexpected error occurred")
             }
         }
     }
 
     suspend fun silentSignIn(context: Context): Boolean {
-        val clientId = try {
-            context.getString(R.string.google_web_client_id).trim()
-        } catch (e: Exception) {
-            "unknown"
-        }
-        android.util.Log.d("AuthFlow", "silentSignIn: Started. google_web_client_id is '$clientId'")
-        
-        try {
-            val firebaseAuth = FirebaseAuth.getInstance()
-            val firebaseUser = firebaseAuth.currentUser
-            if (firebaseUser != null) {
-                android.util.Log.d("AuthFlow", "silentSignIn: Firebase current user found (uid=${firebaseUser.uid}). Refreshing token...")
-                try {
-                    val tokenResult = firebaseUser.getIdToken(false).awaitTask()
-                    val idToken = tokenResult.token
-                    if (idToken != null) {
-                        val googleId = firebaseUser.uid
-                        val email = firebaseUser.email ?: ""
-                        val fullName = firebaseUser.displayName ?: firebaseUser.email ?: "Google User"
-                        val photoUrl = firebaseUser.photoUrl?.toString()
-                        
-                        android.util.Log.d("AuthFlow", "silentSignIn: Logging in to BrushIQ backend...")
-                        val backendRes = authRepository.googleLogin(googleId, email, fullName, photoUrl)
-                        if (backendRes is Resource.Success) {
-                            android.util.Log.d("AuthFlow", "silentSignIn: Backend login success via Firebase session")
-                            _isUserLoggedIn.value = true
-                            _authState.value = AuthState.Success(backendRes.data)
-                            return true
-                        } else {
-                            val msg = (backendRes as? Resource.Error)?.message
-                            android.util.Log.e("AuthFlow", "silentSignIn: Backend login failed: $msg")
-                        }
-                    } else {
-                        android.util.Log.e("AuthFlow", "silentSignIn: Firebase idToken is null")
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.e("AuthFlow", "silentSignIn: Firebase token refresh failed", e)
-                }
-            } else {
-                android.util.Log.d("AuthFlow", "silentSignIn: No Firebase current user found")
-            }
-            
-            android.util.Log.d("AuthFlow", "silentSignIn: Attempting silent Credential Manager sign-in...")
-            val credentialManager = CredentialManager.create(context)
-            val googleIdOption = GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(true)
-                .setServerClientId(clientId)
-                .setAutoSelectEnabled(true)
-                .build()
-            
-            val request = GetCredentialRequest.Builder()
-                .addCredentialOption(googleIdOption)
-                .build()
-            
-            val result = credentialManager.getCredential(context, request)
-            android.util.Log.d("AuthFlow", "silentSignIn: Credential Manager silent check returned success")
-            val credential = GoogleIdTokenCredential.createFrom(result.credential.data)
-            val idToken = credential.idToken
-            
-            android.util.Log.d("AuthFlow", "silentSignIn: Credential Manager token obtained. Signing in to Firebase...")
-            val authCredential = GoogleAuthProvider.getCredential(idToken, null)
-            val authResult = firebaseAuth.signInWithCredential(authCredential).awaitTask()
-            val firebaseUser2 = authResult.user
-            
-            if (firebaseUser2 != null) {
-                val googleId = firebaseUser2.uid
-                val email = firebaseUser2.email ?: ""
-                val fullName = firebaseUser2.displayName ?: firebaseUser2.email ?: "Google User"
-                val photoUrl = firebaseUser2.photoUrl?.toString()
-                
-                android.util.Log.d("AuthFlow", "silentSignIn: Firebase sign-in success. Logging in to backend...")
-                val backendRes = authRepository.googleLogin(googleId, email, fullName, photoUrl)
-                if (backendRes is Resource.Success) {
-                    android.util.Log.d("AuthFlow", "silentSignIn: Backend login success (Credential Manager)")
-                    _isUserLoggedIn.value = true
-                    _authState.value = AuthState.Success(backendRes.data)
-                    return true
-                } else {
-                    val msg = (backendRes as? Resource.Error)?.message
-                    android.util.Log.e("AuthFlow", "silentSignIn: Backend login failed (Credential Manager): $msg")
-                }
-            } else {
-                android.util.Log.e("AuthFlow", "silentSignIn: Firebase sign-in returned null user (Credential Manager)")
-            }
-        } catch (e: GetCredentialException) {
-            android.util.Log.e("AuthFlow", "silentSignIn: Credential Manager exception of type ${e.javaClass.name}: ${e.message}", e)
-            return false
-        } catch (e: Exception) {
-            android.util.Log.e("AuthFlow", "silentSignIn: Silent sign-in encountered an exception of type ${e.javaClass.name}: ${e.message}", e)
-        }
-        
+        // CredentialManager is not initialized automatically on startup.
         return false
     }
 
@@ -324,11 +203,6 @@ class AuthViewModel @Inject constructor(
     fun logout(onComplete: () -> Unit) {
         viewModelScope.launch {
             authRepository.logout()
-            try {
-                FirebaseAuth.getInstance().signOut()
-            } catch (e: Exception) {
-                android.util.Log.e("AuthFlow", "Firebase signOut failed", e)
-            }
             _isUserLoggedIn.value = false
             _authState.value = AuthState.Idle
             onComplete()
@@ -340,17 +214,5 @@ class AuthViewModel @Inject constructor(
         val res = authRepository.checkHealth()
         android.util.Log.d("AuthFlow", "AuthViewModel.checkServerHealth result: $res")
         return res is Resource.Success
-    }
-}
-
-private suspend fun <T> com.google.android.gms.tasks.Task<T>.awaitTask(): T {
-    return suspendCancellableCoroutine { cont ->
-        addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                cont.resume(task.result)
-            } else {
-                cont.resumeWithException(task.exception ?: Exception("Task failed"))
-            }
-        }
     }
 }

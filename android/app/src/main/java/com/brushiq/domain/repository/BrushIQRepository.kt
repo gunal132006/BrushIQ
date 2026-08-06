@@ -94,7 +94,6 @@ interface BrushIQRepository {
     // Auth
     suspend fun register(fullName: String, email: String?, phone: String?, password: String): User
     suspend fun login(username: String, password: String): User
-    suspend fun googleLogin(googleId: String, email: String, fullName: String, photoUrl: String?): User
     suspend fun forgotPassword(email: String?, phone: String?): String
     suspend fun getMe(): User
     fun getSessionToken(): String?

@@ -2,8 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const db = require('../config/db');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretbrushiqjwttoken';
+const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/jwt');
 
 exports.googleLogin = async (req, res) => {
   console.log('[GoogleLogin] Starting Google login request evaluation...');
@@ -118,7 +117,7 @@ exports.googleLogin = async (req, res) => {
 
     // 7. Generate normal BrushIQ JWT
     const jwtPayload = { user: { id: user.id } };
-    const token = jwt.sign(jwtPayload, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(jwtPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
     console.log('[GoogleLogin] Branch Taken: Authentication successful -> HTTP 200');
     // 8. Return standard AuthResponse
@@ -162,8 +161,8 @@ exports.register = async (req, res) => {
     }
   }
 
-  if (password.length < 6) {
-    return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+  if (password.length < 10) {
+    return res.status(400).json({ message: 'Password must be at least 10 characters long' });
   }
 
   try {
@@ -199,7 +198,7 @@ exports.register = async (req, res) => {
 
     // Sign JWT
     const payload = { user: { id: user.id } };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
     return res.status(201).json({
       token,
@@ -253,7 +252,7 @@ exports.login = async (req, res) => {
 
     // Sign JWT
     const payload = { user: { id: user.id } };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
     return res.json({
       token,
@@ -306,8 +305,8 @@ exports.changePassword = async (req, res) => {
     return res.status(400).json({ message: 'Please provide both current and new password' });
   }
 
-  if (newPassword.length < 6) {
-    return res.status(400).json({ message: 'New password must be at least 6 characters long' });
+  if (newPassword.length < 10) {
+    return res.status(400).json({ message: 'New password must be at least 10 characters long' });
   }
 
   try {

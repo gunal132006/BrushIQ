@@ -1,0 +1,1856 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>BrushIQ Android Automation Execution Report</title>
+<link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/extent-framework/extent-github-cdn@b00a2d0486596e73dd7326beacf352c639623a0e/commons/img/logo.png">
+<link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/extent-framework/extent-github-cdn@b00a2d0486596e73dd7326beacf352c639623a0e/commons/img/logo.png">
+<link href="https://cdn.jsdelivr.net/gh/extent-framework/extent-github-cdn@ce8b10435bcbae260c334c0d0c6b61d2c19b6168/spark/css/spark-style.css" rel="stylesheet" />
+<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/gh/extent-framework/extent-github-cdn@7cc78ce/spark/js/jsontree.js"></script>
+<style type="text/css"></style></head><body class="spa -report dark">
+  <div class="app">
+    <div class="layout">
+<div class="header navbar">
+<div class="vheader">
+<div class="nav-logo">
+<a href="#">
+<div class="logo" style="background-image: url('https://cdn.jsdelivr.net/gh/extent-framework/extent-github-cdn@b00a2d0486596e73dd7326beacf352c639623a0e/commons/img/logo.png')"></div>
+</a>
+</div>
+<ul class="nav-left">
+<li class="search-box">
+<a class="search-toggle" href="#">
+<i class="search-icon fa fa-search"></i>
+<i class="search-icon-close fa fa-close"></i>
+</a>
+</li>
+<li class="search-input"><input id="search-tests" class="form-control" type="text" placeholder="Search..."></li>
+</ul>
+<ul class="nav-right">
+<li class="m-r-10">
+<a href="#"><span class="badge badge-primary">BrushIQ Mobile Appium Test Suite</span></a>
+</li>
+<li class="m-r-10">
+<a href="#"><span class="badge badge-primary">Jul 30, 2026 07:14:56 pm</span></a>
+</li>
+</ul>
+</div>
+</div><div class="side-nav">
+<div class="side-nav-inner">
+<ul class="side-nav-menu">
+<li class="nav-item dropdown" onclick="toggleView('test-view')">
+<a id="nav-test" class="dropdown-toggle" href="#">
+<span class="ico"><i class="fa fa-list"></i></span>
+</a>
+</li>
+<li class="nav-item dropdown" onclick="toggleView('dashboard-view')">
+<a id="nav-dashboard" class="dropdown-toggle" href="#">
+<span class="ico"><i class="fa fa-bar-chart"></i></span>
+</a>
+</li>
+</ul>
+</div>
+</div>      <div class="vcontainer">
+        <div class="main-content">
+<div class="test-wrapper row view test-view">
+  <div class="test-list">
+    <div class="test-list-tools">
+<ul class="tools pull-left">
+<li><a href="#"><span class="font-size-14">Tests</span></a></li>
+</ul>
+<ul class="tools text-right">
+<li class="dropdown">
+<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-exclamation-circle"></i></a>
+<ul id="status-toggle" class="dropdown-menu dropdown-md p-v-0">
+<a class="dropdown-item" status="fail" href="#"><span>Fail</span><span class="status danger"></span></a>
+<div class="dropdown-divider"></div>
+<a status="clear" class="dropdown-item" href="#"><span>Clear</span><span class="pull-right"><i class="fa fa-close"></i></span></a>
+</ul>
+</li>
+</ul>
+</div>    <div class="test-list-wrapper scrollable">
+      <ul class="test-list-item">
+        <li class="test-item"  status="fail" test-id="1"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">Verify User Login with Valid Credentials</p>
+            <p class="text-sm">
+              <span>7:14:56 pm</span> / <span>00:00:10:518</span>
+              <span class="badge fail-bg log float-right">Fail</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-fail">Verify User Login with Valid Credentials</h5>
+<span class='badge badge-success'>07.30.2026 7:14:56 pm</span>
+<span class='badge badge-danger'>07.30.2026 7:15:07 pm</span>
+<span class='badge badge-default'>00:00:10:518</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=1</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+<div class="m-t-10 m-l-5">testValidLogin</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:14:56 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 1 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:14:57 pm</td>
+        <td>
+          Appium driver startup failed on attempt 1: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:00 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 2 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:00 pm</td>
+        <td>
+          Appium driver startup failed on attempt 2: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:03 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 3 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:03 pm</td>
+        <td>
+          Appium driver startup failed on attempt 3: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:06 pm</td>
+        <td>
+          Failed to initialize driver in BaseTest: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:07 pm</td>
+        <td>
+          ✖ TEST FAILED: Verify User Login with Valid Credentials Reason: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:07 pm</td>
+        <td>
+          Test failed: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:07 pm</td>
+        <td>
+          === Starting Test: Verify User Registration Flow ===
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="fail" test-id="2"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">Verify User Registration Flow</p>
+            <p class="text-sm">
+              <span>7:15:07 pm</span> / <span>00:00:09:388</span>
+              <span class="badge fail-bg log float-right">Fail</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-fail">Verify User Registration Flow</h5>
+<span class='badge badge-success'>07.30.2026 7:15:07 pm</span>
+<span class='badge badge-danger'>07.30.2026 7:15:16 pm</span>
+<span class='badge badge-default'>00:00:09:388</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=2</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+<div class="m-t-10 m-l-5">testRegistration</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:07 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 1 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:07 pm</td>
+        <td>
+          Appium driver startup failed on attempt 1: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:10 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 2 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:10 pm</td>
+        <td>
+          Appium driver startup failed on attempt 2: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:13 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 3 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:13 pm</td>
+        <td>
+          Appium driver startup failed on attempt 3: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:16 pm</td>
+        <td>
+          Failed to initialize driver in BaseTest: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:16 pm</td>
+        <td>
+          ✖ TEST FAILED: Verify User Registration Flow Reason: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:16 pm</td>
+        <td>
+          Test failed: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:16 pm</td>
+        <td>
+          === Starting Test: Verify Invalid Password Error Message ===
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="fail" test-id="3"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">Verify Invalid Password Error Message</p>
+            <p class="text-sm">
+              <span>7:15:16 pm</span> / <span>00:00:09:439</span>
+              <span class="badge fail-bg log float-right">Fail</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-fail">Verify Invalid Password Error Message</h5>
+<span class='badge badge-success'>07.30.2026 7:15:16 pm</span>
+<span class='badge badge-danger'>07.30.2026 7:15:26 pm</span>
+<span class='badge badge-default'>00:00:09:439</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=3</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+<div class="m-t-10 m-l-5">testInvalidPassword</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:16 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 1 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:16 pm</td>
+        <td>
+          Appium driver startup failed on attempt 1: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:19 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 2 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:19 pm</td>
+        <td>
+          Appium driver startup failed on attempt 2: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:22 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 3 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:23 pm</td>
+        <td>
+          Appium driver startup failed on attempt 3: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:26 pm</td>
+        <td>
+          Failed to initialize driver in BaseTest: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:26 pm</td>
+        <td>
+          ✖ TEST FAILED: Verify Invalid Password Error Message Reason: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:26 pm</td>
+        <td>
+          Test failed: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:26 pm</td>
+        <td>
+          === Starting Test: Verify User Logout ===
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="fail" test-id="4"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">Verify User Logout</p>
+            <p class="text-sm">
+              <span>7:15:26 pm</span> / <span>00:00:09:427</span>
+              <span class="badge fail-bg log float-right">Fail</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-fail">Verify User Logout</h5>
+<span class='badge badge-success'>07.30.2026 7:15:26 pm</span>
+<span class='badge badge-danger'>07.30.2026 7:15:35 pm</span>
+<span class='badge badge-default'>00:00:09:427</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=4</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+<div class="m-t-10 m-l-5">testLogout</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:26 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 1 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:26 pm</td>
+        <td>
+          Appium driver startup failed on attempt 1: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:29 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 2 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:29 pm</td>
+        <td>
+          Appium driver startup failed on attempt 2: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:32 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 3 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:32 pm</td>
+        <td>
+          Appium driver startup failed on attempt 3: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:35 pm</td>
+        <td>
+          Failed to initialize driver in BaseTest: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:35 pm</td>
+        <td>
+          ✖ TEST FAILED: Verify User Logout Reason: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:35 pm</td>
+        <td>
+          Test failed: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:35 pm</td>
+        <td>
+          === Starting Test: Verify Dashboard Load and Health Score Card ===
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="fail" test-id="5"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">Verify Dashboard Load and Health Score Card</p>
+            <p class="text-sm">
+              <span>7:15:35 pm</span> / <span>00:00:09:371</span>
+              <span class="badge fail-bg log float-right">Fail</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-fail">Verify Dashboard Load and Health Score Card</h5>
+<span class='badge badge-success'>07.30.2026 7:15:35 pm</span>
+<span class='badge badge-danger'>07.30.2026 7:15:44 pm</span>
+<span class='badge badge-default'>00:00:09:371</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=5</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+<div class="m-t-10 m-l-5">testDashboardLoads</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:35 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 1 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:35 pm</td>
+        <td>
+          Appium driver startup failed on attempt 1: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:38 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 2 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:38 pm</td>
+        <td>
+          Appium driver startup failed on attempt 2: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:41 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 3 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:41 pm</td>
+        <td>
+          Appium driver startup failed on attempt 3: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:44 pm</td>
+        <td>
+          Failed to initialize driver in BaseTest: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:44 pm</td>
+        <td>
+          ✖ TEST FAILED: Verify Dashboard Load and Health Score Card Reason: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:44 pm</td>
+        <td>
+          Test failed: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:44 pm</td>
+        <td>
+          === Starting Test: Verify Quick Action Navigation to Scan Screen ===
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="fail" test-id="6"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">Verify Quick Action Navigation to Scan Screen</p>
+            <p class="text-sm">
+              <span>7:15:44 pm</span> / <span>00:00:09:347</span>
+              <span class="badge fail-bg log float-right">Fail</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-fail">Verify Quick Action Navigation to Scan Screen</h5>
+<span class='badge badge-success'>07.30.2026 7:15:44 pm</span>
+<span class='badge badge-danger'>07.30.2026 7:15:54 pm</span>
+<span class='badge badge-default'>00:00:09:347</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=6</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+<div class="m-t-10 m-l-5">testStartScanFromDashboard</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:44 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 1 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:45 pm</td>
+        <td>
+          Appium driver startup failed on attempt 1: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:48 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 2 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:48 pm</td>
+        <td>
+          Appium driver startup failed on attempt 2: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:51 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 3 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:51 pm</td>
+        <td>
+          Appium driver startup failed on attempt 3: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:54 pm</td>
+        <td>
+          Failed to initialize driver in BaseTest: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:54 pm</td>
+        <td>
+          ✖ TEST FAILED: Verify Quick Action Navigation to Scan Screen Reason: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:15:54 pm</td>
+        <td>
+          Test failed: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:54 pm</td>
+        <td>
+          === Starting Test: Verify Scan History List and Filter ===
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="fail" test-id="7"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">Verify Scan History List and Filter</p>
+            <p class="text-sm">
+              <span>7:15:54 pm</span> / <span>00:00:09:347</span>
+              <span class="badge fail-bg log float-right">Fail</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-fail">Verify Scan History List and Filter</h5>
+<span class='badge badge-success'>07.30.2026 7:15:54 pm</span>
+<span class='badge badge-danger'>07.30.2026 7:16:03 pm</span>
+<span class='badge badge-default'>00:00:09:347</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=7</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+<div class="m-t-10 m-l-5">testHistoryScreen</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:54 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 1 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:54 pm</td>
+        <td>
+          Appium driver startup failed on attempt 1: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:15:57 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 2 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:15:57 pm</td>
+        <td>
+          Appium driver startup failed on attempt 2: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:00 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 3 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:00 pm</td>
+        <td>
+          Appium driver startup failed on attempt 3: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:03 pm</td>
+        <td>
+          Failed to initialize driver in BaseTest: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:03 pm</td>
+        <td>
+          ✖ TEST FAILED: Verify Scan History List and Filter Reason: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:03 pm</td>
+        <td>
+          Test failed: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:03 pm</td>
+        <td>
+          === Starting Test: Verify Bottom Navigation Tabs Bar ===
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="fail" test-id="8"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">Verify Bottom Navigation Tabs Bar</p>
+            <p class="text-sm">
+              <span>7:16:03 pm</span> / <span>00:00:09:390</span>
+              <span class="badge fail-bg log float-right">Fail</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-fail">Verify Bottom Navigation Tabs Bar</h5>
+<span class='badge badge-success'>07.30.2026 7:16:03 pm</span>
+<span class='badge badge-danger'>07.30.2026 7:16:13 pm</span>
+<span class='badge badge-default'>00:00:09:390</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=8</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+<div class="m-t-10 m-l-5">testBottomNavigation</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:03 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 1 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:03 pm</td>
+        <td>
+          Appium driver startup failed on attempt 1: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:06 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 2 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:06 pm</td>
+        <td>
+          Appium driver startup failed on attempt 2: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:09 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 3 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:09 pm</td>
+        <td>
+          Appium driver startup failed on attempt 3: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:12 pm</td>
+        <td>
+          Failed to initialize driver in BaseTest: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:13 pm</td>
+        <td>
+          ✖ TEST FAILED: Verify Bottom Navigation Tabs Bar Reason: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:13 pm</td>
+        <td>
+          Test failed: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:13 pm</td>
+        <td>
+          === Starting Test: Verify Live Backend API Availability ===
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="fail" test-id="9"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">Verify Live Backend API Availability</p>
+            <p class="text-sm">
+              <span>7:16:13 pm</span> / <span>00:00:09:352</span>
+              <span class="badge fail-bg log float-right">Fail</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-fail">Verify Live Backend API Availability</h5>
+<span class='badge badge-success'>07.30.2026 7:16:13 pm</span>
+<span class='badge badge-danger'>07.30.2026 7:16:22 pm</span>
+<span class='badge badge-default'>00:00:09:352</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=9</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+<div class="m-t-10 m-l-5">testBackendHealthCheck</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:13 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 1 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:13 pm</td>
+        <td>
+          Appium driver startup failed on attempt 1: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:16 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 2 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:16 pm</td>
+        <td>
+          Appium driver startup failed on attempt 2: Could not start a new session. Response code 500. Message: Neither ANDROID_HOME nor ANDROID_SDK_ROOT environment variable was exported. Read https://developer.android.com/studio/command-line/variables for more details 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+Build info: version: '4.21.0', revision: '79ed462ef4'
+System info: os.name: 'Windows 11', os.arch: 'amd64', os.version: '10.0', java.version: '26.0.1'
+Driver info: io.appium.java_client.android.AndroidDriver
+Command: [null, newSession {desiredCapabilities=Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}, capabilities=[{appium:app=d:\BrushIQ\android\app\build\outputs\apk\debug\app-debug.apk, appium:appActivity=.ui.MainActivity, appium:newCommandTimeout=300, appium:deviceName=emulator-5554, appium:automationName=UiAutomator2, appium:appPackage=com.brushiq, platformName=ANDROID, appium:autoGrantPermissions=true, appium:noReset=false}]}]
+Capabilities {appium:app: d:\BrushIQ\android\app\buil..., appium:appActivity: .ui.MainActivity, appium:appPackage: com.brushiq, appium:autoGrantPermissions: true, appium:automationName: UiAutomator2, appium:deviceName: emulator-5554, appium:newCommandTimeout: 300, appium:noReset: false, platformName: ANDROID}
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:19 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 3 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:19 pm</td>
+        <td>
+          Appium driver startup failed on attempt 3: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:22 pm</td>
+        <td>
+          Failed to initialize driver in BaseTest: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:22 pm</td>
+        <td>
+          ✖ TEST FAILED: Verify Live Backend API Availability Reason: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:22 pm</td>
+        <td>
+          Test failed: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:22 pm</td>
+        <td>
+          === Starting Test: Verify Submission of Empty Login Fields ===
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="fail" test-id="10"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">Verify Submission of Empty Login Fields</p>
+            <p class="text-sm">
+              <span>7:16:22 pm</span> / <span>00:00:09:272</span>
+              <span class="badge fail-bg log float-right">Fail</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-fail">Verify Submission of Empty Login Fields</h5>
+<span class='badge badge-success'>07.30.2026 7:16:22 pm</span>
+<span class='badge badge-danger'>07.30.2026 7:16:31 pm</span>
+<span class='badge badge-default'>00:00:09:272</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=10</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+<div class="m-t-10 m-l-5">testEmptyFieldsValidation</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:22 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 1 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:22 pm</td>
+        <td>
+          Appium driver startup failed on attempt 1: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:25 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 2 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:25 pm</td>
+        <td>
+          Appium driver startup failed on attempt 2: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:28 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 3 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:28 pm</td>
+        <td>
+          Appium driver startup failed on attempt 3: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:31 pm</td>
+        <td>
+          Failed to initialize driver in BaseTest: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:31 pm</td>
+        <td>
+          ✖ TEST FAILED: Verify Submission of Empty Login Fields Reason: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:31 pm</td>
+        <td>
+          Test failed: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:31 pm</td>
+        <td>
+          === Starting Test: Verify User Profile Information Display ===
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="fail" test-id="11"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">Verify User Profile Information Display</p>
+            <p class="text-sm">
+              <span>7:16:31 pm</span> / <span>00:00:09:287</span>
+              <span class="badge fail-bg log float-right">Fail</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-fail">Verify User Profile Information Display</h5>
+<span class='badge badge-success'>07.30.2026 7:16:31 pm</span>
+<span class='badge badge-danger'>07.30.2026 7:16:40 pm</span>
+<span class='badge badge-default'>00:00:09:287</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=11</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+<div class="m-t-10 m-l-5">testProfileDetails</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:31 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 1 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:31 pm</td>
+        <td>
+          Appium driver startup failed on attempt 1: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:34 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 2 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:34 pm</td>
+        <td>
+          Appium driver startup failed on attempt 2: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:37 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 3 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:37 pm</td>
+        <td>
+          Appium driver startup failed on attempt 3: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:40 pm</td>
+        <td>
+          Failed to initialize driver in BaseTest: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:40 pm</td>
+        <td>
+          ✖ TEST FAILED: Verify User Profile Information Display Reason: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:40 pm</td>
+        <td>
+          Test failed: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:40 pm</td>
+        <td>
+          === Starting Test: Verify Scan Screen Interface ===
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="fail" test-id="12"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">Verify Scan Screen Interface</p>
+            <p class="text-sm">
+              <span>7:16:40 pm</span> / <span>00:00:09:276</span>
+              <span class="badge fail-bg log float-right">Fail</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-fail">Verify Scan Screen Interface</h5>
+<span class='badge badge-success'>07.30.2026 7:16:40 pm</span>
+<span class='badge badge-danger'>07.30.2026 7:16:50 pm</span>
+<span class='badge badge-default'>00:00:09:276</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=12</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+<div class="m-t-10 m-l-5">testScanScreenControls</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:40 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 1 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:41 pm</td>
+        <td>
+          Appium driver startup failed on attempt 1: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:44 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 2 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:44 pm</td>
+        <td>
+          Appium driver startup failed on attempt 2: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:47 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 3 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:47 pm</td>
+        <td>
+          Appium driver startup failed on attempt 3: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:50 pm</td>
+        <td>
+          Failed to initialize driver in BaseTest: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:50 pm</td>
+        <td>
+          ✖ TEST FAILED: Verify Scan Screen Interface Reason: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:50 pm</td>
+        <td>
+          Test failed: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:50 pm</td>
+        <td>
+          === Starting Test: Verify Settings Screen Navigation and Options ===
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="fail" test-id="13"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">Verify Settings Screen Navigation and Options</p>
+            <p class="text-sm">
+              <span>7:16:50 pm</span> / <span>00:00:09:270</span>
+              <span class="badge fail-bg log float-right">Fail</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-fail">Verify Settings Screen Navigation and Options</h5>
+<span class='badge badge-success'>07.30.2026 7:16:50 pm</span>
+<span class='badge badge-danger'>07.30.2026 7:16:59 pm</span>
+<span class='badge badge-default'>00:00:09:270</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=13</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+<div class="m-t-10 m-l-5">testSettingsScreen</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:50 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 1 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:50 pm</td>
+        <td>
+          Appium driver startup failed on attempt 1: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:53 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 2 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:53 pm</td>
+        <td>
+          Appium driver startup failed on attempt 2: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:56 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 3 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:56 pm</td>
+        <td>
+          Appium driver startup failed on attempt 3: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:59 pm</td>
+        <td>
+          Failed to initialize driver in BaseTest: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:59 pm</td>
+        <td>
+          ✖ TEST FAILED: Verify Settings Screen Navigation and Options Reason: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:16:59 pm</td>
+        <td>
+          Test failed: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:59 pm</td>
+        <td>
+          === Starting Test: Verify Registered Toothbrush List ===
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+        <li class="test-item"  status="fail" test-id="14"
+          author=""
+          tag=""
+          device="">
+          <div class="test-detail">
+            <p class="name">Verify Registered Toothbrush List</p>
+            <p class="text-sm">
+              <span>7:16:59 pm</span> / <span>00:00:09:256</span>
+              <span class="badge fail-bg log float-right">Fail</span>
+            </p>
+          </div>
+          <div class="test-contents d-none">
+<div class="detail-head">
+<div class="p-v-10">
+<div class="info">
+<h5 class="test-status text-fail">Verify Registered Toothbrush List</h5>
+<span class='badge badge-success'>07.30.2026 7:16:59 pm</span>
+<span class='badge badge-danger'>07.30.2026 7:17:08 pm</span>
+<span class='badge badge-default'>00:00:09:256</span>
+&middot; <span class='uri-anchor badge badge-default'>#test-id=14</span>
+<span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
+<span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
+<span title='Expand all nodes' class='badge badge-default pointer float-right et'><i class="fa fa-expand"></i></span>
+</div>
+<div class="m-t-10 m-l-5">testToothbrushScreen</div>
+</div>
+</div><div class="detail-body mt-4">
+<table class="table table-sm">
+  <thead><tr><th class="status-col">Status</th><th class="timestamp-col">Timestamp</th><th class="details-col">Details</th></tr></thead>
+  <tbody>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:16:59 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 1 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:16:59 pm</td>
+        <td>
+          Appium driver startup failed on attempt 1: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:17:02 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 2 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:17:02 pm</td>
+        <td>
+          Appium driver startup failed on attempt 2: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>7:17:05 pm</td>
+        <td>
+          Initializing Appium AndroidDriver (Attempt 3 of 3)...
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log warning-bg">Warning</span></td>
+        <td>7:17:05 pm</td>
+        <td>
+          Appium driver startup failed on attempt 3: Could not start a new session. Possible causes are invalid address of the remote server or browser start-up failure. 
+Host info: host: 'VIVOBOOK16', ip: '10.94.40.108'
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log fail-bg">Fail</span></td>
+        <td>7:17:08 pm</td>
+        <td>
+          Failed to initialize driver in BaseTest: Could not initialize Appium AndroidDriver after 3 attempts. Exception: Could not initialize Appium AndroidDriver after 3 attempts.
+        </td>
+      </tr>
+  </tbody>
+</table>
+</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+<div class="test-content scrollable">
+<div class="test-content-tools">
+<ul><li><a class="back-to-test" href="#"><i class="fa fa-arrow-left"></i></a></li></ul>
+</div>
+<div class="test-content-detail"><div class="detail-body"></div></div>
+</div></div>
+<div class="container-fluid p-4 view dashboard-view">
+<div class="row">
+<div class="col-md-3">
+<div class="card"><div class="card-body">
+<p class="m-b-0">Started</p>
+<h3>Jul 30, 2026 07:14:56 pm</h3>
+</div></div>
+</div>
+<div class="col-md-3">
+<div class="card"><div class="card-body">
+<p class="m-b-0">Ended</p>
+<h3>Jul 30, 2026 07:17:08 pm</h3>
+</div></div>
+</div>
+<div class="col-md-3">
+<div class="card"><div class="card-body">
+<p class="m-b-0 text-pass">Tests Passed</p>
+<h3>0</h3>
+</div></div>
+</div>
+<div class="col-md-3">
+<div class="card"><div class="card-body">
+<p class="m-b-0 text-fail">Tests Failed</p>
+<h3>14</h3>
+</div></div>
+</div>
+</div>
+<div class="row">
+<div class="col-md-6">
+<div class="card">
+<div class="card-header">
+<h6 class="card-title">Tests</h6>
+</div>
+<div class="card-body">
+<div class="">
+<canvas id='parent-analysis' width='115' height='90'></canvas>
+</div>
+</div>
+<div class="card-footer">
+<div><small data-tooltip='0%'>
+<b>0</b> tests passed
+</small>
+</div>
+<div>
+<small data-tooltip='100%'><b>14</b> tests failed,
+<b>0</b> skipped, <b data-tooltip='0%'>0</b> others
+</small>
+</div>
+</div>
+</div>
+</div>
+<div class="col-md-6">
+<div class="card">
+<div class="card-header">
+<h6 class="card-title">Log events</h6>
+</div>
+<div class="card-body">
+<div class="">
+<canvas id='events-analysis' width='115' height='90'></canvas>
+</div>
+</div>
+<div class="card-footer">
+<div><small data-tooltip='0%'><b>0</b> events passed</small></div>
+<div>
+<small data-tooltip='29%'><b>40</b> events failed,
+<b data-tooltip='%'>97</b> others
+</small>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="row"><div class="col-md-12">
+<div class="card"><div class="card-header"><p>Timeline</p></div>
+<div class="card-body pt-0"><div>
+<canvas id="timeline" height="120"></canvas>
+</div></div>
+</div>
+</div></div>
+<script>
+var timeline = {
+"Verify User Login with Valid Credentials":10.518,"Verify User Registration Flow":9.388,"Verify Invalid Password Error Message":9.439,"Verify User Logout":9.427,"Verify Dashboard Load and Health Score Card":9.371,"Verify Quick Action Navigation to Scan Screen":9.347,"Verify Scan History List and Filter":9.347,"Verify Bottom Navigation Tabs Bar":9.39,"Verify Live Backend API Availability":9.352,"Verify Submission of Empty Login Fields":9.272,"Verify User Profile Information Display":9.287,"Verify Scan Screen Interface":9.276,"Verify Settings Screen Navigation and Options":9.27,"Verify Registered Toothbrush List":9.256
+};
+</script>
+<div class="row">
+<div class="col-lg-6 col-md-12 sysenv-container">
+<div class="card">
+<div class="card-header"><p>System/Environment</p></div>
+<div class="card-body pb-0 pt-0"><table class="table table-sm table-bordered">
+<thead><tr class="bg-gray"><th>Name</th><th>Value</th></tr></thead>
+<tbody>
+<tr>
+<td>Application</td>
+<td>BrushIQ Android App</td>
+</tr>
+<tr>
+<td>Platform</td>
+<td>Android</td>
+</tr>
+<tr>
+<td>Framework</td>
+<td>Appium + JUnit 5 + Java</td>
+</tr>
+<tr>
+<td>Backend Endpoint</td>
+<td>https://brushiq-backend.onrender.com/api</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Production CI/CD</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+</div>
+</div>
+<script>
+var statusGroup = {
+parentCount: 5,
+passParent: 0,
+failParent: 14,
+warningParent: 0,
+skipParent: 0,
+childCount: 5,
+passChild: 0,
+failChild: 0,
+warningChild: 0,
+skipChild: 0,
+infoChild: 0,
+grandChildCount: 5,
+passGrandChild: 0,
+failGrandChild: 0,
+warningGrandChild: 0,
+skipGrandChild: 0,
+infoGrandChild: 0,
+eventsCount: 5,
+passEvents: 0,
+failEvents: 40,
+warningEvents: 42,
+skipEvents: 0,
+infoEvents: 55
+};
+</script>        </div>
+      </div>
+    </div>
+  </div>
+<script src="https://cdn.jsdelivr.net/gh/extent-framework/extent-github-cdn@ce8b10435bcbae260c334c0d0c6b61d2c19b6168/spark/js/spark-script.js"></script>
+<script type="text/javascript"></script></body>
+</html>

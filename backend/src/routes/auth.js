@@ -2,31 +2,32 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const authMiddleware = require('../middlewares/auth');
+const { authLimiter } = require('../middlewares/rateLimiter');
 
 // @route   POST api/auth/register
 // @desc    Register a user
 // @access  Public
-router.post('/register', authController.register);
+router.post('/register', authLimiter, authController.register);
 
 // @route   POST api/auth/login
 // @desc    Authenticate user & get token
 // @access  Public
-router.post('/login', authController.login);
+router.post('/login', authLimiter, authController.login);
 
 // @route   POST api/auth/google
 // @desc    Authenticate Google login
 // @access  Public
-router.post('/google', authController.googleLogin);
+router.post('/google', authLimiter, authController.googleLogin);
 
 // @route   POST api/auth/forgot-password
 // @desc    Request password recovery
 // @access  Public
-router.post('/forgot-password', authController.forgotPassword);
+router.post('/forgot-password', authLimiter, authController.forgotPassword);
 
 // @route   POST api/auth/change-password
 // @desc    Update current user password
 // @access  Private
-router.post('/change-password', authMiddleware, authController.changePassword);
+router.post('/change-password', authMiddleware, authLimiter, authController.changePassword);
 
 // @route   GET api/auth/me
 // @desc    Get current user details

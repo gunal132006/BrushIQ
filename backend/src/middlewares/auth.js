@@ -1,8 +1,5 @@
 const jwt = require('jsonwebtoken');
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../../.env') });
-
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretbrushiqjwttoken';
+const { JWT_SECRET } = require('../config/jwt');
 
 module.exports = (req, res, next) => {
   // Get token from header

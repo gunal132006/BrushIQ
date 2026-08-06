@@ -2,9 +2,9 @@
 
 ## Executive Overview
 
-- **Execution Date**: 28/7/2026, 9:39:49 pm
+- **Execution Date**: 6/8/2026, 9:42:10 am
 - **Target Browser**: Google Chrome (Headless)
-- **Total Duration**: 41.28 seconds
+- **Total Duration**: 77.00 seconds
 - **Pass Rate**: 100.00%
 
 | Metric | Count | Percentage |

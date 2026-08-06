@@ -21,17 +21,22 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname) || '.jpg';
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
     cb(null, 'scan-' + uniqueSuffix + ext);
   }
 });
 
-// File filter (accept images only)
+// Strict File filter (extension and MIME type validation)
+const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
+  const ext = path.extname(file.originalname).toLowerCase();
+  
+  if (allowedExtensions.includes(ext) && allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type, only images are allowed!'), false);
+    cb(new Error('Invalid file type! Only .jpg, .jpeg, .png, and .webp image files are allowed.'), false);
   }
 };
 
@@ -41,9 +46,37 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
+// Magic Byte (File Signature) Validation Middleware
+const validateImageMagicBytes = (req, res, next) => {
+  if (!req.file) return next();
+  const filePath = req.file.path;
+  let fd;
+  try {
+    const buffer = Buffer.alloc(12);
+    fd = fs.openSync(filePath, 'r');
+    fs.readSync(fd, buffer, 0, 12, 0);
+    fs.closeSync(fd);
+    fd = null;
+
+    const isJpeg = buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
+    const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
+    const isWebp = buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
+
+    if (!isJpeg && !isPng && !isWebp) {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      return res.status(400).json({ message: 'Security Validation Failed: Invalid image file signature.' });
+    }
+    next();
+  } catch (err) {
+    if (fd) fs.closeSync(fd);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    return res.status(400).json({ message: 'Error validating uploaded image file.' });
+  }
+};
+
 // @route   POST api/scans/analyze
 // @desc    Upload image and get AI wear analysis results
-router.post('/analyze', upload.single('image'), scanController.analyzeScan);
+router.post('/analyze', upload.single('image'), validateImageMagicBytes, scanController.analyzeScan);
 
 // @route   POST api/scans
 // @desc    Persist scan result to database history

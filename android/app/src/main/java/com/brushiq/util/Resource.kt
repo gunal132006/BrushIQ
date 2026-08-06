@@ -10,17 +10,28 @@ suspend inline fun <T> safeApiCall(crossinline call: suspend () -> T): Resource<
     return try {
         Resource.Success(call())
     } catch (e: java.io.IOException) {
-        Resource.Error(e, "Connection timeout or no internet. Please check your network connection.")
+        android.util.Log.e("NetworkDiag", "IOException in safeApiCall: ${e.javaClass.simpleName} - ${e.message}", e)
+        Resource.Error(e, "Connection error: ${e.message ?: "timeout or no internet"}")
     } catch (e: retrofit2.HttpException) {
-        val msg = when (e.code()) {
+        val errorBody = e.response()?.errorBody()?.string()
+        val code = e.code()
+        val url = e.response()?.raw()?.request?.url
+        val method = e.response()?.raw()?.request?.method
+        
+        val diagnosticMsg = "HTTP $code $method $url\nResponse: $errorBody"
+        android.util.Log.e("NetworkDiag", diagnosticMsg, e)
+
+        val userMsg = when (code) {
+            400 -> "Bad Request: $errorBody"
             401 -> "Unauthorized. Please log in again."
             403 -> "Access denied."
-            404 -> "Requested resource not found on server."
+            404 -> "Not Found: $url"
             500 -> "Server error. Our team is working on it."
-            else -> "Network error: ${e.message()}"
+            else -> "Network error ($code): ${e.message()}"
         }
-        Resource.Error(e, msg)
+        Resource.Error(e, userMsg)
     } catch (e: Exception) {
+        android.util.Log.e("NetworkDiag", "Unknown exception in safeApiCall", e)
         Resource.Error(e, e.localizedMessage ?: "An unknown error occurred.")
     }
 }
