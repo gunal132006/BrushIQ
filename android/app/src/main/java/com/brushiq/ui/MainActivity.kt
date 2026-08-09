@@ -125,7 +125,7 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("scan_details/{scanId}") { backStackEntry ->
                             val scanId = backStackEntry.arguments?.getString("scanId") ?: ""
-                            ScanDetailsScreen(scanId = scanId, navController = navController)
+                            ScanDetailsScreen(scanId = scanId, navController = navController, viewModel = brushIQViewModel)
                         }
 
                         // Reminders

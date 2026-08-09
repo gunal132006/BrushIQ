@@ -158,6 +158,9 @@ interface ToothbrushDao {
 
 @Dao
 interface ScanDao {
+    @Query("SELECT * FROM scans ORDER BY scanDate DESC")
+    fun getAll(): Flow<List<ScanEntity>>
+
     @Query("SELECT * FROM scans WHERE toothbrushId = :toothbrushId ORDER BY scanDate DESC")
     fun getByToothbrush(toothbrushId: String): Flow<List<ScanEntity>>
 

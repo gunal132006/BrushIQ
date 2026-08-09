@@ -39,9 +39,12 @@ import com.brushiq.ui.theme.*
 @Composable
 fun ScanDetailsScreen(
     scanId: String,
-    navController: NavController
+    navController: NavController,
+    viewModel: com.brushiq.ui.viewmodel.BrushIQViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     val scrollState = rememberScrollState()
+    val dbScans by viewModel.scanHistory.collectAsState()
+    val realScan = dbScans.firstOrNull { it.id == scanId }
 
     // Mock data for selected scan
     val scanData = remember {
@@ -54,7 +57,26 @@ fun ScanDetailsScreen(
         )
     }
 
-    val scan = scanData[scanId] ?: scanData.values.first()
+    val scan = if (realScan != null) {
+        ScanDetailData(
+            healthScore = realScan.healthScore,
+            condition = realScan.condition,
+            confidenceScore = realScan.confidenceScore,
+            wearPercentage = realScan.wearPercentage,
+            bristleSpreading = realScan.bristleSpreading,
+            bristleBending = realScan.bristleBending,
+            bristleDamage = realScan.bristleDamage,
+            brushingFrequency = realScan.brushingFrequency,
+            detectedIssues = realScan.detectedIssues,
+            aiRecommendation = realScan.aiRecommendation,
+            scanDate = if (realScan.scanDate.length >= 10) realScan.scanDate.substring(0, 10) else realScan.scanDate,
+            remainingLifeDays = realScan.remainingLifeDays,
+            toothbrushModel = "Toothbrush Scan",
+            memberName = "Self"
+        )
+    } else {
+        scanData[scanId] ?: scanData.values.first()
+    }
 
     // Compare with previous scan mock data
     val previousScore = (scan.healthScore + (8..18).random()).coerceAtMost(100.0)

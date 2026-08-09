@@ -44,43 +44,11 @@ fun HistoryScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedConditionFilter by remember { mutableStateOf("All") }
 
-    // Mock scans list for display if DB is empty
-    val defaultMockScans = remember {
-        listOf(
-            ScanReport(
-                id = "scan-101", toothbrushId = "tb-01", imageUrl = "", wearPercentage = 15.0,
-                healthScore = 85.0, remainingLifeDays = 72, condition = "Good",
-                confidenceScore = 96.0, bristleSpreading = 8.0, bristleBending = 10.0, bristleDamage = 4.0,
-                brushingFrequency = "2x daily", detectedIssues = emptyList(), aiRecommendation = "Fibers are in good shape.", scanDate = "2026-06-15"
-            ),
-            ScanReport(
-                id = "scan-102", toothbrushId = "tb-02", imageUrl = "", wearPercentage = 22.0,
-                healthScore = 78.0, remainingLifeDays = 64, condition = "Moderate Wear",
-                confidenceScore = 95.0, bristleSpreading = 12.0, bristleBending = 15.0, bristleDamage = 6.0,
-                brushingFrequency = "2x daily", detectedIssues = listOf("Slight bending"), aiRecommendation = "Continue routine checks.", scanDate = "2026-06-10"
-            ),
-            ScanReport(
-                id = "scan-103", toothbrushId = "tb-01", imageUrl = "", wearPercentage = 38.0,
-                healthScore = 62.0, remainingLifeDays = 38, condition = "Moderate Wear",
-                confidenceScore = 94.0, bristleSpreading = 18.0, bristleBending = 24.0, bristleDamage = 12.0,
-                brushingFrequency = "2x daily", detectedIssues = listOf("Elasticity Loss"), aiRecommendation = "Monitor closely.", scanDate = "2026-05-28"
-            ),
-            ScanReport(
-                id = "scan-104", toothbrushId = "tb-02", imageUrl = "", wearPercentage = 55.0,
-                healthScore = 45.0, remainingLifeDays = 15, condition = "Replace Soon",
-                confidenceScore = 97.0, bristleSpreading = 28.0, bristleBending = 35.0, bristleDamage = 18.0,
-                brushingFrequency = "2x daily", detectedIssues = listOf("Significant Splay", "Fraying"), aiRecommendation = "Recommend replacement within 2 weeks.", scanDate = "2026-05-12"
-            ),
-            ScanReport(
-                id = "scan-105", toothbrushId = "tb-03", imageUrl = "", wearPercentage = 68.0,
-                healthScore = 32.0, remainingLifeDays = 0, condition = "Replace Immediately",
-                confidenceScore = 93.0, bristleSpreading = 45.0, bristleBending = 52.0, bristleDamage = 35.0,
-                brushingFrequency = "2x daily", detectedIssues = listOf("Extreme Splay", "Fibers broken"), aiRecommendation = "Replace toothbrush head immediately.", scanDate = "2026-04-24"
-            )
-        )
+    LaunchedEffect(Unit) {
+        viewModel?.fetchScansHistory("")
     }
 
-    val historyItems = if (dbScans.isNotEmpty()) dbScans else defaultMockScans
+    val historyItems = dbScans
 
     // 1. Calculate Analytics summary stats
     val totalScansCount = historyItems.size
@@ -215,8 +183,8 @@ fun HistoryScreen(
                                 }
                         ) {
                             RecentScanItem(
-                                name = if (scan.toothbrushId == "tb-01") "Gunal S" else if (scan.toothbrushId == "tb-02") "Sarah J" else "Child",
-                                model = if (scan.toothbrushId == "tb-01") "Oral-B iO Series 9" else "Philips Sonicare",
+                                name = "Diagnostic Scan (${if (scan.scanDate.length >= 10) scan.scanDate.substring(0, 10) else scan.scanDate})",
+                                model = scan.condition,
                                 score = scan.healthScore.toInt(),
                                 condition = scan.condition
                             )

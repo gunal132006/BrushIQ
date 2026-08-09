@@ -115,6 +115,7 @@ class BrushIQViewModel @Inject constructor(
                 familyRepository.syncReminders()
                 tipsRepository.syncTips()
                 fetchDashboardStats()
+                fetchScansHistory("")
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
@@ -236,20 +237,23 @@ class BrushIQViewModel @Inject constructor(
     fun saveAnalysisReport(
         toothbrushId: String,
         report: ScanReport,
-        frequency: String,
-        onSuccess: () -> Unit,
+        frequency: String = "2x daily",
+        onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
         viewModelScope.launch {
             _loading.value = true
-            try {
-                val targetBrushId = if (toothbrushId.isNotBlank()) {
-                    toothbrushId
-                } else {
-                    toothbrushes.value.firstOrNull()?.id ?: ""
-                }
+            val targetBrushId = if (toothbrushId.isNotBlank()) {
+                toothbrushId
+            } else {
+                toothbrushes.value.firstOrNull()?.id ?: ""
+            }
 
-                android.util.Log.d("SAVE", "[SAVE] Preparing request targetBrushId=[$targetBrushId]")
+            android.util.Log.d("ANDROID SAVE", "[ANDROID SAVE] Button clicked")
+            android.util.Log.d("ANDROID SAVE", "[ANDROID SAVE] toothbrushId = '$targetBrushId'")
+            android.util.Log.d("ANDROID SAVE", "[ANDROID SAVE] Request payload = $report")
+            android.util.Log.d("ANDROID SAVE", "[ANDROID SAVE] POST /api/scans started")
+            try {
                 val res = scanRepository.saveScan(
                     toothbrushId = targetBrushId,
                     imageUrl = report.imageUrl,
@@ -267,13 +271,16 @@ class BrushIQViewModel @Inject constructor(
                 )
                 when (res) {
                     is Resource.Success -> {
-                        android.util.Log.d("SAVE", "[SAVE] HTTP response received. Status: 201 Created. Record ID: ${res.data.id}")
+                        android.util.Log.d("ANDROID SAVE", "[ANDROID SAVE] HTTP status = 201 Created")
+                        android.util.Log.d("ANDROID SAVE", "[ANDROID SAVE] Returned scan ID = ${res.data.id}")
+                        fetchScansHistory("")
                         syncAllData()
+                        android.util.Log.d("ANDROID SAVE", "[ANDROID SAVE] Save callback completed successfully")
                         onSuccess()
                     }
                     is Resource.Error -> {
                         val errMsg = res.message ?: "Failed to save diagnostic report."
-                        android.util.Log.e("SAVE", "[SAVE] HTTP error / Save failed: $errMsg", res.exception)
+                        android.util.Log.e("ANDROID SAVE", "[ANDROID SAVE] HTTP error / Save failed: $errMsg", res.exception)
                         onError(errMsg)
                     }
                     else -> {
@@ -281,7 +288,7 @@ class BrushIQViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("SAVE", "[SAVE] Exception in saveAnalysisReport: ${e.message}", e)
+                android.util.Log.e("ANDROID SAVE", "[ANDROID SAVE] Exception in saveAnalysisReport: ${e.message}", e)
                 onError(e.message ?: "Unexpected error occurred during save.")
             } finally {
                 _loading.value = false
@@ -289,7 +296,7 @@ class BrushIQViewModel @Inject constructor(
         }
     }
 
-    fun fetchScansHistory(toothbrushId: String) {
+    fun fetchScansHistory(toothbrushId: String = "") {
         viewModelScope.launch {
             scanRepository.syncScansHistory(toothbrushId)
             scanRepository.getScansHistory(toothbrushId).collect { res ->

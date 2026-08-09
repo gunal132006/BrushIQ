@@ -25,7 +25,12 @@ class ScanRepositoryImpl @Inject constructor(
 ) : ScanRepository {
 
     override fun getScansHistory(toothbrushId: String): Flow<Resource<List<ScanReport>>> {
-        return scanDao.getByToothbrush(toothbrushId).map { list ->
+        val flow = if (toothbrushId.isBlank()) {
+            scanDao.getAll()
+        } else {
+            scanDao.getByToothbrush(toothbrushId)
+        }
+        return flow.map { list ->
             val domainList = list.map {
                 ScanReport(
                     it.id, it.toothbrushId, it.imageUrl, it.wearPercentage, it.healthScore,
