@@ -237,11 +237,20 @@ class BrushIQViewModel @Inject constructor(
         toothbrushId: String,
         report: ScanReport,
         frequency: String,
-        onSuccess: () -> Unit
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit = {}
     ) {
         viewModelScope.launch {
+            _loading.value = true
+            val targetBrushId = if (toothbrushId.isNotBlank()) {
+                toothbrushId
+            } else {
+                toothbrushes.value.firstOrNull()?.id ?: ""
+            }
+
+            android.util.Log.d("SaveReport", "Attempting saveScan with targetBrushId=[$targetBrushId]")
             val res = scanRepository.saveScan(
-                toothbrushId = toothbrushId,
+                toothbrushId = targetBrushId,
                 imageUrl = report.imageUrl,
                 wearPercentage = report.wearPercentage,
                 healthScore = report.healthScore,
@@ -255,9 +264,18 @@ class BrushIQViewModel @Inject constructor(
                 detectedIssues = report.detectedIssues,
                 aiRecommendation = report.aiRecommendation
             )
-            if (res is Resource.Success) {
-                syncAllData()
-                onSuccess()
+            _loading.value = false
+            when (res) {
+                is Resource.Success -> {
+                    android.util.Log.d("SaveReport", "saveScan SUCCESS record ID: ${res.data.id}")
+                    syncAllData()
+                    onSuccess()
+                }
+                is Resource.Error -> {
+                    android.util.Log.e("SaveReport", "saveScan ERROR: ${res.message}", res.exception)
+                    onError(res.message ?: "Failed to save diagnostic report.")
+                }
+                else -> {}
             }
         }
     }

@@ -65,6 +65,8 @@ fun ResultScreen(
     val result by scanViewModel.mockResult.collectAsState()
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+    var isSaving by remember { mutableStateOf(false) }
+    var isSaved by remember { mutableStateOf(false) }
 
     if (result == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -239,20 +241,29 @@ fun ResultScreen(
             // 8. Actions
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 PrimaryButton(
-                    text = "Save AI Report",
+                    text = if (isSaving) "Saving to Database..." else if (isSaved) "Report Saved!" else "Save AI Report",
                     onClick = {
+                        if (isSaving || isSaved) return@PrimaryButton
+                        isSaving = true
                         viewModel?.saveAnalysisReport(
                             toothbrushId = report.toothbrushId,
                             report = report,
                             frequency = "2x daily",
                             onSuccess = {
+                                isSaving = false
+                                isSaved = true
                                 Toast.makeText(context, "Diagnostic report saved successfully!", Toast.LENGTH_SHORT).show()
                                 navController.navigate("dashboard") {
                                     popUpTo("dashboard") { inclusive = true }
                                 }
+                            },
+                            onError = { err ->
+                                isSaving = false
+                                Toast.makeText(context, "Save Failed: $err", Toast.LENGTH_LONG).show()
                             }
                         )
-                    }
+                    },
+                    enabled = !isSaving
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
