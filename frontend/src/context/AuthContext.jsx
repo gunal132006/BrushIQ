@@ -36,9 +36,22 @@ export const AuthProvider = ({ children }) => {
       return userData;
     } catch (err) {
       if (!err.response) {
-        throw 'Cannot connect to server. Make sure the backend is running on port 5000.';
+        throw 'Network Error: Unable to reach BrushIQ server. Please check your internet connection.';
       }
-      throw err.response?.data?.message || 'Login failed. Please try again.';
+      const status = err.response.status;
+      const message = err.response?.data?.message;
+
+      if (status === 401) {
+        throw message || 'Invalid email/phone or password.';
+      } else if (status === 429) {
+        throw message || 'Too many authentication attempts. Please try again later.';
+      } else if (status === 503) {
+        throw message || 'Database service temporarily unavailable. Please try again in a moment.';
+      } else if (status === 400) {
+        throw message || 'Invalid credentials or missing required fields.';
+      } else {
+        throw message || 'Server error during login. Please try again.';
+      }
     }
   };
 
@@ -51,9 +64,20 @@ export const AuthProvider = ({ children }) => {
       return userData;
     } catch (err) {
       if (!err.response) {
-        throw 'Cannot connect to server. Make sure the backend is running on port 5000.';
+        throw 'Network Error: Unable to reach BrushIQ server. Please check your internet connection.';
       }
-      throw err.response?.data?.message || 'Registration failed. Please try again.';
+      const status = err.response.status;
+      const message = err.response?.data?.message;
+
+      if (status === 400) {
+        throw message || 'Registration failed. Please verify your details.';
+      } else if (status === 429) {
+        throw message || 'Too many registration attempts. Please try again later.';
+      } else if (status === 503) {
+        throw message || 'Database service temporarily unavailable. Please try again in a moment.';
+      } else {
+        throw message || 'Server error during registration. Please try again.';
+      }
     }
   };
 

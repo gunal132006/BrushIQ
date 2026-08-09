@@ -212,7 +212,10 @@ exports.register = async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Registration error details:', err);
+    console.error('Registration error details:', err.message || err);
+    if (!db.isPgConnected() || err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND') {
+      return res.status(503).json({ message: 'PostgreSQL database service unavailable' });
+    }
     return res.status(500).json({ message: 'Server error during registration' });
   }
 };
@@ -223,6 +226,11 @@ exports.login = async (req, res) => {
 
   if (!loginIdentifier || !password) {
     return res.status(400).json({ message: 'Please enter all fields' });
+  }
+
+  // Check PostgreSQL availability
+  if (!db.isPgConnected()) {
+    return res.status(503).json({ message: 'PostgreSQL database service unavailable' });
   }
 
   try {
@@ -266,7 +274,10 @@ exports.login = async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Login error:', err.message);
+    console.error('Login error:', err.message || err);
+    if (!db.isPgConnected() || err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND') {
+      return res.status(503).json({ message: 'PostgreSQL database service unavailable' });
+    }
     return res.status(500).json({ message: 'Server error during login' });
   }
 };
