@@ -73,8 +73,8 @@ const Layout = ({ children }) => {
             <div>
               <h2 className="text-base sm:text-lg font-bold m-0 leading-none tracking-tight flex items-center gap-2">
                 {getHeaderTitle(location.pathname)}
-                <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                  BUILD: e9f10a2
+                <span className="inline-block px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                  BUILD: 2026-08-09-DESKTOP-FIX-01
                 </span>
               </h2>
               <p className={`text-[10px] sm:text-[11px] mt-0.5 font-semibold ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>
