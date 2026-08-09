@@ -98,7 +98,7 @@ const ReminderModule = () => {
           </p>
         </div>
       ) : (
-        <div className="space-y-2.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredReminders.map((reminder) => (
             <ReminderCard 
               key={reminder.id} 

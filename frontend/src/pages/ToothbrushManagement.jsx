@@ -192,7 +192,7 @@ const ToothbrushManagement = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {toothbrushes.map((brush) => (
             <BrushCard
               key={brush.id}
@@ -204,10 +204,10 @@ const ToothbrushManagement = () => {
         </div>
       )}
 
-      {/* Edit/Create Form Modal - styled relative to the mobile mockup container */}
+      {/* Edit/Create Form Modal */}
       {isModalOpen && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-5">
-          <div className={`w-full max-w-[390px] rounded-2xl border p-5 shadow-2xl relative ${
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 sm:p-6 overflow-y-auto">
+          <div className={`w-full max-w-lg rounded-3xl border p-6 sm:p-8 shadow-2xl relative my-auto ${
             darkMode ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-100 text-slate-950'
           }`}>
             <button
