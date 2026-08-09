@@ -59,7 +59,7 @@ enum class OverlayViewType {
 @Composable
 fun ResultScreen(
     navController: NavController,
-    viewModel: BrushIQViewModel? = null,
+    viewModel: BrushIQViewModel = hiltViewModel(),
     scanViewModel: ScanViewModel = hiltViewModel()
 ) {
     val result by scanViewModel.mockResult.collectAsState()
@@ -245,13 +245,25 @@ fun ResultScreen(
                     onClick = {
                         if (isSaving || isSaved) return@PrimaryButton
                         isSaving = true
-                        viewModel?.saveAnalysisReport(
+                        android.util.Log.d("SAVE", "[SAVE] Button clicked. Preparing request...")
+                        
+                        val vm = viewModel
+                        if (vm == null) {
+                            isSaving = false
+                            android.util.Log.e("SAVE", "[SAVE] Exception = BrushIQViewModel is null!")
+                            Toast.makeText(context, "Save Failed: ViewModel not initialized", Toast.LENGTH_LONG).show()
+                            return@PrimaryButton
+                        }
+
+                        android.util.Log.d("SAVE", "[SAVE] toothbrushId = '${report.toothbrushId}', healthScore = ${report.healthScore}")
+                        vm.saveAnalysisReport(
                             toothbrushId = report.toothbrushId,
                             report = report,
                             frequency = "2x daily",
                             onSuccess = {
                                 isSaving = false
                                 isSaved = true
+                                android.util.Log.d("SAVE", "[SAVE] Save successful confirmed by backend!")
                                 Toast.makeText(context, "Diagnostic report saved successfully!", Toast.LENGTH_SHORT).show()
                                 navController.navigate("dashboard") {
                                     popUpTo("dashboard") { inclusive = true }
@@ -259,6 +271,7 @@ fun ResultScreen(
                             },
                             onError = { err ->
                                 isSaving = false
+                                android.util.Log.e("SAVE", "[SAVE] Save failed: $err")
                                 Toast.makeText(context, "Save Failed: $err", Toast.LENGTH_LONG).show()
                             }
                         )

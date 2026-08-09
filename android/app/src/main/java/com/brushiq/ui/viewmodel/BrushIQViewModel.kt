@@ -242,40 +242,49 @@ class BrushIQViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             _loading.value = true
-            val targetBrushId = if (toothbrushId.isNotBlank()) {
-                toothbrushId
-            } else {
-                toothbrushes.value.firstOrNull()?.id ?: ""
-            }
+            try {
+                val targetBrushId = if (toothbrushId.isNotBlank()) {
+                    toothbrushId
+                } else {
+                    toothbrushes.value.firstOrNull()?.id ?: ""
+                }
 
-            android.util.Log.d("SaveReport", "Attempting saveScan with targetBrushId=[$targetBrushId]")
-            val res = scanRepository.saveScan(
-                toothbrushId = targetBrushId,
-                imageUrl = report.imageUrl,
-                wearPercentage = report.wearPercentage,
-                healthScore = report.healthScore,
-                remainingLifeDays = report.remainingLifeDays,
-                condition = report.condition,
-                confidenceScore = report.confidenceScore,
-                bristleSpreading = report.bristleSpreading,
-                bristleBending = report.bristleBending,
-                bristleDamage = report.bristleDamage,
-                brushingFrequency = frequency,
-                detectedIssues = report.detectedIssues,
-                aiRecommendation = report.aiRecommendation
-            )
-            _loading.value = false
-            when (res) {
-                is Resource.Success -> {
-                    android.util.Log.d("SaveReport", "saveScan SUCCESS record ID: ${res.data.id}")
-                    syncAllData()
-                    onSuccess()
+                android.util.Log.d("SAVE", "[SAVE] Preparing request targetBrushId=[$targetBrushId]")
+                val res = scanRepository.saveScan(
+                    toothbrushId = targetBrushId,
+                    imageUrl = report.imageUrl,
+                    wearPercentage = report.wearPercentage,
+                    healthScore = report.healthScore,
+                    remainingLifeDays = report.remainingLifeDays,
+                    condition = report.condition,
+                    confidenceScore = report.confidenceScore,
+                    bristleSpreading = report.bristleSpreading,
+                    bristleBending = report.bristleBending,
+                    bristleDamage = report.bristleDamage,
+                    brushingFrequency = frequency,
+                    detectedIssues = report.detectedIssues,
+                    aiRecommendation = report.aiRecommendation
+                )
+                when (res) {
+                    is Resource.Success -> {
+                        android.util.Log.d("SAVE", "[SAVE] HTTP response received. Status: 201 Created. Record ID: ${res.data.id}")
+                        syncAllData()
+                        onSuccess()
+                    }
+                    is Resource.Error -> {
+                        val errMsg = res.message ?: "Failed to save diagnostic report."
+                        android.util.Log.e("SAVE", "[SAVE] HTTP error / Save failed: $errMsg", res.exception)
+                        onError(errMsg)
+                    }
+                    else -> {
+                        onError("Unknown response state")
+                    }
                 }
-                is Resource.Error -> {
-                    android.util.Log.e("SaveReport", "saveScan ERROR: ${res.message}", res.exception)
-                    onError(res.message ?: "Failed to save diagnostic report.")
-                }
-                else -> {}
+            } catch (e: Exception) {
+                android.util.Log.e("SAVE", "[SAVE] Exception in saveAnalysisReport: ${e.message}", e)
+                onError(e.message ?: "Unexpected error occurred during save.")
+            } finally {
+                _loading.value = false
             }
         }
     }

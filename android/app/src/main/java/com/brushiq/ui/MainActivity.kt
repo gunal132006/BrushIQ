@@ -116,7 +116,7 @@ class MainActivity : ComponentActivity() {
                             AnalysisLoadingScreen(navController = navController, viewModel = scanViewModel)
                         }
                         composable("result") {
-                            ResultScreen(navController = navController, scanViewModel = scanViewModel)
+                            ResultScreen(navController = navController, viewModel = brushIQViewModel, scanViewModel = scanViewModel)
                         }
 
                         // History Module
