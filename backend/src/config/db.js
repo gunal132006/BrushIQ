@@ -31,10 +31,20 @@ const rawConnectionString = process.env.DATABASE_URL;
 const connectionString = sanitizeConnectionString(rawConnectionString);
 const dbHost = sanitizeDbHost(process.env.DB_HOST);
 
+const isRemote = (connectionString && !connectionString.includes('localhost') && !connectionString.includes('127.0.0.1')) ||
+                (dbHost && dbHost !== 'localhost' && dbHost !== '127.0.0.1');
+
+const sslConfig = process.env.DB_SSL === 'false' 
+  ? false 
+  : (isRemote ? { rejectUnauthorized: false } : false);
+
 const dbConfig = connectionString
   ? {
       connectionString,
-      ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false }
+      ssl: sslConfig,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000
     }
   : {
       host: dbHost,
@@ -42,9 +52,10 @@ const dbConfig = connectionString
       user: process.env.DB_USER || 'postgres',
       password: process.env.DB_PASSWORD || 'postgrespassword',
       database: process.env.DB_DATABASE || 'brushiq',
-      ssl: (dbHost && dbHost !== 'localhost' && dbHost !== '127.0.0.1')
-        ? { rejectUnauthorized: false }
-        : false
+      ssl: sslConfig,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000
     };
 
 const pool = new Pool(dbConfig);
@@ -53,15 +64,18 @@ let pgConnected = false;
 // Strict PostgreSQL connection test
 async function checkDbConnection() {
   try {
-    await pool.query('SELECT 1');
-    pgConnected = true;
-    console.log('[POSTGRESQL] Connection established successfully.');
-    return true;
+    const client = await pool.connect();
+    try {
+      await client.query('SELECT 1');
+      pgConnected = true;
+      console.log('[POSTGRESQL] Connection established successfully.');
+      return true;
+    } finally {
+      client.release();
+    }
   } catch (err) {
     pgConnected = false;
-    console.error('[FATAL DATABASE ERROR]');
-    console.error('PostgreSQL connection unavailable:', err.message);
-    console.error('Server startup aborted.');
+    console.error('[POSTGRESQL ERROR] Connection check failed:', err.message);
     return false;
   }
 }
@@ -71,7 +85,7 @@ checkDbConnection();
 
 pool.on('error', (err) => {
   pgConnected = false;
-  console.error('[POSTGRESQL ERROR] Client error:', err.message);
+  console.error('[POSTGRESQL ERROR] Client pool error:', err.message);
 });
 
 async function query(text, params) {
