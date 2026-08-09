@@ -311,7 +311,7 @@ const TipsModule = () => {
               <span>{searchQuery ? 'No guides match your search query.' : 'No articles found in this section.'}</span>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
               {filteredTips.map((tip) => (
                 <TipCard 
                   key={tip.id} 

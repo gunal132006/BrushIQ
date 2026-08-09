@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Home, Users, Camera, BookOpen, User, LogOut, Bell } from 'lucide-react';
+import { Home, Users, Sparkles, Camera, History, Bell, BookOpen, User, LogOut } from 'lucide-react';
 
 const SidebarNavigation = () => {
   const { darkMode } = useTheme();
@@ -12,11 +12,13 @@ const SidebarNavigation = () => {
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: Home },
-    { name: 'Family', path: '/family', icon: Users },
+    { name: 'Family Members', path: '/family', icon: Users },
+    { name: 'Toothbrushes', path: '/toothbrushes', icon: Sparkles },
     { name: 'AI Scan', path: '/scan', icon: Camera },
-    { name: 'Reminders', path: '/reminders', icon: Bell },
-    { name: 'Tips', path: '/tips', icon: BookOpen },
-    { name: 'Profile', path: '/settings', icon: User },
+    { name: 'Timeline History', path: '/history', icon: History },
+    { name: 'Hygiene Alerts', path: '/reminders', icon: Bell },
+    { name: 'Hygiene Tips', path: '/tips', icon: BookOpen },
+    { name: 'Profile & Settings', path: '/settings', icon: User },
   ];
 
   const handleLogout = () => {
