@@ -48,6 +48,7 @@ object NetworkConfig {
         }
 
         // Safe development logging - NO secrets, tokens, or credentials logged
+        Log.d("AuthFlow", "Selected Base URL=[$constUrl]")
         Log.d("NetworkConfig", "Selected environment = $environment")
         Log.d("NetworkConfig", "Base URL = $constUrl")
 
