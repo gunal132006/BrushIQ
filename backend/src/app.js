@@ -94,12 +94,22 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/system', require('./routes/system'));
 
 // Health Routes
-app.get('/health', (req, res) => {
-  res.json({ status: 'UP' });
+app.get('/health', async (req, res) => {
+  const db = require('./config/db');
+  const connected = db.isPgConnected();
+  res.status(connected ? 200 : 503).json({
+    status: 'UP',
+    database: connected ? 'CONNECTED' : 'DISCONNECTED'
+  });
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'UP' });
+app.get('/api/health', async (req, res) => {
+  const db = require('./config/db');
+  const connected = db.isPgConnected();
+  res.status(connected ? 200 : 503).json({
+    status: 'UP',
+    database: connected ? 'CONNECTED' : 'DISCONNECTED'
+  });
 });
 
 // Base Route
