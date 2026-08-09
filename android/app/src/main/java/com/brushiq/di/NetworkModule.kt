@@ -56,16 +56,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        val baseUrl = if (BuildConfig.DEBUG) {
-            BuildConfig.DEV_BASE_URL
-        } else {
-            BuildConfig.PROD_BASE_URL
-        }
-
-        android.util.Log.d("AuthFlow", "BuildConfig.DEBUG=${BuildConfig.DEBUG}")
-        android.util.Log.d("AuthFlow", "DEV_BASE_URL=${BuildConfig.DEV_BASE_URL}")
-        android.util.Log.d("AuthFlow", "PROD_BASE_URL=${BuildConfig.PROD_BASE_URL}")
-        android.util.Log.d("AuthFlow", "Selected Base URL=$baseUrl")
+        val baseUrl = com.brushiq.config.NetworkConfig.getActiveBaseUrl()
 
         return Retrofit.Builder()
             .baseUrl(baseUrl)

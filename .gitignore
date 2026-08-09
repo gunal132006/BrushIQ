@@ -43,6 +43,9 @@ Thumbs.db
 # Upload folders
 backend/uploads/
 uploads/
+backend/data/
+*.png
+android/window_dump*.xml
 
 # Archives
 *.zip

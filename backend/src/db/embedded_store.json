@@ -8,11 +8,273 @@
       "password_hash": "$2a$10$s7Of2sQpH2G/j0PCUcTsaeTzVieUj5foWS92DCFI9wGifhzUDPB8G",
       "created_at": "2026-07-28T16:03:17.091Z",
       "updated_at": "2026-07-28T16:03:17.091Z"
+    },
+    {
+      "id": "83363096-92de-4075-86f5-6b920e95df13",
+      "full_name": "M.Nirosha",
+      "email": "nirosham2065@gmail.com",
+      "phone": "7010854450",
+      "password_hash": "$2a$10$ingPz4BxXL1/6DyM92GZi.j0fnyjyjHPgNFJ8gU2LZ3IbVsHxS.wC",
+      "created_at": "2026-08-08T04:02:58.253Z",
+      "updated_at": "2026-08-08T04:02:58.253Z"
+    },
+    {
+      "id": "552a67ad-e119-44b5-9a72-724b91081c6e",
+      "full_name": "bavani",
+      "email": "bavani26@gmail.com",
+      "phone": "9360689276",
+      "password_hash": "$2a$10$hAcSKtYBPIu5bnnERUu82uIcS.Qs1WVuuaP5B652NYP6CW0L4jYju",
+      "created_at": "2026-08-08T08:36:18.410Z",
+      "updated_at": "2026-08-08T08:36:18.410Z"
     }
   ],
-  "family_members": [],
-  "toothbrushes": [],
-  "scans": [],
+  "family_members": [
+    {
+      "id": "5e9d548b-32e2-4c70-b98e-a14feac644d4",
+      "user_id": "83363096-92de-4075-86f5-6b920e95df13",
+      "name": "murali",
+      "profile_photo_url": null,
+      "created_at": "2026-08-08T04:34:32.133Z",
+      "updated_at": "2026-08-08T04:40:47.023Z",
+      "age": 48,
+      "gender": "Other",
+      "relationship": "Parent"
+    },
+    {
+      "id": "afa36acc-5fa8-4ddf-9779-37f46398feff",
+      "user_id": "552a67ad-e119-44b5-9a72-724b91081c6e",
+      "name": "bavani",
+      "profile_photo_url": null,
+      "created_at": "2026-08-08T08:36:23.694Z",
+      "updated_at": "2026-08-08T08:36:23.694Z"
+    }
+  ],
+  "toothbrushes": [
+    {
+      "id": "11975a74-66fc-42fa-a5c1-ed69898cb5cd",
+      "family_member_id": "5e9d548b-32e2-4c70-b98e-a14feac644d4",
+      "brand": "Oral-B",
+      "model": "Pro 1000",
+      "color": "Blue",
+      "type": "Manual",
+      "purchase_date": "2026-06-15",
+      "created_at": "2026-08-08T04:34:32.138Z",
+      "updated_at": "2026-08-08T04:48:45.305Z"
+    },
+    {
+      "id": "2e781bae-af80-40d0-9655-f8987098667c",
+      "family_member_id": "5e9d548b-32e2-4c70-b98e-a14feac644d4",
+      "brand": "Oral-B",
+      "model": "Pro 1000",
+      "color": "Blue",
+      "type": "Manual",
+      "purchase_date": "2026-08-08",
+      "created_at": "2026-08-08T04:45:18.091Z",
+      "updated_at": "2026-08-08T04:45:18.091Z"
+    },
+    {
+      "id": "19a797a0-abe8-4563-8acc-7a54bcf8af59",
+      "family_member_id": "afa36acc-5fa8-4ddf-9779-37f46398feff",
+      "created_at": "2026-08-08T08:36:23.704Z",
+      "updated_at": "2026-08-08T08:36:23.704Z"
+    }
+  ],
+  "scans": [
+    {
+      "id": "581bf74a-caf3-417b-9ba5-816e64b73109",
+      "toothbrush_id": "11975a74-66fc-42fa-a5c1-ed69898cb5cd",
+      "image_url": "/uploads/scan-1786166954652-536586588.jpeg",
+      "wear_percentage": 50.3,
+      "health_score": 49.7,
+      "remaining_life_days": 45,
+      "condition": "Heavy Wear",
+      "confidence_score": 61.5,
+      "bristle_spreading": 0,
+      "bristle_bending": 99.2,
+      "bristle_damage": 100,
+      "brushing_frequency": "2x daily",
+      "detected_issues": [
+        "Significant bristle bending",
+        "Frayed bristle tips causing gum friction",
+        "Significant bristle density loss"
+      ],
+      "ai_recommendation": "Heavy wear detected. Replace soon.",
+      "scan_date": "2026-08-08T05:29:17.727Z",
+      "created_at": "2026-08-08T05:29:17.727Z"
+    },
+    {
+      "id": "19dc5b61-84ec-43ca-958b-489d04847bda",
+      "toothbrush_id": "11975a74-66fc-42fa-a5c1-ed69898cb5cd",
+      "image_url": "/uploads/scan-1786166954652-536586588.jpeg",
+      "wear_percentage": 50.3,
+      "health_score": 49.7,
+      "remaining_life_days": 45,
+      "condition": "Heavy Wear",
+      "confidence_score": 61.5,
+      "bristle_spreading": 0,
+      "bristle_bending": 99.2,
+      "bristle_damage": 100,
+      "brushing_frequency": "2x daily",
+      "detected_issues": [
+        "Significant bristle bending",
+        "Frayed bristle tips causing gum friction",
+        "Significant bristle density loss"
+      ],
+      "ai_recommendation": "Heavy wear detected. Replace soon.",
+      "scan_date": "2026-08-08T05:29:17.734Z",
+      "created_at": "2026-08-08T05:29:17.734Z"
+    },
+    {
+      "id": "7c1ff24d-e98b-4b0e-bc0d-652897c4ac83",
+      "toothbrush_id": "11975a74-66fc-42fa-a5c1-ed69898cb5cd",
+      "image_url": "/uploads/scan-1786174111432-850904395.jpeg",
+      "wear_percentage": 48.1,
+      "health_score": 51.9,
+      "remaining_life_days": 47,
+      "condition": "Moderate Wear",
+      "confidence_score": 59.6,
+      "bristle_spreading": 0.8,
+      "bristle_bending": 100,
+      "bristle_damage": 100,
+      "brushing_frequency": "2x daily",
+      "detected_issues": [
+        "Significant bristle bending",
+        "Frayed bristle tips causing gum friction",
+        "Significant bristle density loss"
+      ],
+      "ai_recommendation": "Moderate wear detected. Continue monitoring.",
+      "scan_date": "2026-08-08T07:28:34.177Z",
+      "created_at": "2026-08-08T07:28:34.177Z"
+    },
+    {
+      "id": "40bcd0af-6317-4f0c-8442-dab95c73cf26",
+      "toothbrush_id": "11975a74-66fc-42fa-a5c1-ed69898cb5cd",
+      "image_url": "/uploads/scan-1786174111432-850904395.jpeg",
+      "wear_percentage": 48.1,
+      "health_score": 51.9,
+      "remaining_life_days": 47,
+      "condition": "Moderate Wear",
+      "confidence_score": 59.6,
+      "bristle_spreading": 0.8,
+      "bristle_bending": 100,
+      "bristle_damage": 100,
+      "brushing_frequency": "2x daily",
+      "detected_issues": [
+        "Significant bristle bending",
+        "Frayed bristle tips causing gum friction",
+        "Significant bristle density loss"
+      ],
+      "ai_recommendation": "Moderate wear detected. Continue monitoring.",
+      "scan_date": "2026-08-08T07:28:34.186Z",
+      "created_at": "2026-08-08T07:28:34.186Z"
+    },
+    {
+      "id": "bb308803-e044-4229-a30e-1dc52e8e30f4",
+      "toothbrush_id": "19a797a0-abe8-4563-8acc-7a54bcf8af59",
+      "image_url": "/uploads/scan-1786178233850-910910986.jpg",
+      "wear_percentage": 25.2,
+      "health_score": 74.8,
+      "remaining_life_days": 67,
+      "condition": "Moderate Wear",
+      "confidence_score": 100,
+      "bristle_spreading": 0,
+      "bristle_bending": 10.5,
+      "bristle_damage": 100,
+      "brushing_frequency": "2x daily",
+      "detected_issues": [
+        "Frayed bristle tips causing gum friction"
+      ],
+      "ai_recommendation": "Moderate wear detected. Continue monitoring.",
+      "scan_date": "2026-08-08T08:37:17.005Z",
+      "created_at": "2026-08-08T08:37:17.005Z"
+    },
+    {
+      "id": "4b7297b3-ad4b-4c31-9deb-bab8c06ad052",
+      "toothbrush_id": "19a797a0-abe8-4563-8acc-7a54bcf8af59",
+      "image_url": "/uploads/scan-1786178233850-910910986.jpg",
+      "wear_percentage": 25.2,
+      "health_score": 74.8,
+      "remaining_life_days": 67,
+      "condition": "Moderate Wear",
+      "confidence_score": 100,
+      "bristle_spreading": 0,
+      "bristle_bending": 10.5,
+      "bristle_damage": 100,
+      "brushing_frequency": "2x daily",
+      "detected_issues": [
+        "Frayed bristle tips causing gum friction"
+      ],
+      "ai_recommendation": "Moderate wear detected. Continue monitoring.",
+      "scan_date": "2026-08-08T08:37:17.017Z",
+      "created_at": "2026-08-08T08:37:17.017Z"
+    },
+    {
+      "id": "4faf2895-aef1-4950-8e76-a25a27439e22",
+      "toothbrush_id": "19a797a0-abe8-4563-8acc-7a54bcf8af59",
+      "image_url": "/uploads/scan-1786178293879-676534983.jpeg",
+      "wear_percentage": 48.1,
+      "health_score": 51.9,
+      "remaining_life_days": 47,
+      "condition": "Moderate Wear",
+      "confidence_score": 59.6,
+      "bristle_spreading": 0.8,
+      "bristle_bending": 100,
+      "bristle_damage": 100,
+      "brushing_frequency": "2x daily",
+      "detected_issues": [
+        "Significant bristle bending",
+        "Frayed bristle tips causing gum friction",
+        "Significant bristle density loss"
+      ],
+      "ai_recommendation": "Moderate wear detected. Continue monitoring.",
+      "scan_date": "2026-08-08T08:38:16.916Z",
+      "created_at": "2026-08-08T08:38:16.916Z"
+    },
+    {
+      "id": "34db43ba-46a4-48b5-a51b-9b0606701aa9",
+      "toothbrush_id": "19a797a0-abe8-4563-8acc-7a54bcf8af59",
+      "image_url": "/uploads/scan-1786178293879-676534983.jpeg",
+      "wear_percentage": 48.1,
+      "health_score": 51.9,
+      "remaining_life_days": 47,
+      "condition": "Moderate Wear",
+      "confidence_score": 59.6,
+      "bristle_spreading": 0.8,
+      "bristle_bending": 100,
+      "bristle_damage": 100,
+      "brushing_frequency": "2x daily",
+      "detected_issues": [
+        "Significant bristle bending",
+        "Frayed bristle tips causing gum friction",
+        "Significant bristle density loss"
+      ],
+      "ai_recommendation": "Moderate wear detected. Continue monitoring.",
+      "scan_date": "2026-08-08T08:38:16.925Z",
+      "created_at": "2026-08-08T08:38:16.925Z"
+    },
+    {
+      "id": "9991017f-0785-4151-ab58-c9e020bef5c8",
+      "toothbrush_id": "19a797a0-abe8-4563-8acc-7a54bcf8af59",
+      "image_url": "/uploads/scan-1786178293879-676534983.jpeg",
+      "wear_percentage": 48.1,
+      "health_score": 51.9,
+      "remaining_life_days": 47,
+      "condition": "Moderate Wear",
+      "confidence_score": 59.6,
+      "bristle_spreading": 0.8,
+      "bristle_bending": 100,
+      "bristle_damage": 100,
+      "brushing_frequency": "2x daily",
+      "detected_issues": [
+        "Significant bristle bending",
+        "Frayed bristle tips causing gum friction",
+        "Significant bristle density loss"
+      ],
+      "ai_recommendation": "Moderate wear detected. Continue monitoring.",
+      "scan_date": "2026-08-08T08:42:03.497Z",
+      "created_at": "2026-08-08T08:42:03.497Z"
+    }
+  ],
   "reminders": [],
   "tips": [
     {

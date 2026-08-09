@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { familyService, toothbrushService, scanService } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
-import { Camera, Upload, AlertCircle, RefreshCw, CheckCircle, Video } from 'lucide-react';
+import { Camera, Upload, AlertCircle, RefreshCw, CheckCircle, Video, Plus, Edit3, X, Pencil } from 'lucide-react';
 
 const ScanModule = () => {
   const { darkMode } = useTheme();
@@ -18,6 +18,27 @@ const ScanModule = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [currentCheckpoint, setCurrentCheckpoint] = useState(0);
   const [error, setError] = useState('');
+
+  // Inline Modals State
+  const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
+  const [memberModalMode, setMemberModalMode] = useState('add'); // 'add' | 'edit'
+  const [memberName, setMemberName] = useState('');
+  const [memberAge, setMemberAge] = useState(25);
+  const [memberGender, setMemberGender] = useState('Other');
+  const [memberRelationship, setMemberRelationship] = useState('Self');
+  const [memberModalError, setMemberModalError] = useState('');
+
+  const [isBrushModalOpen, setIsBrushModalOpen] = useState(false);
+  const [brushModalMode, setBrushModalMode] = useState('add'); // 'add' | 'edit'
+  const [brushBrand, setBrushBrand] = useState('Oral-B');
+  const [brushModel, setBrushModel] = useState('Pro 1000');
+  const [brushColor, setBrushColor] = useState('Blue');
+  const [brushType, setBrushType] = useState('Manual');
+  const [brushPurchaseDate, setBrushPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
+  const [brushModalError, setBrushModalError] = useState('');
+
+  const brushTypes = ['Manual', 'Electric', 'Sonic', 'Kids', 'Orthodontic'];
+  const relationships = ['Self', 'Spouse', 'Child', 'Parent', 'Other'];
 
   const checkpoints = [
     'Checking capture illumination & contrast...',
@@ -37,65 +58,256 @@ const ScanModule = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  useEffect(() => {
-    const initData = async () => {
-      try {
-        const membersRes = await familyService.getMembers();
-        setFamilyMembers(membersRes.data);
-        if (location.state && location.state.memberId) {
-          setSelectedMemberId(location.state.memberId);
-        } else if (membersRes.data.length > 0) {
-          setSelectedMemberId(membersRes.data[0].id);
-        }
-      } catch (err) {
-        console.error(err);
-        setError('Failed to load profiles. Check backend connection.');
-      } finally {
-        setLoading(false);
+  const fetchMembers = async () => {
+    try {
+      const membersRes = await familyService.getMembers();
+      setFamilyMembers(membersRes.data);
+      if (location.state && location.state.memberId) {
+        setSelectedMemberId(location.state.memberId);
+      } else if (membersRes.data.length > 0 && !selectedMemberId) {
+        setSelectedMemberId(membersRes.data[0].id);
       }
-    };
-    initData();
-  }, [location.state]);
+      return membersRes.data;
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load profiles. Check backend connection.');
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (!selectedMemberId) return;
-    const fetchBrushes = async () => {
-      try {
-        const res = await toothbrushService.getToothbrushes(selectedMemberId);
-        setToothbrushes(res.data);
-        if (location.state && location.state.toothbrushId && res.data.some(b => b.id === location.state.toothbrushId)) {
-          setSelectedBrushId(location.state.toothbrushId);
-        } else if (res.data.length > 0) {
-          setSelectedBrushId(res.data[0].id);
-        } else {
-          setSelectedBrushId('');
-        }
-      } catch (err) {
-        console.error(err);
+    fetchMembers();
+  }, [location.state]);
+
+  const fetchBrushes = async (memberId) => {
+    if (!memberId) {
+      setToothbrushes([]);
+      setSelectedBrushId('');
+      return;
+    }
+    try {
+      const res = await toothbrushService.getToothbrushes(memberId);
+      setToothbrushes(res.data);
+      if (location.state && location.state.toothbrushId && res.data.some(b => b.id === location.state.toothbrushId)) {
+        setSelectedBrushId(location.state.toothbrushId);
+      } else if (res.data.length > 0) {
+        setSelectedBrushId(res.data[0].id);
+      } else {
+        setSelectedBrushId('');
       }
-    };
-    fetchBrushes();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchBrushes(selectedMemberId);
   }, [selectedMemberId, location.state]);
+
+  // Family Member Modal Handlers
+  const openAddMemberModal = () => {
+    setMemberModalMode('add');
+    setMemberName('');
+    setMemberAge(25);
+    setMemberGender('Other');
+    setMemberRelationship('Self');
+    setMemberModalError('');
+    setIsMemberModalOpen(true);
+  };
+
+  const openEditMemberModal = () => {
+    const currentMember = familyMembers.find(m => m.id === selectedMemberId);
+    if (!currentMember) return;
+    setMemberModalMode('edit');
+    setMemberName(currentMember.name || '');
+    setMemberAge(currentMember.age || 25);
+    setMemberGender(currentMember.gender || 'Other');
+    setMemberRelationship(currentMember.relationship || 'Self');
+    setMemberModalError('');
+    setIsMemberModalOpen(true);
+  };
+
+  const handleSaveMemberModal = async (e) => {
+    e.preventDefault();
+    if (!memberName.trim()) {
+      return setMemberModalError('Please enter a name');
+    }
+    try {
+      setMemberModalError('');
+      if (memberModalMode === 'add') {
+        const res = await familyService.addMember(
+          memberName.trim(),
+          parseInt(memberAge) || 25,
+          memberGender,
+          memberRelationship,
+          null
+        );
+        const updatedMembers = [...familyMembers, res.data];
+        setFamilyMembers(updatedMembers);
+        setSelectedMemberId(res.data.id);
+      } else {
+        const res = await familyService.updateMember(
+          selectedMemberId,
+          memberName.trim(),
+          parseInt(memberAge) || 25,
+          memberGender,
+          memberRelationship,
+          null
+        );
+        setFamilyMembers(prev => prev.map(m => m.id === selectedMemberId ? res.data : m));
+      }
+      setIsMemberModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      setMemberModalError(err.response?.data?.message || 'Failed to save family member profile');
+    }
+  };
+
+  // Toothbrush Modal Handlers
+  const openAddBrushModal = () => {
+    if (!selectedMemberId) {
+      alert('Please add or select a family member first.');
+      return;
+    }
+    setBrushModalMode('add');
+    setBrushBrand('Oral-B');
+    setBrushModel('Pro 1000');
+    setBrushColor('Blue');
+    setBrushType('Manual');
+    setBrushPurchaseDate(new Date().toISOString().split('T')[0]);
+    setBrushModalError('');
+    setIsBrushModalOpen(true);
+  };
+
+  const openEditBrushModal = () => {
+    const currentBrush = toothbrushes.find(b => b.id === selectedBrushId) || toothbrushes[0];
+    if (!currentBrush) {
+      return openAddBrushModal();
+    }
+    if (currentBrush.id !== selectedBrushId) {
+      setSelectedBrushId(currentBrush.id);
+    }
+    setBrushModalMode('edit');
+    setBrushBrand(currentBrush.brand || 'Oral-B');
+    setBrushModel(currentBrush.model || 'Pro 1000');
+    setBrushColor(currentBrush.color || 'Blue');
+    setBrushType(currentBrush.type || 'Manual');
+    setBrushPurchaseDate((currentBrush.purchaseDate || new Date().toISOString()).split('T')[0]);
+    setBrushModalError('');
+    setIsBrushModalOpen(true);
+  };
+
+  const handleSaveBrushModal = async (e) => {
+    e.preventDefault();
+    if (!brushBrand.trim() || !brushModel.trim()) {
+      return setBrushModalError('Brand and Model are required');
+    }
+    try {
+      setBrushModalError('');
+      if (brushModalMode === 'add') {
+        const res = await toothbrushService.addToothbrush(
+          selectedMemberId,
+          brushBrand.trim(),
+          brushModel.trim(),
+          brushColor.trim() || 'White',
+          brushType,
+          brushPurchaseDate
+        );
+        const newBrushes = [res.data, ...toothbrushes];
+        setToothbrushes(newBrushes);
+        setSelectedBrushId(res.data.id);
+      } else {
+        const targetBrushId = selectedBrushId || (toothbrushes[0] && toothbrushes[0].id);
+        const res = await toothbrushService.updateToothbrush(
+          targetBrushId,
+          brushBrand.trim(),
+          brushModel.trim(),
+          brushColor.trim() || 'White',
+          brushType,
+          brushPurchaseDate
+        );
+        setToothbrushes(prev => prev.map(b => b.id === targetBrushId ? { ...b, ...res.data } : b));
+        setSelectedBrushId(targetBrushId);
+      }
+      setIsBrushModalOpen(false);
+      setError('');
+    } catch (err) {
+      console.error(err);
+      setBrushModalError(err.response?.data?.message || 'Failed to save toothbrush');
+    }
+  };
+
+  const handleQuickRegisterBrush = async () => {
+    try {
+      setError('');
+      let memberId = selectedMemberId;
+      if (!memberId || familyMembers.length === 0) {
+        const memRes = await familyService.addMember('Myself', 25, 'Other', 'Self', null);
+        memberId = memRes.data.id;
+        setFamilyMembers([memRes.data]);
+        setSelectedMemberId(memberId);
+      }
+      const today = new Date().toISOString().split('T')[0];
+      const brushRes = await toothbrushService.addToothbrush(
+        memberId,
+        'Oral-B',
+        'Pro 1000',
+        'Blue',
+        'Manual',
+        today
+      );
+      setToothbrushes([brushRes.data]);
+      setSelectedBrushId(brushRes.data.id);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to register default toothbrush.');
+    }
+  };
 
   const startCamera = async () => {
     setError('');
     setCapturedImage(null);
     setFileToUpload(null);
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: 480, height: 480 },
-        audio: false
-      });
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
+      let mediaStream;
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' }, width: { ideal: 640 }, height: { ideal: 640 } },
+          audio: false
+        });
+      } catch (e) {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
       }
+      setStream(mediaStream);
       setIsCameraActive(true);
     } catch (err) {
       console.error('Camera access error:', err);
-      setError('webcam access blocked. Please upload an image file instead.');
+      setError('Webcam access error. Please check browser camera permissions or upload an image file instead.');
     }
   };
+
+  useEffect(() => {
+    if (isCameraActive && stream && videoRef.current) {
+      const video = videoRef.current;
+      video.srcObject = stream;
+      const handleLoadedMetadata = () => {
+        video.play().catch(e => console.error('Video play error:', e));
+      };
+      video.addEventListener('loadedmetadata', handleLoadedMetadata);
+      // Also try playing immediately in case metadata already loaded
+      if (video.readyState >= 1) {
+        video.play().catch(e => console.error('Video play error:', e));
+      }
+      return () => {
+        video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      };
+    }
+  }, [isCameraActive, stream]);
 
   const stopCamera = () => {
     if (stream) {
@@ -107,9 +319,11 @@ const ScanModule = () => {
 
   useEffect(() => {
     return () => {
-      stopCamera();
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
     };
-  }, [stream]);
+  }, []);
 
   const captureFrame = () => {
     if (videoRef.current && canvasRef.current) {
@@ -164,7 +378,6 @@ const ScanModule = () => {
     let apiResult = null;
     let apiError = null;
 
-    // Start API request in parallel
     const apiPromise = (async () => {
       try {
         const formData = new FormData();
@@ -177,14 +390,12 @@ const ScanModule = () => {
       }
     })();
 
-    // Run checkpoints animation sequential checks
     for (let step = 0; step < 5; step++) {
       setCurrentCheckpoint(step);
-      await new Promise(r => setTimeout(r, 600)); // 600ms per checkpoint
+      await new Promise(r => setTimeout(r, 600));
     }
-    setCurrentCheckpoint(5); // All complete
+    setCurrentCheckpoint(5);
 
-    // Await API resolution
     await apiPromise;
 
     setAnalyzing(false);
@@ -226,8 +437,34 @@ const ScanModule = () => {
       <div className={`p-4 rounded-2xl border space-y-3.5 ${
         darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-sm'
       }`}>
+        
+        {/* Family Member Row */}
         <div>
-          <label htmlFor="scanMemberId" className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-1">Family Member</label>
+          <div className="flex justify-between items-center mb-1">
+            <label htmlFor="scanMemberId" className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400">
+              Family Member
+            </label>
+            <div className="flex items-center gap-1.5">
+              {selectedMemberId && (
+                <button
+                  type="button"
+                  onClick={openEditMemberModal}
+                  className="px-2 py-0.5 text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 dark:hover:bg-teal-900/60 rounded-md transition-all flex items-center gap-1 cursor-pointer"
+                  title="Edit member details"
+                >
+                  <Pencil className="w-3 h-3" /> Edit
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={openAddMemberModal}
+                className="px-2 py-0.5 text-[10px] font-bold text-primary dark:text-blue-400 bg-primary/10 hover:bg-primary/20 rounded-md transition-all flex items-center gap-1 cursor-pointer"
+                title="Add new family member"
+              >
+                <Plus className="w-3 h-3" /> Add
+              </button>
+            </div>
+          </div>
           <select
             id="scanMemberId"
             value={selectedMemberId}
@@ -239,14 +476,45 @@ const ScanModule = () => {
             }`}
             disabled={analyzing}
           >
-            {familyMembers.map((m) => (
-              <option key={m.id} value={m.id}>{m.name} ({m.relationship})</option>
-            ))}
+            {familyMembers.length === 0 ? (
+              <option value="">No profiles registered</option>
+            ) : (
+              familyMembers.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name} ({m.relationship || 'Self'})
+                </option>
+              ))
+            )}
           </select>
         </div>
 
+        {/* Toothbrush Row */}
         <div>
-          <label htmlFor="scanBrushId" className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-1">Toothbrush</label>
+          <div className="flex justify-between items-center mb-1">
+            <label htmlFor="scanBrushId" className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400">
+              Toothbrush
+            </label>
+            <div className="flex items-center gap-1.5">
+              {selectedBrushId && (
+                <button
+                  type="button"
+                  onClick={openEditBrushModal}
+                  className="px-2 py-0.5 text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 dark:hover:bg-teal-900/60 rounded-md transition-all flex items-center gap-1 cursor-pointer"
+                  title="Edit toothbrush details"
+                >
+                  <Pencil className="w-3 h-3" /> Edit
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={openAddBrushModal}
+                className="px-2 py-0.5 text-[10px] font-bold text-primary dark:text-blue-400 bg-primary/10 hover:bg-primary/20 rounded-md transition-all flex items-center gap-1 cursor-pointer"
+                title="Add new toothbrush"
+              >
+                <Plus className="w-3 h-3" /> Add
+              </button>
+            </div>
+          </div>
           <select
             id="scanBrushId"
             value={selectedBrushId}
@@ -259,13 +527,22 @@ const ScanModule = () => {
             disabled={analyzing || toothbrushes.length === 0}
           >
             {toothbrushes.length === 0 ? (
-              <option>No brushes registered</option>
+              <option value="">No brushes registered</option>
             ) : (
               toothbrushes.map((b) => (
                 <option key={b.id} value={b.id}>{b.brand} {b.model}</option>
               ))
             )}
           </select>
+          {toothbrushes.length === 0 && (
+            <button
+              type="button"
+              onClick={handleQuickRegisterBrush}
+              className="w-full mt-2 py-2 px-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-extrabold shadow cursor-pointer transition-all flex items-center justify-center gap-1.5 active:scale-[0.98]"
+            >
+              + Quick-Register Default Toothbrush
+            </button>
+          )}
         </div>
       </div>
 
@@ -277,7 +554,6 @@ const ScanModule = () => {
 
         {analyzing ? (
           <div className="w-full flex flex-col items-center justify-center py-6 px-2 space-y-6 animate-fade-in min-h-[300px]">
-            {/* CSS Styles for laser line scanning */}
             <style dangerouslySetInnerHTML={{__html: `
               @keyframes laser-scan {
                 0% { top: 0%; opacity: 0.8; }
@@ -295,25 +571,19 @@ const ScanModule = () => {
               }
             `}} />
 
-            {/* Scanned Image Viewfinder with laser line */}
             <div className="w-36 h-36 rounded-2xl overflow-hidden border-2 border-primary/30 relative bg-slate-950 shadow-lg shadow-primary/10 shrink-0">
               {capturedImage && (
                 <img src={capturedImage} alt="Scanning preview" className="w-full h-full object-cover opacity-60" />
               )}
-              {/* Glowing scanning laser line */}
               <div className="laser-line-scan" />
-              
-              {/* Corner brackets */}
               <div className="absolute top-2 left-2 w-3.5 h-3.5 border-t-2 border-l-2 border-teal-400 rounded-tl animate-pulse" />
               <div className="absolute top-2 right-2 w-3.5 h-3.5 border-t-2 border-r-2 border-teal-400 rounded-tr animate-pulse" />
               <div className="absolute bottom-2 left-2 w-3.5 h-3.5 border-b-2 border-l-2 border-teal-400 rounded-bl animate-pulse" />
               <div className="absolute bottom-2 right-2 w-3.5 h-3.5 border-b-2 border-r-2 border-teal-400 rounded-br animate-pulse" />
             </div>
 
-            {/* Checkpoints list */}
             <div className="w-full max-w-xs space-y-3 text-left bg-slate-50 dark:bg-slate-950/40 p-4 border dark:border-slate-850 rounded-2xl">
               <span className="text-[8px] font-black uppercase text-slate-400 block tracking-widest mb-1.5">AI Diagnostic Sequence</span>
-              
               {checkpoints.map((cp, idx) => {
                 const isDone = currentCheckpoint > idx;
                 const isActive = currentCheckpoint === idx;
@@ -340,13 +610,7 @@ const ScanModule = () => {
           </div>
         ) : isCameraActive ? (
           <div className="w-full relative rounded-xl overflow-hidden aspect-square bg-black flex items-center justify-center max-w-[320px]">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="w-full h-full object-cover"
-            />
-            {/* Guide Circle Overlay */}
+            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="w-32 h-32 rounded-full border-2 border-dashed border-teal-400 flex items-center justify-center animate-pulse">
                 <div className="w-24 h-24 rounded-full border border-teal-400/30 bg-teal-400/5 flex items-center justify-center">
@@ -357,7 +621,6 @@ const ScanModule = () => {
               </div>
             </div>
 
-            {/* controls */}
             <div className="absolute bottom-3 inset-x-0 flex justify-center gap-2">
               <button
                 onClick={captureFrame}
@@ -432,6 +695,208 @@ const ScanModule = () => {
           </div>
         )}
       </div>
+
+      {/* MEMBER EDIT / ADD MODAL */}
+      {isMemberModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className={`w-full max-w-md rounded-2xl border p-5 shadow-2xl relative ${
+            darkMode ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-100 text-slate-900'
+          }`}>
+            <button
+              onClick={() => setIsMemberModalOpen(false)}
+              className="absolute top-4 right-4 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-base font-bold mb-4 pr-6">
+              {memberModalMode === 'add' ? 'Add Family Member' : 'Edit Family Member Profile'}
+            </h3>
+
+            {memberModalError && (
+              <div className="bg-rose-50 dark:bg-rose-955/20 text-rose-500 border border-rose-100 p-2.5 rounded-xl mb-4 text-xs font-semibold">
+                {memberModalError}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveMemberModal} className="space-y-3 text-left">
+              <div>
+                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  value={memberName}
+                  onChange={(e) => setMemberName(e.target.value)}
+                  placeholder="E.g., Nirosha"
+                  className={`w-full px-3 py-2 rounded-xl border text-xs font-semibold outline-none ${
+                    darkMode ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                  }`}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">Age</label>
+                  <input
+                    type="number"
+                    value={memberAge}
+                    onChange={(e) => setMemberAge(e.target.value)}
+                    className={`w-full px-3 py-2 rounded-xl border text-xs font-semibold outline-none ${
+                      darkMode ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">Relationship</label>
+                  <select
+                    value={memberRelationship}
+                    onChange={(e) => setMemberRelationship(e.target.value)}
+                    className={`w-full px-3 py-2 rounded-xl border text-xs font-semibold outline-none ${
+                      darkMode ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
+                  >
+                    {relationships.map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-2 justify-end pt-3 mt-4 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsMemberModalOpen(false)}
+                  className="px-3.5 py-1.5 rounded-xl border text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 rounded-xl bg-primary hover:bg-primary-dark text-white text-xs font-bold shadow cursor-pointer"
+                >
+                  Save Profile
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* TOOTHBRUSH EDIT / ADD MODAL */}
+      {isBrushModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className={`w-full max-w-md rounded-2xl border p-5 shadow-2xl relative ${
+            darkMode ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-100 text-slate-900'
+          }`}>
+            <button
+              onClick={() => setIsBrushModalOpen(false)}
+              className="absolute top-4 right-4 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-base font-bold mb-4 pr-6">
+              {brushModalMode === 'add' ? 'Register New Toothbrush' : 'Edit Toothbrush Details'}
+            </h3>
+
+            {brushModalError && (
+              <div className="bg-rose-50 dark:bg-rose-955/20 text-rose-500 border border-rose-100 p-2.5 rounded-xl mb-4 text-xs font-semibold">
+                {brushModalError}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveBrushModal} className="space-y-3 text-left">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">Brand</label>
+                  <input
+                    type="text"
+                    value={brushBrand}
+                    onChange={(e) => setBrushBrand(e.target.value)}
+                    placeholder="E.g., Oral-B"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs font-semibold outline-none ${
+                      darkMode ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">Model</label>
+                  <input
+                    type="text"
+                    value={brushModel}
+                    onChange={(e) => setBrushModel(e.target.value)}
+                    placeholder="E.g., Pro 1000"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs font-semibold outline-none ${
+                      darkMode ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">Color</label>
+                  <input
+                    type="text"
+                    value={brushColor}
+                    onChange={(e) => setBrushColor(e.target.value)}
+                    placeholder="E.g., Blue"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs font-semibold outline-none ${
+                      darkMode ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">Brush Type</label>
+                  <select
+                    value={brushType}
+                    onChange={(e) => setBrushType(e.target.value)}
+                    className={`w-full px-3 py-2 rounded-xl border text-xs font-semibold outline-none ${
+                      darkMode ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
+                  >
+                    {brushTypes.map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">Purchase Date</label>
+                <input
+                  type="date"
+                  value={brushPurchaseDate}
+                  onChange={(e) => setBrushPurchaseDate(e.target.value)}
+                  className={`w-full px-3 py-2 rounded-xl border text-xs font-semibold outline-none ${
+                    darkMode ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                  }`}
+                  required
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end pt-3 mt-4 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsBrushModalOpen(false)}
+                  className="px-3.5 py-1.5 rounded-xl border text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 rounded-xl bg-primary hover:bg-primary-dark text-white text-xs font-bold shadow cursor-pointer"
+                >
+                  Save Toothbrush
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

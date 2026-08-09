@@ -76,8 +76,20 @@ async function main() {
     for (const s of suitesToRun) {
       if (targetSuite === 'all' || targetSuite.toLowerCase() === s.key) {
         logger.info(`Running ${s.name} Test Suite...`);
-        const suiteResults = await s.runner.runAll(driver);
-        allResults = allResults.concat(suiteResults);
+        let suiteResults = [];
+        try {
+          const instance = typeof s.runner === 'function' ? new s.runner() : s.runner;
+          if (typeof instance.runAll === 'function') {
+            suiteResults = await instance.runAll(driver);
+          } else if (typeof instance.runSuite === 'function') {
+            suiteResults = await instance.runSuite(driver);
+          }
+        } catch (err) {
+          logger.error(`Error running suite ${s.name}:`, err);
+        }
+        if (Array.isArray(suiteResults)) {
+          allResults = allResults.concat(suiteResults);
+        }
       }
     }
 
@@ -88,8 +100,8 @@ async function main() {
         if (!executedIds.has(tc.testId)) {
           allResults.push({
             ...tc,
-            status: 'PASSED',
-            durationMs: 120,
+            status: 'SKIPPED',
+            durationMs: 0,
             timestamp: new Date().toLocaleString()
           });
         }

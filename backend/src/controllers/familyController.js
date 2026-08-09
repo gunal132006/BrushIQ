@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 exports.getFamilyMembers = async (req, res) => {
   try {
-    const result = await db.query(
+    let result = await db.query(
       `SELECT 
          f.id, 
          f.name, 
@@ -40,23 +40,58 @@ exports.getFamilyMembers = async (req, res) => {
       [req.user.id]
     );
 
+    // Auto-create a default family member & toothbrush if user has none yet
+    if (result.rows.length === 0) {
+      const userRes = await db.query('SELECT full_name FROM users WHERE id = $1', [req.user.id]);
+      const userName = (userRes.rows[0] && userRes.rows[0].full_name) ? userRes.rows[0].full_name : 'Myself';
+      
+      const newMember = await db.query(
+        `INSERT INTO family_members (user_id, name, age, gender, relationship)
+         VALUES ($1, $2, 25, 'Other', 'Self')
+         RETURNING id`,
+        [req.user.id, userName]
+      );
+      const memberId = newMember.rows[0].id;
+
+      await db.query(
+        `INSERT INTO toothbrushes (family_member_id, brand, model, color, type, purchase_date)
+         VALUES ($1, 'Oral-B', 'Pro 1000', 'Blue', 'Manual', CURRENT_DATE)`,
+        [memberId]
+      );
+
+      // Re-query to fetch freshly created member with toothbrush
+      result = await db.query(
+        `SELECT 
+           f.id, f.name, f.age, f.gender, f.relationship, 
+           f.profile_photo_url as "profilePhotoUrl", f.created_at as "createdAt",
+           t.id as "toothbrushId", t.brand as "toothbrushBrand", t.model as "toothbrushModel",
+           t.color as "toothbrushColor", t.type as "toothbrushType", t.purchase_date as "toothbrushPurchaseDate",
+           s.health_score as "healthScore", s.condition as "toothbrushCondition", s.scan_date as "lastScanDate"
+         FROM family_members f
+         LEFT JOIN LATERAL (
+           SELECT id, brand, model, color, type, purchase_date
+           FROM toothbrushes
+           WHERE family_member_id = f.id
+           ORDER BY created_at DESC
+           LIMIT 1
+         ) t ON TRUE
+         LEFT JOIN LATERAL (
+           SELECT health_score, condition, scan_date
+           FROM scans
+           WHERE toothbrush_id = t.id
+           ORDER BY scan_date DESC
+           LIMIT 1
+         ) s ON TRUE
+         WHERE f.user_id = $1
+         ORDER BY f.created_at ASC`,
+        [req.user.id]
+      );
+    }
+
     const formattedRows = result.rows.map(row => ({
       ...row,
       healthScore: row.healthScore ? parseFloat(row.healthScore) : null
     }));
-
-    // Retrieve global count of toothbrushes for this user's family members
-    const toothbrushCountRes = await db.query(
-      `SELECT count(*)::int as count 
-       FROM toothbrushes t 
-       JOIN family_members f ON t.family_member_id = f.id 
-       WHERE f.user_id = $1`, 
-      [req.user.id]
-    );
-    const toothbrushCount = toothbrushCountRes.rows[0].count;
-    const familyMemberCount = formattedRows.length;
-    const assignedToothbrushCount = formattedRows.filter(r => r.toothbrushId).length;
-    const missingAssignments = familyMemberCount - assignedToothbrushCount;
 
     res.json(formattedRows);
   } catch (err) {

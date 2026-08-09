@@ -1,0 +1,37 @@
+{
+  "testName": "100 Virtual Users Baseline Load Test",
+  "timestamp": "2026-08-09T08:01:46.595Z",
+  "config": {
+    "virtualUsers": 100,
+    "durationSeconds": 60,
+    "endpoints": [
+      "/health",
+      "/api/health",
+      "/api/system/database-status",
+      "/",
+      "/api/tips"
+    ]
+  },
+  "metrics": {
+    "totalRequests": 344575,
+    "successRequests": 344575,
+    "failedRequests": 0,
+    "requestsPerSecond": 5741.58,
+    "throughputKBps": 5946.1,
+    "successRatePercent": 100,
+    "errorRatePercent": 0,
+    "latency": {
+      "minMs": 4.46,
+      "avgMs": 12.66,
+      "maxMs": 293.16,
+      "p50Ms": 10.07,
+      "p90Ms": 21.21,
+      "p95Ms": 23.69,
+      "p99Ms": 29.38
+    }
+  },
+  "statusCounts": {
+    "200": 344575
+  },
+  "slaStatus": "PASSED"
+}

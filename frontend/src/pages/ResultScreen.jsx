@@ -63,6 +63,31 @@ const ResultScreen = () => {
 
     fetchBrushInfo();
 
+    // Auto-save scan report to history automatically
+    const autoSave = async () => {
+      try {
+        await scanService.saveScan({
+          toothbrushId,
+          imageUrl: analysis.imageUrl,
+          wearPercentage: analysis.wearPercentage,
+          healthScore: analysis.healthScore,
+          remainingLifeDays: analysis.remainingLifeDays,
+          condition: analysis.condition,
+          confidenceScore: analysis.confidenceScore,
+          bristleSpreading: analysis.bristleSpreading,
+          bristleBending: analysis.bristleBending,
+          bristleDamage: analysis.bristleDamage,
+          brushingFrequency,
+          detectedIssues: analysis.detectedIssues,
+          aiRecommendation: analysis.aiRecommendation,
+        });
+        setSaved(true);
+      } catch (err) {
+        console.error('Auto-save scan error:', err);
+      }
+    };
+    autoSave();
+
     // Trigger ring count-up animation
     let start = 0;
     const end = Math.round(analysis.healthScore);

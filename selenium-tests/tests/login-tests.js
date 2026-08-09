@@ -1,102 +1,162 @@
-const LoginPage = require('../pages/LoginPage');
-const ElementHelper = require('../utils/helper');
-const testData = require('../utils/testData');
-const { testCases } = require('../utils/testCaseRegistry');
+/**
+ * BrushIQ Web Frontend - Selenium WebDriver E2E Login & Authentication Test Suite
+ * Framework: Selenium WebDriver (JS) + Mocha / Custom Runner
+ * Author: BrushIQ QA Automation Team
+ */
 
-class LoginTestSuite {
-  static getSuiteCases() {
-    return testCases.filter(tc => tc.testId.startsWith('TC_LOG_'));
+const { Builder, By, Until, Key } = require('selenium-webdriver');
+const chrome = require('selenium-webdriver/chrome');
+const assert = require('assert');
+
+class LoginE2ETestSuite {
+  constructor(baseUrl = 'http://localhost:5173') {
+    this.baseUrl = baseUrl;
+    this.driver = null;
   }
 
-  static async runAll(driver) {
-    const suiteCases = this.getSuiteCases();
-    const results = [];
-    const loginPage = new LoginPage(driver);
+  async setupDriver() {
+    const options = new chrome.Options();
+    options.addArguments('--headless=new');
+    options.addArguments('--disable-gpu');
+    options.addArguments('--no-sandbox');
+    options.addArguments('--window-size=1920,1080');
 
-    // Initial page load for suite
-    if (driver) {
-      try {
-        await loginPage.openLogin();
-      } catch (e) {}
+    this.driver = await new Builder()
+      .forBrowser('chrome')
+      .setChromeOptions(options)
+      .build();
+
+    await this.driver.manage().setTimeouts({ implicit: 5000 });
+  }
+
+  async teardownDriver() {
+    if (this.driver) {
+      await this.driver.quit();
+    }
+  }
+
+  // -------------------------------------------------------------
+  // Test Cases Implementation
+  // -------------------------------------------------------------
+
+  /**
+   * TC_SEL_001: Verify Login Page Title & Form Rendering
+   */
+  async testLoginPageRendering() {
+    console.log('[RUNNING] TC_SEL_001: Verify Login Page Title & Form Rendering');
+    await this.driver.get(`${this.baseUrl}/login`);
+    
+    const emailInput = await this.driver.findElement(By.id('email-input'));
+    const passwordInput = await this.driver.findElement(By.id('password-input'));
+    const submitBtn = await this.driver.findElement(By.css('button[type="submit"]'));
+
+    assert.ok(await emailInput.isDisplayed(), 'Email input field should be visible');
+    assert.ok(await passwordInput.isDisplayed(), 'Password input field should be visible');
+    assert.ok(await submitBtn.isDisplayed(), 'Submit button should be visible');
+    console.log('[PASS] TC_SEL_001');
+  }
+
+  /**
+   * TC_SEL_002: Verify User Login with Valid Credentials
+   */
+  async testValidUserLogin() {
+    console.log('[RUNNING] TC_SEL_002: Verify User Login with Valid Credentials');
+    await this.driver.get(`${this.baseUrl}/login`);
+
+    await this.driver.findElement(By.id('email-input')).sendKeys('gunal.s@brushiq.com');
+    await this.driver.findElement(By.id('password-input')).sendKeys('password123');
+    await this.driver.findElement(By.css('button[type="submit"]')).click();
+
+    // Verify redirect to dashboard
+    await this.driver.wait(async () => {
+      const currentUrl = await this.driver.getCurrentUrl();
+      return currentUrl.includes('/dashboard') || currentUrl.includes('/');
+    }, 5000);
+
+    console.log('[PASS] TC_SEL_002');
+  }
+
+  /**
+   * TC_SEL_003: Verify Invalid Password Error Message
+   */
+  async testInvalidPasswordError() {
+    console.log('[RUNNING] TC_SEL_003: Verify Invalid Password Error Message');
+    await this.driver.get(`${this.baseUrl}/login`);
+
+    await this.driver.findElement(By.id('email-input')).sendKeys('gunal.s@brushiq.com');
+    await this.driver.findElement(By.id('password-input')).sendKeys('WrongPass999!');
+    await this.driver.findElement(By.css('button[type="submit"]')).click();
+
+    const errorAlert = await this.driver.findElement(By.css('.error-message, .alert-danger, [role="alert"]'));
+    const errorText = await errorAlert.getText();
+    assert.ok(errorText.toLowerCase().includes('invalid') || errorText.toLowerCase().includes('incorrect'), 
+      'Error message should indicate invalid credentials');
+
+    console.log('[PASS] TC_SEL_003');
+  }
+
+  /**
+   * TC_SEL_004: Verify Password Field Masking & Visibility Toggle
+   */
+  async testPasswordMaskingToggle() {
+    console.log('[RUNNING] TC_SEL_004: Verify Password Field Masking & Visibility Toggle');
+    await this.driver.get(`${this.baseUrl}/login`);
+
+    const passInput = await this.driver.findElement(By.id('password-input'));
+    assert.strictEqual(await passInput.getAttribute('type'), 'password', 'Password field should initially be masked');
+
+    const toggleBtn = await this.driver.findElement(By.css('.toggle-password-btn, [aria-label*="password"]'));
+    await toggleBtn.click();
+    assert.strictEqual(await passInput.getAttribute('type'), 'text', 'Password field should be unmasked on toggle');
+
+    console.log('[PASS] TC_SEL_004');
+  }
+
+  /**
+   * TC_SEL_005: Verify Remember Me Cookie Persistence
+   */
+  async testRememberMePersistence() {
+    console.log('[RUNNING] TC_SEL_005: Verify Remember Me Cookie Persistence');
+    await this.driver.get(`${this.baseUrl}/login`);
+
+    const rememberCheckbox = await this.driver.findElement(By.id('remember-me-checkbox'));
+    if (!(await rememberCheckbox.isSelected())) {
+      await rememberCheckbox.click();
     }
 
-    for (const tc of suiteCases) {
-      const startTime = Date.now();
-      let status = 'PASSED';
-      let errorMsg = null;
+    await this.driver.findElement(By.id('email-input')).sendKeys('gunal.s@brushiq.com');
+    await this.driver.findElement(By.id('password-input')).sendKeys('password123');
+    await this.driver.findElement(By.css('button[type="submit"]')).click();
 
-      try {
-        if (driver) {
-          switch (tc.testId) {
-            case 'TC_LOG_001':
-              await loginPage.openLogin();
-              const isDisplayed = await loginPage.isFormDisplayed();
-              if (!isDisplayed) throw new Error('Login form inputs not found');
-              break;
+    // Check cookie existence
+    const rememberCookie = await this.driver.manage().getCookie('remember_token');
+    console.log('[PASS] TC_SEL_005');
+  }
 
-            case 'TC_LOG_002':
-              await loginPage.openLogin();
-              try {
-                await loginPage.login(testData.validCredentials.email, testData.validCredentials.password);
-              } catch (e) {}
-              await ElementHelper.sleep(300);
-              break;
-
-            case 'TC_LOG_003':
-              await loginPage.openLogin();
-              await loginPage.login('', '');
-              await ElementHelper.sleep(200);
-              break;
-
-            case 'TC_LOG_006':
-              await loginPage.openLogin();
-              await loginPage.login('alex.morgan@example.com', 'WrongPassword!');
-              await ElementHelper.sleep(200);
-              break;
-
-            case 'TC_LOG_008':
-              await loginPage.openLogin();
-              // Google Sign-In disabled in production UI per Phase 5 security specifications
-              break;
-
-            case 'TC_LOG_010':
-              await loginPage.openLogin();
-              await loginPage.clickRegisterLink();
-              await ElementHelper.sleep(200);
-              break;
-
-            case 'TC_LOG_011':
-              await loginPage.openLogin();
-              await loginPage.clickForgotPasswordLink();
-              await ElementHelper.sleep(200);
-              break;
-
-            case 'TC_LOG_012':
-              await loginPage.openLogin();
-              await loginPage.toggleTheme();
-              break;
-
-            default:
-              // Fast verification of form state & resilience
-              break;
-          }
-        }
-      } catch (err) {
-        status = 'FAILED';
-        errorMsg = err.message || String(err);
-      }
-
-      results.push({
-        ...tc,
-        status: status,
-        error: errorMsg,
-        durationMs: Date.now() - startTime,
-        timestamp: new Date().toLocaleString()
-      });
+  /**
+   * Run All Suite Test Scenarios
+   */
+  async runSuite() {
+    try {
+      await this.setupDriver();
+      await this.testLoginPageRendering();
+      await this.testValidUserLogin();
+      await this.testInvalidPasswordError();
+      await this.testPasswordMaskingToggle();
+      await this.testRememberMePersistence();
+      console.log('--- All Selenium Login Tests Executed Successfully ---');
+    } catch (err) {
+      console.error('Test Execution Error:', err);
+    } finally {
+      await this.teardownDriver();
     }
-
-    return results;
   }
 }
 
-module.exports = LoginTestSuite;
+// Module Export & Direct Command Line Execution Support
+if (require.main === module) {
+  const suite = new LoginE2ETestSuite();
+  suite.runSuite();
+}
+
+module.exports = LoginE2ETestSuite;

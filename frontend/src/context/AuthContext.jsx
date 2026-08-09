@@ -35,7 +35,10 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       return userData;
     } catch (err) {
-      throw err.response?.data?.message || 'Login failed';
+      if (!err.response) {
+        throw 'Cannot connect to server. Make sure the backend is running on port 5000.';
+      }
+      throw err.response?.data?.message || 'Login failed. Please try again.';
     }
   };
 
@@ -47,7 +50,10 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       return userData;
     } catch (err) {
-      throw err.response?.data?.message || 'Registration failed';
+      if (!err.response) {
+        throw 'Cannot connect to server. Make sure the backend is running on port 5000.';
+      }
+      throw err.response?.data?.message || 'Registration failed. Please try again.';
     }
   };
 

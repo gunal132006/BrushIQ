@@ -8,5 +8,11 @@ export default defineConfig({
     react(),
     tailwindcss()
   ],
+  server: {
+    headers: {
+      'Permissions-Policy': 'camera=*, microphone=()',
+    }
+  }
 })
+
 

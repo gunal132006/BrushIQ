@@ -86,15 +86,15 @@ exports.saveScan = async (req, res) => {
         imageUrl,
         wearPercentage,
         healthScore,
-        remainingLifeDays,
+        remainingLifeDays !== undefined ? remainingLifeDays : Math.max(1, Math.round((healthScore / 100) * 90)),
         condition,
-        confidenceScore,
-        bristleSpreading,
-        bristleBending,
-        bristleDamage,
+        confidenceScore !== undefined ? confidenceScore : 95.0,
+        bristleSpreading !== undefined ? bristleSpreading : 0.0,
+        bristleBending !== undefined ? bristleBending : 0.0,
+        bristleDamage !== undefined ? bristleDamage : 0.0,
         brushingFrequency || '2x daily',
         detectedIssues || [],
-        aiRecommendation,
+        aiRecommendation || 'Routine check recommended.',
       ]
     );
 
@@ -137,8 +137,8 @@ exports.saveScan = async (req, res) => {
 
     res.status(201).json(savedScan);
   } catch (err) {
-    console.error('Error saving scan:', err.message);
-    res.status(500).json({ message: 'Server error saving scan result' });
+    console.error('Error saving scan full stack:', err);
+    res.status(500).json({ message: 'Server error saving scan result', error: err.message });
   }
 };
 
