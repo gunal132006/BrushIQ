@@ -2,6 +2,10 @@ package com.brushiq.data.repository
 
 import com.brushiq.data.local.UserDao
 import com.brushiq.data.local.UserEntity
+import com.brushiq.data.local.FamilyMemberDao
+import com.brushiq.data.local.ToothbrushDao
+import com.brushiq.data.local.ScanDao
+import com.brushiq.data.local.ReminderDao
 import com.brushiq.data.remote.AuthApi
 import com.brushiq.data.remote.LoginRequest
 import com.brushiq.data.remote.RegisterRequest
@@ -22,6 +26,10 @@ import javax.inject.Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val authApi: AuthApi,
     private val userDao: UserDao,
+    private val familyMemberDao: FamilyMemberDao,
+    private val toothbrushDao: ToothbrushDao,
+    private val scanDao: ScanDao,
+    private val reminderDao: ReminderDao,
     private val preferenceManager: PreferenceManager
 ) : AuthRepository {
 
@@ -116,6 +124,10 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun logout(): Resource<Unit> {
         userDao.clear()
+        familyMemberDao.clearAll()
+        toothbrushDao.clearAll()
+        scanDao.clearAll()
+        reminderDao.clearAll()
         preferenceManager.clearAll()
         try {
             FirebaseAuth.getInstance().signOut()

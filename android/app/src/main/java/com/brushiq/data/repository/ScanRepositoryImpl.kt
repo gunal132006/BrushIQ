@@ -67,6 +67,9 @@ class ScanRepositoryImpl @Inject constructor(
                         scanDate = it.scanDate ?: ""
                     )
                 }
+                if (toothbrushId.isBlank()) {
+                    scanDao.clearAll()
+                }
                 scanDao.insertAll(entities)
                 Resource.Success(Unit)
             }
