@@ -36,16 +36,8 @@ object NetworkConfig {
         val environment: EnvironmentType
         val constUrl: String
 
-        if (!BuildConfig.DEBUG) {
-            environment = EnvironmentType.PRODUCTION
-            constUrl = PROD_BASE_URL
-        } else if (isRunningOnEmulator()) {
-            environment = EnvironmentType.EMULATOR_DEBUG
-            constUrl = EMULATOR_BASE_URL
-        } else {
-            environment = EnvironmentType.PHYSICAL_DEVICE_DEBUG
-            constUrl = PHYSICAL_DEVICE_BASE_URL
-        }
+        constUrl = PROD_BASE_URL
+        environment = if (!BuildConfig.DEBUG) EnvironmentType.PRODUCTION else if (isRunningOnEmulator()) EnvironmentType.EMULATOR_DEBUG else EnvironmentType.PHYSICAL_DEVICE_DEBUG
 
         // Safe development logging - NO secrets, tokens, or credentials logged
         Log.d("AuthFlow", "Selected Base URL=[$constUrl]")

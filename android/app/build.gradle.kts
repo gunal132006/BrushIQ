@@ -24,8 +24,8 @@ android {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "DEV_EMULATOR_BASE_URL", "\"http://10.0.2.2:5000/api/\"")
-        buildConfigField("String", "DEV_PHYSICAL_BASE_URL", "\"http://10.49.32.98:5000/api/\"")
+        buildConfigField("String", "DEV_EMULATOR_BASE_URL", "\"https://brushiq-backend.onrender.com/api/\"")
+        buildConfigField("String", "DEV_PHYSICAL_BASE_URL", "\"https://brushiq-backend.onrender.com/api/\"")
         buildConfigField("String", "PROD_BASE_URL", "\"https://brushiq-backend.onrender.com/api/\"")
     }
 
