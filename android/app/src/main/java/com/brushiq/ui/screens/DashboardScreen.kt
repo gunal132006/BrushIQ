@@ -287,8 +287,10 @@ fun SectionHeader(title: String, onActionClick: () -> Unit) {
 fun RecentScanItem(name: String, model: String, score: Int, condition: String) {
     val condColor = when(condition) {
         "Good" -> Success
+        "Moderate Wear" -> Warning
         "Replace Soon" -> Alert
-        else -> Error
+        "Replace Immediately" -> Error
+        else -> Warning
     }
     Card(
         modifier = Modifier.fillMaxWidth(),

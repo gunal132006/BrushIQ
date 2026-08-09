@@ -71,16 +71,12 @@ const HistoryModule = () => {
   }, [selectedMemberId]);
 
   useEffect(() => {
-    if (!selectedBrushId) {
-      setScans([]);
-      return;
-    }
-    
     const fetchHistory = async () => {
       setHistoryLoading(true);
       try {
-        const res = await scanService.getHistory(selectedBrushId);
-        setScans(res.data.sort((a, b) => new Date(a.scanDate) - new Date(b.scanDate)));
+        const res = await scanService.getHistory(selectedBrushId || '');
+        const data = Array.isArray(res.data) ? res.data : [];
+        setScans(data.sort((a, b) => new Date(a.scanDate) - new Date(b.scanDate)));
       } catch (err) {
         console.error(err);
       } finally {
