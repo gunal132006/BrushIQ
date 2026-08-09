@@ -34,4 +34,10 @@ router.post('/change-password', authMiddleware, authLimiter, authController.chan
 // @access  Private
 router.get('/me', authMiddleware, authController.getMe);
 
+// @route   POST api/auth/reset-limiter
+// @desc    Development helper to clear rate-limit lockout state for testing
+// @access  Public (Restricted to Development mode inside controller handler)
+const { resetAuthLimiter } = require('../middlewares/rateLimiter');
+router.post('/reset-limiter', resetAuthLimiter);
+
 module.exports = router;

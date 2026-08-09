@@ -11,6 +11,9 @@ const { apiLimiter } = require('./middlewares/rateLimiter');
 
 const app = express();
 
+// Enable trust proxy for accurate client IP rate limiting behind Render/Vercel reverse proxies
+app.set('trust proxy', 1);
+
 // Disable x-powered-by header for security hardening
 app.disable('x-powered-by');
 
