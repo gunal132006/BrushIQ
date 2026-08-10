@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { Jimp, intToRGBA, rgbaToInt } = require('jimp');
 const { v4: uuidv4 } = require('uuid');
+const mlAnalyzer = require('./mlAnalyzer');
 
 /**
  * AI toothbrush analysis engine.
@@ -168,7 +169,8 @@ exports.analyzeToothbrushImage = async (imagePath) => {
       spreadScore,
       densityScore,
       frayingScore,
-      bendingScore
+      bendingScore,
+      mlModelPredictions: await mlAnalyzer.predict(imagePath)
     };
 
   } else {
@@ -775,7 +777,8 @@ exports.analyzeToothbrushImage = async (imagePath) => {
       spreadScore,
       densityScore,
       frayingScore,
-      bendingScore
+      bendingScore,
+      mlModelPredictions: await mlAnalyzer.predict(img)
     };
   }
 };
