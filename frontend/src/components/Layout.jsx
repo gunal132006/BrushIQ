@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { APP_VERSION } from '../config/version';
 import { ArrowLeft, Sun, Moon } from 'lucide-react';
 import SidebarNavigation from './SidebarNavigation';
 import BottomNavigation from './BottomNavigation';
@@ -73,8 +74,8 @@ const Layout = ({ children }) => {
             <div>
               <h2 className="text-base sm:text-lg font-bold m-0 leading-none tracking-tight flex items-center gap-2">
                 {getHeaderTitle(location.pathname)}
-                <span className="inline-block px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                  BUILD: 2026-08-09-DESKTOP-FIX-01
+                <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                  BUILD: {APP_VERSION}
                 </span>
               </h2>
               <p className={`text-[10px] sm:text-[11px] mt-0.5 font-semibold ${darkMode ? 'text-slate-500' : 'text-slate-400'}`}>

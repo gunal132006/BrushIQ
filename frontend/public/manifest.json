@@ -1,0 +1,16 @@
+{
+  "short_name": "BrushIQ",
+  "name": "BrushIQ - AI Oral Healthcare Platform",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#090d17",
+  "theme_color": "#14B8A6",
+  "display": "standalone",
+  "orientation": "any"
+}
