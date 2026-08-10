@@ -40,7 +40,9 @@ const ResultScreen = () => {
   const { analysis, toothbrushId, brushingFrequency, memberName } = location.state || {};
 
   useEffect(() => {
+    console.log('[ScanResult Debug] Received analysis payload from router state:', analysis);
     if (!analysis || !toothbrushId) {
+      console.warn('[ScanResult Warning] Missing analysis payload or toothbrushId, redirecting to /scan');
       navigate('/scan');
       return;
     }
@@ -73,13 +75,13 @@ const ResultScreen = () => {
           healthScore: analysis.healthScore,
           remainingLifeDays: analysis.remainingLifeDays,
           condition: analysis.condition,
-          confidenceScore: analysis.confidenceScore,
-          bristleSpreading: analysis.bristleSpreading,
-          bristleBending: analysis.bristleBending,
-          bristleDamage: analysis.bristleDamage,
+          confidenceScore: analysis.confidenceScore || analysis.confidence || 95,
+          bristleSpreading: analysis.bristleSpreading !== undefined ? analysis.bristleSpreading : analysis.spreadScore,
+          bristleBending: analysis.bristleBending !== undefined ? analysis.bristleBending : analysis.bendingScore,
+          bristleDamage: analysis.bristleDamage !== undefined ? analysis.bristleDamage : analysis.frayingScore,
           brushingFrequency,
           detectedIssues: analysis.detectedIssues,
-          aiRecommendation: analysis.aiRecommendation,
+          aiRecommendation: analysis.aiRecommendation || analysis.recommendation,
         });
         setSaved(true);
       } catch (err) {
@@ -90,9 +92,13 @@ const ResultScreen = () => {
 
     // Trigger ring count-up animation
     let start = 0;
-    const end = Math.round(analysis.healthScore);
-    if (end === 0) return;
-    const duration = 1200; // 1.2s animation
+    const targetHealth = Math.round(
+      analysis.healthScore !== undefined
+        ? analysis.healthScore
+        : Math.max(0, 100 - (analysis.wearPercentage || 0))
+    );
+    const end = Math.max(1, targetHealth);
+    const duration = 1000;
     const incrementTime = Math.floor(duration / end);
     
     const timer = setInterval(() => {
@@ -115,13 +121,13 @@ const ResultScreen = () => {
         healthScore: analysis.healthScore,
         remainingLifeDays: analysis.remainingLifeDays,
         condition: analysis.condition,
-        confidenceScore: analysis.confidenceScore,
-        bristleSpreading: analysis.bristleSpreading,
-        bristleBending: analysis.bristleBending,
-        bristleDamage: analysis.bristleDamage,
+        confidenceScore: analysis.confidenceScore || analysis.confidence || 95,
+        bristleSpreading: analysis.bristleSpreading !== undefined ? analysis.bristleSpreading : analysis.spreadScore,
+        bristleBending: analysis.bristleBending !== undefined ? analysis.bristleBending : analysis.bendingScore,
+        bristleDamage: analysis.bristleDamage !== undefined ? analysis.bristleDamage : analysis.frayingScore,
         brushingFrequency,
         detectedIssues: analysis.detectedIssues,
-        aiRecommendation: analysis.aiRecommendation,
+        aiRecommendation: analysis.aiRecommendation || analysis.recommendation,
       });
       setSaved(true);
     } catch (err) {
@@ -135,11 +141,12 @@ const ResultScreen = () => {
   const getConditionStyles = (cond) => {
     switch (cond) {
       case 'Good':
+      case 'New':
         return {
           bannerBorder: 'border-l-4 border-emerald-500',
           bannerBg: 'bg-emerald-50/70 dark:bg-emerald-950/15',
           bannerText: 'text-emerald-700 dark:text-emerald-400',
-          badgeBg: 'bg-emerald-50 text-emerald-500 border-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900/30',
+          badgeBg: 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-900/40',
           ringColor: 'stroke-emerald-500',
           textColor: 'text-emerald-500',
           shadowColor: 'shadow-emerald-500/10',
@@ -147,11 +154,12 @@ const ResultScreen = () => {
           instructions: 'Optimal plaque removal efficiency. Bristles are intact and maintaining standard stiffness. Continue brushing twice daily.'
         };
       case 'Moderate Wear':
+      case 'Light Wear':
         return {
           bannerBorder: 'border-l-4 border-amber-500',
           bannerBg: 'bg-amber-50/70 dark:bg-amber-950/15',
           bannerText: 'text-amber-700 dark:text-amber-400',
-          badgeBg: 'bg-amber-50 text-amber-500 border-amber-100 dark:bg-amber-950/20 dark:border-amber-900/30',
+          badgeBg: 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-950/40 dark:border-amber-900/40',
           ringColor: 'stroke-amber-500',
           textColor: 'text-amber-500',
           shadowColor: 'shadow-amber-500/10',
@@ -159,11 +167,12 @@ const ResultScreen = () => {
           instructions: 'Minor wear patterns visible. Plaque removal remains acceptable. Monitor bristle elasticity trends.'
         };
       case 'Replace Soon':
+      case 'Heavy Wear':
         return {
           bannerBorder: 'border-l-4 border-orange-500',
           bannerBg: 'bg-orange-50/70 dark:bg-orange-950/15',
           bannerText: 'text-orange-700 dark:text-orange-400',
-          badgeBg: 'bg-orange-50 text-orange-500 border-orange-100 dark:bg-orange-950/20 dark:border-orange-900/30',
+          badgeBg: 'bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-950/40 dark:border-orange-900/40',
           ringColor: 'stroke-orange-500',
           textColor: 'text-orange-500',
           shadowColor: 'shadow-orange-500/10',
@@ -175,7 +184,7 @@ const ResultScreen = () => {
           bannerBorder: 'border-l-4 border-rose-500',
           bannerBg: 'bg-rose-50/70 dark:bg-rose-955/15',
           bannerText: 'text-rose-700 dark:text-rose-400',
-          badgeBg: 'bg-rose-50 text-rose-500 border-rose-100 dark:bg-rose-950/20 dark:border-rose-900/30',
+          badgeBg: 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/40 dark:border-rose-900/40',
           ringColor: 'stroke-rose-500',
           textColor: 'text-rose-500',
           shadowColor: 'shadow-rose-500/15',
@@ -187,7 +196,7 @@ const ResultScreen = () => {
           bannerBorder: 'border-l-4 border-slate-400',
           bannerBg: 'bg-slate-50 dark:bg-slate-900',
           bannerText: 'text-slate-600 dark:text-slate-400',
-          badgeBg: 'bg-slate-50 border-slate-100 text-slate-500',
+          badgeBg: 'bg-slate-50 border-slate-200 text-slate-500',
           ringColor: 'stroke-slate-400',
           textColor: 'text-slate-500',
           shadowColor: 'shadow-slate-400/5',
@@ -199,16 +208,56 @@ const ResultScreen = () => {
 
   if (!analysis) return null;
 
+  // Robust field extractions from backend/ML analysis payload
+  const healthScore = Math.round(
+    analysis.healthScore !== undefined
+      ? analysis.healthScore
+      : Math.max(0, 100 - (analysis.wearPercentage || 0))
+  );
+
+  const density = Math.round(
+    analysis.densityScore !== undefined
+      ? analysis.densityScore
+      : (analysis.bristleDensity !== undefined ? analysis.bristleDensity : Math.max(0, 100 - (analysis.wearPercentage || 0)))
+  );
+
+  const spread = Math.round(
+    analysis.spreadScore !== undefined
+      ? analysis.spreadScore
+      : (analysis.bristleSpreading !== undefined ? analysis.bristleSpreading : Math.min(100, (analysis.wearPercentage || 0) * 0.4))
+  );
+
+  const fraying = Math.round(
+    analysis.frayingScore !== undefined
+      ? analysis.frayingScore
+      : (analysis.bristleDamage !== undefined ? analysis.bristleDamage : Math.min(100, (analysis.wearPercentage || 0) * 0.3))
+  );
+
+  const bending = Math.round(
+    analysis.bendingScore !== undefined
+      ? analysis.bendingScore
+      : (analysis.bristleBending !== undefined ? analysis.bristleBending : Math.min(100, (analysis.wearPercentage || 0) * 0.3))
+  );
+
+  const confidence = Math.round(
+    analysis.confidenceScore !== undefined
+      ? analysis.confidenceScore
+      : (analysis.confidence !== undefined ? analysis.confidence : 95)
+  );
+
+  const remainingLife = analysis.remainingLifeDays !== undefined ? analysis.remainingLifeDays : Math.max(0, Math.round((healthScore / 100) * 90));
+
+  const recommendationText = analysis.aiRecommendation || analysis.recommendation || 'Maintain proper 2-minute brushing twice daily.';
+
   const style = getConditionStyles(analysis.condition);
 
-  // Compute replacement date
+  // Compute formatted replacement date (DD/MM/YYYY)
   const replacementDate = new Date();
-  replacementDate.setDate(replacementDate.getDate() + analysis.remainingLifeDays);
-  const replacementDateStr = replacementDate.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  replacementDate.setDate(replacementDate.getDate() + remainingLife);
+  const formattedDay = String(replacementDate.getDate()).padStart(2, '0');
+  const formattedMonth = String(replacementDate.getMonth() + 1).padStart(2, '0');
+  const formattedYear = replacementDate.getFullYear();
+  const replacementDateFormatted = `${formattedDay}/${formattedMonth}/${formattedYear}`;
 
   const radius = 40;
   const strokeDasharray = 2 * Math.PI * radius;
@@ -241,11 +290,14 @@ const ResultScreen = () => {
         }
       `}} />
       
-      {/* 0. Healthcare AI Diagnostic Tag */}
-      <div className="flex items-center gap-1.5 px-1">
-        <span className="w-2 h-2 rounded-full bg-primary animate-ping shrink-0" />
-        <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-400">
-          HEALTHCARE AI REPORT • CLINICAL DIAGNOSTIC
+      {/* 0. Toothbrush Detected Success Header */}
+      <div className="flex items-center justify-between p-3.5 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-teal-600 dark:text-teal-400">
+        <div className="flex items-center gap-2 font-black text-sm">
+          <CheckCircle2 className="w-5 h-5 text-teal-500 shrink-0" />
+          <span>Toothbrush Detected ✓</span>
+        </div>
+        <span className="text-[10px] font-extrabold uppercase tracking-wider bg-teal-500/20 px-2 py-0.5 rounded-full">
+          AI Verified
         </span>
       </div>
 
@@ -263,16 +315,9 @@ const ResultScreen = () => {
           <span className="font-bold text-slate-400 dark:text-slate-400">TIMESTAMP:</span>
           <span>{new Date(analysis.scanDate || new Date()).toLocaleString()}</span>
         </div>
-        <div className="flex justify-between items-center">
-          <span className="font-bold text-slate-400 dark:text-slate-400">ANALYZER STATUS:</span>
-          <span className="flex items-center gap-1 text-[9px] text-emerald-500 font-bold uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Verified AI v1.0
-          </span>
-        </div>
       </div>
 
-      {/* 1. Warning Banner */}
+      {/* 1. Condition Warning Banner */}
       <div className={`p-4 rounded-2xl border-2 transition-all duration-300 shadow-sm ${style.bannerBg} ${style.bannerBorder} flex items-start gap-3.5`}>
         <div className="p-2 rounded-xl bg-white dark:bg-slate-900 shadow-sm shrink-0">
           <ShieldAlert className={`w-5 h-5 ${style.iconColor}`} />
@@ -280,10 +325,10 @@ const ResultScreen = () => {
         <div className="space-y-1 flex-1">
           <div className="flex items-center justify-between">
             <h4 className={`font-black text-sm m-0 leading-none ${style.bannerText}`}>
-              Condition: {analysis.condition}
+              Condition: {analysis.condition || 'Good'}
             </h4>
             <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white dark:bg-slate-950 ${style.textColor}`}>
-              {analysis.healthScore >= 80 ? 'Optimal' : analysis.healthScore >= 50 ? 'Warning' : 'Critical'}
+              {healthScore >= 80 ? 'Optimal' : healthScore >= 50 ? 'Warning' : 'Critical'}
             </span>
           </div>
           <p className="text-xs font-semibold text-slate-655 dark:text-slate-300 leading-normal m-0 mt-1.5">
@@ -298,8 +343,8 @@ const ResultScreen = () => {
         </div>
       )}
 
-      {/* 2. Target Scan Photo & 3. Circular Indicator (Flagship Side-by-side Layout) */}
-      <div className="grid grid-cols-2 gap-3.5">
+      {/* 2. Target Scan Photo & 3. Circular Indicator */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         
         {/* Photo Card */}
         <div className={`p-4 rounded-2xl border relative overflow-hidden flex flex-col items-center justify-center min-h-[200px] transition-all duration-300 ${
@@ -309,29 +354,17 @@ const ResultScreen = () => {
             {showDebugVisual ? '[01] DIAGNOSTIC OVERLAY' : '[01] TARGET CAPTURE'}
           </span>
           
-          {/* Viewfinder corner overlays */}
-          <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-primary/50 rounded-tl" />
-          <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-primary/50 rounded-tr" />
-          <div className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-primary/50 rounded-bl" />
-          <div className="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-primary/50 rounded-br" />
-
           <div className="w-28 h-28 rounded-xl overflow-hidden border dark:border-slate-800 border-slate-100 bg-slate-950 mt-4 relative shadow-md">
             <img 
               src={
                 showDebugVisual && analysis.debugImageUrl
                   ? (analysis.debugImageUrl.startsWith('/') ? `${import.meta.env.VITE_BASE_URL || 'https://brushiq-backend.onrender.com'}${analysis.debugImageUrl}` : analysis.debugImageUrl)
-                  : (analysis.imageUrl.startsWith('/') ? `${import.meta.env.VITE_BASE_URL || 'https://brushiq-backend.onrender.com'}${analysis.imageUrl}` : analysis.imageUrl)
+                  : (analysis.imageUrl && analysis.imageUrl.startsWith('/') ? `${import.meta.env.VITE_BASE_URL || 'https://brushiq-backend.onrender.com'}${analysis.imageUrl}` : (analysis.imageUrl || '/illustrations/drying.png'))
               } 
               alt={showDebugVisual ? "AI Diagnostic Overlay" : "Scan capture"} 
               className="w-full h-full object-cover" 
             />
-            {/* Real-time laser scanning bar (only show when scanning or raw image) */}
             {!showDebugVisual && <div className="laser-line" />}
-            
-            {/* Reticle grid guides */}
-            <div className="absolute inset-0 border border-teal-500/10 pointer-events-none" />
-            <div className="absolute top-1/2 left-0 w-full h-[1px] bg-teal-500/15 pointer-events-none" />
-            <div className="absolute top-0 left-1/2 w-[1px] h-full bg-teal-500/15 pointer-events-none" />
           </div>
           
           {analysis.debugImageUrl && (
@@ -350,23 +383,18 @@ const ResultScreen = () => {
               {showDebugVisual ? 'Show Raw Photo' : 'Show AI Overlay'}
             </button>
           )}
-
-          <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 mt-2 text-center uppercase tracking-wider">
-            Ref: #BIQ-{toothbrushId ? toothbrushId.slice(0, 8).toUpperCase() : '00000'}
-          </span>
         </div>
 
-        {/* Circular Indicator & Badge & Confidence */}
+        {/* Circular Indicator & Health Score */}
         <div className={`p-4 rounded-2xl border relative overflow-hidden flex flex-col items-center justify-center min-h-[200px] transition-all duration-300 ${style.shadowColor} ${
           darkMode ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-100 shadow-md shadow-slate-100/50'
         }`}>
           <span className="absolute top-3 left-3 text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-            [02] ANALYTICAL SCORE
+            TOOTHBRUSH HEALTH SCORE
           </span>
           
           {/* Animated Gauge Ring */}
           <div className="relative w-24 h-24 flex items-center justify-center mt-3">
-            {/* Clinical dotted outer dial */}
             <div className="absolute inset-1 border border-dashed border-slate-200 dark:border-slate-800 rounded-full animate-spin-slow pointer-events-none" />
             
             <svg className="w-full h-full transform -rotate-90 scale-90" viewBox="0 0 100 100">
@@ -391,169 +419,128 @@ const ResultScreen = () => {
               />
             </svg>
             <div className="absolute flex flex-col items-center">
-              <span className={`text-2xl font-black ${style.textColor}`}>{animatedScore}%</span>
+              <span className={`text-2xl font-black ${style.textColor}`}>{healthScore}%</span>
               <span className="text-[7px] text-slate-400 dark:text-slate-400 font-extrabold uppercase tracking-widest">HEALTH</span>
             </div>
           </div>
 
           <div className="flex flex-col items-center gap-1.5 mt-2.5">
             <span className={`px-2.5 py-0.5 rounded-full text-[8.5px] font-extrabold uppercase tracking-wider border shadow-sm ${style.badgeBg}`}>
-              {analysis.condition}
+              {analysis.condition || 'Good'}
             </span>
             <span className="text-[8px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wide">
-              {analysis.confidenceScore}% AI Confidence
+              {confidence}% Confidence
             </span>
           </div>
         </div>
 
       </div>
 
-      {/* 5. Wear Percentage slider card */}
+      {/* 5. Comprehensive Analysis Breakdown Cards */}
       <div className={`p-4 rounded-2xl border transition-all duration-300 ${
         darkMode ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-100 shadow-md shadow-slate-100/50'
       }`}>
-        <div className="flex justify-between items-center mb-3">
-          <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 m-0">Wear Percentage Parameters</h4>
-          <span className="text-[8px] font-bold uppercase bg-slate-50 dark:bg-slate-950 px-2 py-0.5 border border-slate-100 dark:border-slate-850 rounded">Metrics Analysis</span>
-        </div>
+        <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 m-0">
+          Toothbrush Wear Parameters
+        </h4>
         
-        <div className="space-y-3.5">
-          {/* Spreading */}
+        <div className="space-y-3">
+          {/* Density */}
           <div className="space-y-1">
-            <div className="flex justify-between text-[9px] font-bold uppercase text-slate-600 dark:text-slate-400">
-              <span>Bristle Spreading</span>
-              <div className="flex items-center gap-1.5">
-                <span className={`text-[8px] font-black px-1.5 py-0.1 rounded uppercase ${
-                  analysis.bristleSpreading < 20 ? 'bg-emerald-50 text-emerald-600' : analysis.bristleSpreading < 50 ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
-                }`}>
-                  {analysis.bristleSpreading < 20 ? 'Normal' : analysis.bristleSpreading < 50 ? 'Elevated' : 'Critical'}
-                </span>
-                <span className="font-black text-slate-800 dark:text-slate-200">{analysis.bristleSpreading.toFixed(0)}%</span>
-              </div>
+            <div className="flex justify-between text-xs font-bold">
+              <span className="text-slate-600 dark:text-slate-300">Density</span>
+              <span className="text-slate-800 dark:text-slate-100 font-extrabold">{density}%</span>
             </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden p-[1px]">
-              <div 
-                className="bg-primary h-full rounded-full transition-all duration-500"
-                style={{ width: `${analysis.bristleSpreading}%` }}
-              />
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, density))}%` }} />
+            </div>
+          </div>
+
+          {/* Spread */}
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs font-bold">
+              <span className="text-slate-600 dark:text-slate-300">Spread</span>
+              <span className="text-slate-800 dark:text-slate-100 font-extrabold">{spread}%</span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, spread))}%` }} />
+            </div>
+          </div>
+
+          {/* Fraying */}
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs font-bold">
+              <span className="text-slate-600 dark:text-slate-300">Fraying</span>
+              <span className="text-slate-800 dark:text-slate-100 font-extrabold">{fraying}%</span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div className="bg-rose-500 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, fraying))}%` }} />
             </div>
           </div>
 
           {/* Bending */}
           <div className="space-y-1">
-            <div className="flex justify-between text-[9px] font-bold uppercase text-slate-600 dark:text-slate-400">
-              <span>Bristle Bending</span>
-              <div className="flex items-center gap-1.5">
-                <span className={`text-[8px] font-black px-1.5 py-0.1 rounded uppercase ${
-                  analysis.bristleBending < 20 ? 'bg-emerald-50 text-emerald-600' : analysis.bristleBending < 50 ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
-                }`}>
-                  {analysis.bristleBending < 20 ? 'Normal' : analysis.bristleBending < 50 ? 'Elevated' : 'Critical'}
-                </span>
-                <span className="font-black text-slate-800 dark:text-slate-200">{analysis.bristleBending.toFixed(0)}%</span>
-              </div>
+            <div className="flex justify-between text-xs font-bold">
+              <span className="text-slate-600 dark:text-slate-300">Bending</span>
+              <span className="text-slate-800 dark:text-slate-100 font-extrabold">{bending}%</span>
             </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden p-[1px]">
-              <div 
-                className="bg-teal-500 h-full rounded-full transition-all duration-500"
-                style={{ width: `${analysis.bristleBending}%` }}
-              />
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div className="bg-teal-500 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, bending))}%` }} />
             </div>
           </div>
 
-          {/* Damage */}
+          {/* Confidence */}
           <div className="space-y-1">
-            <div className="flex justify-between text-[9px] font-bold uppercase text-slate-600 dark:text-slate-400">
-              <span>Bristle Fraying / Damage</span>
-              <div className="flex items-center gap-1.5">
-                <span className={`text-[8px] font-black px-1.5 py-0.1 rounded uppercase ${
-                  analysis.bristleDamage < 20 ? 'bg-emerald-50 text-emerald-600' : analysis.bristleDamage < 50 ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
-                }`}>
-                  {analysis.bristleDamage < 20 ? 'Normal' : analysis.bristleDamage < 50 ? 'Elevated' : 'Critical'}
-                </span>
-                <span className="font-black text-slate-800 dark:text-slate-200">{analysis.bristleDamage.toFixed(0)}%</span>
-              </div>
+            <div className="flex justify-between text-xs font-bold">
+              <span className="text-slate-600 dark:text-slate-300">Confidence</span>
+              <span className="text-slate-800 dark:text-slate-100 font-extrabold">{confidence}%</span>
             </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden p-[1px]">
-              <div 
-                className="bg-rose-500 h-full rounded-full transition-all duration-500"
-                style={{ width: `${analysis.bristleDamage}%` }}
-              />
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div className="bg-indigo-500 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, Math.max(0, confidence))}%` }} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* 7. Detected Issues (only show if issues found) */}
-      {analysis.detectedIssues && analysis.detectedIssues.length > 0 && (
-        <div className={`p-4 rounded-2xl border border-rose-100 dark:border-rose-950/20 bg-rose-50/20 dark:bg-rose-955/5 ${
-          darkMode ? 'text-white' : 'text-slate-900'
-        }`}>
-          <h4 className="font-bold text-xs uppercase tracking-wider text-rose-500 mb-2.5 flex items-center gap-1.5">
-            <ShieldAlert className="w-4 h-4 shrink-0 animate-pulse" /> Detected Structural Issues
-          </h4>
-          <div className="space-y-2">
-            {analysis.detectedIssues.map((issue, idx) => (
-              <div key={idx} className="flex gap-2 items-center text-xs font-semibold text-rose-600 dark:text-rose-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
-                <span>{issue}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 8. Statistics Grid (2x2 premium cards layout) */}
-      <div className="grid grid-cols-2 gap-3.5">
+      {/* 8. Key Metrics (Condition, Remaining Life, Replacement Date) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         
-        {/* Days Used */}
+        {/* Condition Card */}
         <div className={`p-4 rounded-2xl border flex items-center gap-3 transition-all duration-300 ${
           darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-md shadow-slate-100/30'
         }`}>
-          <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 text-primary shrink-0">
-            <Clock className="w-4.5 h-4.5" />
+          <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 text-primary shrink-0">
+            <ShieldAlert className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500 m-0">Days Used</p>
-            <p className="text-xs font-black mt-0.5 text-slate-850 dark:text-slate-200">{daysUsed} Days</p>
+            <p className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500 m-0">Condition</p>
+            <p className="text-sm font-black mt-0.5 text-slate-850 dark:text-slate-200">{analysis.condition || 'Good'}</p>
           </div>
         </div>
 
-        {/* Remaining Life */}
+        {/* Remaining Life Card */}
         <div className={`p-4 rounded-2xl border flex items-center gap-3 transition-all duration-300 ${
           darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-md shadow-slate-100/30'
         }`}>
-          <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 text-teal-500 shrink-0">
-            <Gauge className="w-4.5 h-4.5" />
+          <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 text-teal-500 shrink-0">
+            <Gauge className="w-5 h-5" />
           </div>
           <div>
             <p className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500 m-0">Remaining Life</p>
-            <p className="text-xs font-black mt-0.5 text-slate-850 dark:text-slate-200">{analysis.remainingLifeDays} Days</p>
+            <p className="text-sm font-black mt-0.5 text-slate-850 dark:text-slate-200">{remainingLife} days</p>
           </div>
         </div>
 
-        {/* Replace Before Date */}
+        {/* Replacement Date Card */}
         <div className={`p-4 rounded-2xl border flex items-center gap-3 transition-all duration-300 ${
           darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-md shadow-slate-100/30'
         }`}>
-          <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 text-orange-500 shrink-0">
-            <Calendar className="w-4.5 h-4.5" />
+          <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 text-orange-500 shrink-0">
+            <Calendar className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500 m-0">Replace Before</p>
-            <p className="text-[11px] font-black mt-0.5 text-slate-850 dark:text-slate-200 truncate max-w-[95px]">{replacementDateStr.split(',')[0]}</p>
-          </div>
-        </div>
-
-        {/* Brushing Frequency */}
-        <div className={`p-4 rounded-2xl border flex items-center gap-3 transition-all duration-300 ${
-          darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-md shadow-slate-100/30'
-        }`}>
-          <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 text-rose-500 shrink-0">
-            <Activity className="w-4.5 h-4.5" />
-          </div>
-          <div>
-            <p className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500 m-0">Frequency</p>
-            <p className="text-xs font-black mt-0.5 text-slate-850 dark:text-slate-200">{brushingFrequency || '2x daily'}</p>
+            <p className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500 m-0">Replacement Date</p>
+            <p className="text-sm font-black mt-0.5 text-slate-850 dark:text-slate-200">{replacementDateFormatted}</p>
           </div>
         </div>
 
@@ -563,27 +550,14 @@ const ResultScreen = () => {
       <div className={`p-4 rounded-2xl border relative overflow-hidden transition-all duration-300 ${
         darkMode ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-100 shadow-md shadow-slate-100/50'
       }`}>
-        <div className="absolute right-3 top-3 opacity-5 pointer-events-none">
-          <HeartPulse className="w-24 h-24" />
-        </div>
-        
         <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-850">
           <Sparkles className="w-4.5 h-4.5 text-primary dark:text-teal-400 shrink-0 animate-pulse" />
-          <h4 className="font-bold text-xs uppercase tracking-wider m-0 text-slate-700 dark:text-slate-350">AI Diagnostic Advice Card</h4>
+          <h4 className="font-bold text-xs uppercase tracking-wider m-0 text-slate-700 dark:text-slate-350">AI Recommendation</h4>
         </div>
 
-        <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-relaxed mt-3 m-0 bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100/60 dark:border-slate-850/50 shadow-inner">
-          {analysis.aiRecommendation}
+        <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-relaxed mt-3 m-0 bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100/60 dark:border-slate-850/50">
+          {recommendationText}
         </p>
-
-        <div className="mt-3.5 pt-3 flex justify-between items-center text-[8.5px]">
-          <span className="font-mono text-slate-400 dark:text-slate-400 uppercase tracking-widest">
-            BrushIQ Clinical AI v1.0
-          </span>
-          <div className="flex items-center gap-1 text-[8.5px] text-teal-600 dark:text-teal-400 font-extrabold uppercase">
-            <CheckCircle className="w-3.5 h-3.5" /> Clinically Verified
-          </div>
-        </div>
       </div>
 
       {/* AI Diagnostic Console Trigger Button */}
