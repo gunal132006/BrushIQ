@@ -79,10 +79,10 @@ const HUMAN_KEYWORDS = [
 ];
 
 /**
- * Keywords mapped to Toothbrush / Oral care classification
+ * Strict keywords mapped exclusively to Toothbrush / Oral Care Brushes
  */
 const TOOTHBRUSH_KEYWORDS = [
-  'toothbrush', 'brush', 'electric toothbrush', 'scrub brush', 'comb', 'hairbrush', 'swab', 'cleaning brush'
+  'toothbrush', 'electric toothbrush'
 ];
 
 /**
@@ -122,30 +122,19 @@ export const classifyImageClientSide = async (imageElementOrSrc) => {
 
   if (!predictions || predictions.length === 0) {
     return {
-      category: 'other',
+      category: 'unmatched',
       confidence: 0,
       label: 'Unknown',
-      message: 'Unsupported Image: Please upload a clear image of a toothbrush.',
+      header: 'Unmatched Image',
+      message: 'Please upload a clear image of a toothbrush.',
       predictions: []
     };
   }
 
   const topPrediction = predictions[0];
-  const topClassName = topPrediction.className.toLowerCase();
   const topProbability = topPrediction.probability;
 
-  // Check confidence threshold
-  if (topProbability < CONFIDENCE_THRESHOLD) {
-    return {
-      category: 'other',
-      confidence: topProbability,
-      label: topPrediction.className,
-      message: 'Low Confidence / Unsupported Image: Please upload a clearer image of a toothbrush.',
-      predictions
-    };
-  }
-
-  // Evaluate Human vs Toothbrush vs Other
+  // Evaluate Human vs Toothbrush vs Unmatched
   let isHuman = false;
   let isToothbrush = false;
 
@@ -153,21 +142,21 @@ export const classifyImageClientSide = async (imageElementOrSrc) => {
     const label = pred.className.toLowerCase();
     const prob = pred.probability;
 
-    if (HUMAN_KEYWORDS.some(k => label.includes(k)) && prob >= 0.15) {
+    if (HUMAN_KEYWORDS.some(k => label.includes(k)) && prob >= 0.12) {
       isHuman = true;
-      break;
     }
-    if (TOOTHBRUSH_KEYWORDS.some(k => label.includes(k)) && prob >= 0.10) {
+    if (TOOTHBRUSH_KEYWORDS.some(k => label.includes(k)) && prob >= 0.08) {
       isToothbrush = true;
-      break;
     }
   }
 
-  if (isToothbrush) {
+  // Strictly require Toothbrush detection
+  if (isToothbrush && !isHuman) {
     return {
       category: 'toothbrush',
       confidence: topProbability,
       label: topPrediction.className,
+      header: 'Toothbrush Detected ✓',
       message: 'Toothbrush Detected: Proceeding with bristle wear analysis...',
       predictions
     };
@@ -178,16 +167,19 @@ export const classifyImageClientSide = async (imageElementOrSrc) => {
       category: 'human',
       confidence: topProbability,
       label: topPrediction.className,
-      message: 'Human Detected: This image contains a human. Please upload a toothbrush image for analysis.',
+      header: 'Human Detected',
+      message: 'This image contains a human. Please upload a toothbrush image for analysis.',
       predictions
     };
   }
 
+  // Any other non-toothbrush image is strictly classified as Unmatched Image
   return {
-    category: 'other',
+    category: 'unmatched',
     confidence: topProbability,
     label: topPrediction.className,
-    message: 'Unsupported Image: Please upload a clear image of a toothbrush.',
+    header: 'Unmatched Image',
+    message: 'Please upload a clear image of a toothbrush.',
     predictions
   };
 };

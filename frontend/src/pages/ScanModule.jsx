@@ -393,8 +393,8 @@ const ScanModule = () => {
         return; // STOP! Do NOT run bristle wear detection
       }
 
-      if (classification.category === 'other') {
-        setMlStatus('other');
+      if (classification.category === 'unmatched' || classification.category === 'other') {
+        setMlStatus('unmatched');
         setAnalyzing(false);
         return; // STOP! Do NOT run bristle wear detection
       }
@@ -718,11 +718,11 @@ const ScanModule = () => {
               </div>
             )}
 
-            {mlStatus === 'other' && (
+            {(mlStatus === 'unmatched' || mlStatus === 'other') && (
               <div className="w-full max-w-sm p-4 rounded-2xl bg-rose-50 dark:bg-rose-955/30 border border-rose-200 dark:border-rose-900/50 text-rose-800 dark:text-rose-300 space-y-1.5 text-center animate-fade-in">
                 <div className="flex items-center justify-center gap-2 font-black text-sm">
                   <ShieldAlert className="w-5 h-5 text-rose-600 dark:text-rose-400" />
-                  <span>Unsupported Image</span>
+                  <span>Unmatched Image</span>
                 </div>
                 <p className="text-xs font-semibold leading-relaxed">
                   {mlResult?.message || 'Please upload a clear image of a toothbrush.'}
