@@ -10,21 +10,12 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
 function sanitizeDbHost(rawHost) {
   if (!rawHost) return 'localhost';
-  let host = rawHost.trim();
-  if (host.startsWith('postgres.') && !host.includes('.supabase.')) {
-    const ref = host.replace('postgres.', '');
-    host = `db.${ref}.supabase.co`;
-  } else if (!host.includes('.') && host !== 'localhost') {
-    host = `db.${host}.supabase.co`;
-  }
-  return host;
+  return rawHost.trim();
 }
 
 function sanitizeConnectionString(url) {
   if (!url) return null;
-  let s = url.trim();
-  s = s.replace(/@postgres\.([a-z0-9]+)(:\d+)?\//i, '@db.$1.supabase.co$2/');
-  return s;
+  return url.trim();
 }
 
 const rawConnectionString = process.env.DATABASE_URL;
