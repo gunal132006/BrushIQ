@@ -7,12 +7,14 @@ const { analyzeToothbrushImage } = require('../services/ai/analyzer');
 
 exports.analyzeScan = async (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ message: 'No toothbrush image file uploaded' });
+    return res.status(400).json({
+      code: 'TOOTHBRUSH_NOT_DETECTED',
+      message: 'Toothbrush not detected. Please scan only a single toothbrush.'
+    });
   }
 
   try {
     const filePath = req.file.path;
-    // Format the URL path to be relative and accessible via static server
     const relativeUrl = `/uploads/${req.file.filename}`;
 
     // Perform AI Analysis using the analyzer service
@@ -23,10 +25,29 @@ exports.analyzeScan = async (req, res) => {
       ...analysisResult,
     });
   } catch (err) {
-    console.error('Error in scan analysis:', err.message);
-    if (err.message && err.message.startsWith('CV_ERROR:')) {
-      return res.status(400).json({ message: err.message.substring(9) });
+    console.error('[AI VALIDATION] Error in scan analysis:', err.message);
+
+    if (err.message && err.message.startsWith('TOOTHBRUSH_NOT_DETECTED:')) {
+      return res.status(400).json({
+        code: 'TOOTHBRUSH_NOT_DETECTED',
+        message: 'Toothbrush not detected. Please scan only a single toothbrush.'
+      });
     }
+
+    if (err.message && err.message.startsWith('MULTIPLE_TOOTHBRUSHES:')) {
+      return res.status(400).json({
+        code: 'MULTIPLE_TOOTHBRUSHES',
+        message: 'Multiple toothbrushes detected. Please scan a single toothbrush.'
+      });
+    }
+
+    if (err.message && err.message.startsWith('CV_ERROR:')) {
+      return res.status(400).json({
+        code: 'IMAGE_QUALITY_ERROR',
+        message: err.message.substring(9)
+      });
+    }
+
     res.status(500).json({ message: 'Error processing toothbrush scan' });
   }
 };

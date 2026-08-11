@@ -50,17 +50,16 @@ const upload = multer({
 const validateImageMagicBytes = (req, res, next) => {
   if (!req.file) return next();
   const filePath = req.file.path;
-  let fd;
   try {
-    const buffer = Buffer.alloc(12);
-    fd = fs.openSync(filePath, 'r');
-    fs.readSync(fd, buffer, 0, 12, 0);
-    fs.closeSync(fd);
-    fd = null;
+    const buffer = fs.readFileSync(filePath);
+    if (buffer.length < 4) {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      return res.status(400).json({ message: 'Security Validation Failed: File too small.' });
+    }
 
     const isJpeg = buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
     const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
-    const isWebp = buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
+    const isWebp = buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
 
     if (!isJpeg && !isPng && !isWebp) {
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
@@ -68,7 +67,6 @@ const validateImageMagicBytes = (req, res, next) => {
     }
     next();
   } catch (err) {
-    if (fd) fs.closeSync(fd);
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     return res.status(400).json({ message: 'Error validating uploaded image file.' });
   }

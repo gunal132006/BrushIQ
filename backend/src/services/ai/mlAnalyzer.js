@@ -121,12 +121,12 @@ class ToothbrushMLModelService {
       const tensor = this.preprocessTensor(jimpImage);
       return this.infer(tensor);
     } catch (err) {
-      console.warn('[ML Model Service Warning] Could not decode image tensor, returning default ML inference fallback:', err.message);
+      console.warn('[ML Model Service Warning] Could not decode image tensor for ML inference:', err.message);
       return {
         modelName: this.modelName,
-        topClass: 'New',
-        mlConfidence: 85.0,
-        probabilities: { new: 0.85, lightWear: 0.10, moderateWear: 0.04, severeWear: 0.01 },
+        topClass: 'Uncertain',
+        mlConfidence: 0.0,
+        probabilities: { new: 0, lightWear: 0, moderateWear: 0, severeWear: 0 },
       };
     }
   }

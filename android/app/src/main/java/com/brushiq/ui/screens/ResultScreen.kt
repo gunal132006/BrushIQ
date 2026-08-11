@@ -25,8 +25,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RadialGradientShader
-import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
@@ -37,24 +35,16 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.brushiq.domain.repository.ScanReport
 import com.brushiq.ui.components.*
 import com.brushiq.ui.theme.*
 import com.brushiq.ui.viewmodel.BrushIQViewModel
 import com.brushiq.ui.viewmodel.ScanViewModel
-
-enum class OverlayViewType {
-    ORIGINAL,
-    SEGMENTED_OVERLAY,
-    DENSITY_HEATMAP
-}
 
 @Composable
 fun ResultScreen(
@@ -167,7 +157,7 @@ fun ResultScreen(
                             ) {
                                 Icon(Icons.Default.AutoGraph, contentDescription = null, tint = PrimaryMain, modifier = Modifier.size(14.dp))
                                 Text(
-                                    text = "AI Confidence: 96%",
+                                    text = "AI Confidence: ${report.confidenceScore.toInt()}%",
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                     color = PrimaryMain
                                 )
@@ -223,22 +213,19 @@ fun ResultScreen(
                 }
             }
 
-            // 3. AI Overlay Viewer (Interactive Tab switching)
-            AIOverlayViewer(imageUrl = report.imageUrl)
-
-            // 4. Detected Issues
+            // 3. Detected Issues
             DetectedIssuesSection(report)
 
-            // 5. Statistics Grid (Including Days Used)
+            // 4. Statistics Grid (Including Days Used)
             StatisticsGridPanel(report)
 
-            // 6. AI Recommendation Card
+            // 5. AI Recommendation Card
             AiRecommendationCard(report.aiRecommendation)
 
-            // 7. AI Debug Console (Collapsible)
+            // 6. AI Debug Console (Collapsible)
             ResultAiDebugConsole(report)
 
-            // 8. Actions
+            // 7. Actions
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 PrimaryButton(
                     text = if (isSaving) "Saving to Database..." else if (isSaved) "Report Saved!" else "Save AI Report",
@@ -317,125 +304,51 @@ fun ResultScreen(
 }
 
 @Composable
-fun AIOverlayViewer(imageUrl: String) {
-    var selectedTab by remember { mutableStateOf(OverlayViewType.ORIGINAL) }
-
+fun DiagnosticSummaryHeader(report: ScanReport, conditionColor: Color) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = BrushIQShapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+        colors = CardDefaults.cardColors(containerColor = conditionColor.copy(alpha = 0.08f)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, conditionColor.copy(alpha = 0.25f))
     ) {
-        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(
-                text = "AI OVERLAY VIEWER",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            // Dynamic Canvas Viewport
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(240.dp)
-                    .clip(BrushIQShapes.medium)
-                    .background(Color.Black),
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(conditionColor.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
-                // Background image
-                AsyncImage(
-                    model = imageUrl,
+                Icon(
+                    imageVector = when (report.condition) {
+                        "Good" -> Icons.Default.CheckCircle
+                        "Moderate Wear" -> Icons.Default.Warning
+                        "Replace Soon" -> Icons.Default.Error
+                        else -> Icons.Default.ReportProblem
+                    },
                     contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    tint = conditionColor,
+                    modifier = Modifier.size(26.dp)
                 )
-
-                // Dynamic Canvas Overlay drawing based on selection
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .semantics {
-                            contentDescription = when (selectedTab) {
-                                OverlayViewType.ORIGINAL -> "Raw bristle capture without overlays"
-                                OverlayViewType.SEGMENTED_OVERLAY -> "Semi-transparent green bounding boxes indicating individual bristle segmentation boundaries."
-                                OverlayViewType.DENSITY_HEATMAP -> "Color density gradient mapping splay intensity, showing red alerts in the high-friction outer edge."
-                            }
-                        }
-                ) {
-                    val w = size.width
-                    val h = size.height
-
-                    when (selectedTab) {
-                        OverlayViewType.ORIGINAL -> {
-                            // No overlay drawn
-                        }
-                        OverlayViewType.SEGMENTED_OVERLAY -> {
-                            // Draw green boundary polygons around bristles to show segmentation
-                            drawCircle(color = Success.copy(alpha = 0.15f), radius = w * 0.18f, center = Offset(w * 0.42f, h * 0.45f))
-                            drawCircle(color = Success, radius = w * 0.18f, center = Offset(w * 0.42f, h * 0.45f), style = Stroke(width = 2.dp.toPx()))
-                            
-                            drawCircle(color = Success.copy(alpha = 0.15f), radius = w * 0.12f, center = Offset(w * 0.60f, h * 0.52f))
-                            drawCircle(color = Success, radius = w * 0.12f, center = Offset(w * 0.60f, h * 0.52f), style = Stroke(width = 2.dp.toPx()))
-
-                            drawLine(color = Success, start = Offset(w * 0.3f, h * 0.3f), end = Offset(w * 0.35f, h * 0.25f), strokeWidth = 2.dp.toPx())
-                            drawRect(color = Success, topLeft = Offset(w * 0.28f, h * 0.2f), size = androidx.compose.ui.geometry.Size(32.dp.toPx(), 16.dp.toPx()), style = Stroke(width = 1.dp.toPx()))
-                        }
-                        OverlayViewType.DENSITY_HEATMAP -> {
-                            // Draw radial gradients to simulate heat levels
-                            drawCircle(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(Error.copy(alpha = 0.6f), Warning.copy(alpha = 0.3f), Color.Transparent),
-                                    center = Offset(w * 0.45f, h * 0.48f),
-                                    radius = w * 0.25f
-                                ),
-                                radius = w * 0.25f,
-                                center = Offset(w * 0.45f, h * 0.48f)
-                            )
-
-                            drawCircle(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(Warning.copy(alpha = 0.5f), Alert.copy(alpha = 0.2f), Color.Transparent),
-                                    center = Offset(w * 0.62f, h * 0.55f),
-                                    radius = w * 0.18f
-                                ),
-                                radius = w * 0.18f,
-                                center = Offset(w * 0.62f, h * 0.55f)
-                            )
-                        }
-                    }
-                }
             }
-
-            // Tab Buttons
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp))
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                OverlayViewType.values().forEach { type ->
-                    val isActive = selectedTab == type
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(if (isActive) PrimaryMain else Color.Transparent)
-                            .clickable { selectedTab = type }
-                            .padding(vertical = 8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = when (type) {
-                                OverlayViewType.ORIGINAL -> "ORIGINAL"
-                                OverlayViewType.SEGMENTED_OVERLAY -> "OVERLAY"
-                                OverlayViewType.DENSITY_HEATMAP -> "HEATMAP"
-                            },
-                            style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Bold),
-                            color = if (isActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "STATUS: ${report.condition.uppercase()}",
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black),
+                    color = conditionColor
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = if (report.healthScore >= 70) "Toothbrush bristles are in effective condition." else "Bristle degradation detected. Consider replacement.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
         }
     }
@@ -450,37 +363,28 @@ fun DetectedIssuesSection(report: ScanReport) {
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("DETECTED ANOMALIES", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = "DETECTED ANOMALIES",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
             if (report.detectedIssues.isEmpty()) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Success, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("No bristle deformities detected.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                    Text("No structural defects or severe bristle splaying detected.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
                 }
             } else {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    report.detectedIssues.forEach { issue ->
-                        val (issueTitle, description) = when (issue) {
-                            "Significant Splay" -> "Bristle Spreading" to "Fibers bent outwards reduces plaque removal efficacy."
-                            "Elasticity Loss" -> "Bristle Bending" to "Fibers failed to recoil after brushing friction."
-                            else -> issue to "Anomaly in fiber alignment matrix."
-                        }
-                        
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.background, BrushIQShapes.small)
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Default.Error, contentDescription = null, tint = Alert, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(issueTitle, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
-                                Text(description, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                        }
+                report.detectedIssues.forEach { issue ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Default.ErrorOutline, contentDescription = null, tint = Warning, modifier = Modifier.size(18.dp))
+                        Text(issue, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
@@ -490,76 +394,30 @@ fun DetectedIssuesSection(report: ScanReport) {
 
 @Composable
 fun StatisticsGridPanel(report: ScanReport) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard(
-                title = "Days Used",
-                value = "64 Days",
-                icon = Icons.Default.DateRange,
-                modifier = Modifier.weight(1f)
-            )
-            StatCard(
-                title = "Remaining Life",
-                value = "${report.remainingLifeDays} Days",
-                icon = Icons.Default.Timer,
-                modifier = Modifier.weight(1f),
-                iconColor = if (report.remainingLifeDays < 30) Alert else Success
-            )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard(
-                title = "Replace Before",
-                value = "Aug 22",
-                icon = Icons.Default.Event,
-                modifier = Modifier.weight(1f),
-                iconColor = Alert
-            )
-            StatCard(
-                title = "Frequency",
-                value = report.brushingFrequency,
-                icon = Icons.Default.Autorenew,
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
-
-@Composable
-fun DiagnosticSummaryHeader(report: ScanReport, conditionColor: Color) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Surface(
-            color = conditionColor.copy(alpha = 0.1f),
-            shape = CircleShape,
-            modifier = Modifier.size(80.dp),
-            border = androidx.compose.foundation.BorderStroke(2.dp, conditionColor.copy(alpha = 0.3f))
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Card(
+            modifier = Modifier.weight(1f),
+            shape = BrushIQShapes.medium,
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = when (report.condition) {
-                        "Good" -> Icons.Default.CheckCircle
-                        "Replace Soon" -> Icons.Default.Warning
-                        else -> Icons.Default.Error
-                    },
-                    contentDescription = null,
-                    tint = conditionColor,
-                    modifier = Modifier.size(40.dp)
-                )
+            Column(modifier = Modifier.padding(14.dp)) {
+                Text("REMAINING LIFE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("${report.remainingLifeDays} Days", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = PrimaryMain)
             }
         }
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = report.condition.uppercase(),
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black),
-            color = conditionColor
-        )
-        Text(
-            text = "Clinical Analysis Result",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+
+        Card(
+            modifier = Modifier.weight(1f),
+            shape = BrushIQShapes.medium,
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Text("WEAR LEVEL", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("${report.wearPercentage.toInt()}%", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = SecondaryMain)
+            }
+        }
     }
 }
 
@@ -568,29 +426,16 @@ fun AiRecommendationCard(recommendation: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = BrushIQShapes.large,
-        colors = CardDefaults.cardColors(containerColor = PrimaryAlpha10),
-        border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryMain.copy(alpha = 0.2f))
+        colors = CardDefaults.cardColors(containerColor = PrimaryMain.copy(alpha = 0.06f)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryMain.copy(alpha = 0.15f))
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.AutoGraph, contentDescription = null, modifier = Modifier.size(16.dp), tint = PrimaryMain)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("AI RECOMMENDATION", style = MaterialTheme.typography.labelSmall, color = PrimaryMain)
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Default.Lightbulb, contentDescription = null, tint = PrimaryMain, modifier = Modifier.size(20.dp))
+                Text("AI RECOMMENDATION", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = PrimaryMain)
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(recommendation, style = MaterialTheme.typography.bodyMedium, lineHeight = 22.sp)
+            Text(recommendation, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
         }
-    }
-}
-
-@Composable
-fun DebugMetric(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(label, style = TextStyle(fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant))
-        Text(value, style = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface))
     }
 }
 
@@ -600,11 +445,10 @@ fun ResultAiDebugConsole(report: ScanReport) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = BrushIQShapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+        shape = BrushIQShapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -612,24 +456,18 @@ fun ResultAiDebugConsole(report: ScanReport) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Terminal, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("AI DEBUG CONSOLE", style = MaterialTheme.typography.labelSmall)
-                }
-                Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, contentDescription = null)
+                Text("Technical Diagnostic Details", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
             if (expanded) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DebugMetric("Spread Score", "%.3f".format(report.bristleSpreading / 100.0))
-                    DebugMetric("Bending Score", "%.3f".format(report.bristleBending / 100.0))
-                    DebugMetric("Fraying Score", "%.3f".format(report.bristleDamage / 100.0))
-                    DebugMetric("Density Score", "0.942")
-                    DebugMetric("Image Quality Score", "0.985 (Optimal)")
-                    DebugMetric("Final Health Score", "%.1f".format(report.healthScore))
-                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Scan ID: ${report.id}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+                Text("Toothbrush ID: ${report.toothbrushId}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+                Text("Confidence Score: ${report.confidenceScore}%", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+                Text("Bristle Spreading: ${report.bristleSpreading}%", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+                Text("Bristle Bending: ${report.bristleBending}%", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+                Text("Bristle Damage: ${report.bristleDamage}%", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
             }
         }
     }

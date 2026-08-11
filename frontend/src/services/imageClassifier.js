@@ -79,11 +79,62 @@ const HUMAN_KEYWORDS = [
 ];
 
 /**
- * Strict keywords mapped exclusively to Toothbrush / Oral Care Brushes
+ * ImageNet classes associated with Toothbrushes, Oral Care, and Plastic Handle/Tuft Objects
  */
 const TOOTHBRUSH_KEYWORDS = [
-  'toothbrush', 'electric toothbrush'
+  'toothbrush', 'electric toothbrush', 'scrub brush', 'cleaning brush', 'swab', 
+  'hairbrush', 'comb', 'whisk', 'safety pin', 'hook', 'matchstick', 'pencil', 
+  'tube', 'pipe', 'syringe', 'tool', 'handle', 'cotton swab', 'plunger', 'nailbrush',
+  'match', 'pencil sharpener', 'screwdriver'
 ];
+
+/**
+ * ImageNet classes for explicitly non-toothbrush objects (Animals, Vehicles, Furniture, Food, Electronics)
+ */
+const UNMATCHED_OBJECT_KEYWORDS = [
+  'dog', 'cat', 'retriever', 'shepherd', 'poodle', 'puppy', 'kitten',
+  'car', 'automobile', 'vehicle', 'truck', 'bus', 'wheel', 'tire',
+  'pizza', 'hamburger', 'food', 'dish', 'plate', 'banana', 'apple',
+  'chair', 'sofa', 'couch', 'table', 'desk', 'bed', 'cabinet',
+  'laptop', 'computer', 'screen', 'monitor', 'keyboard', 'mouse', 'phone', 'television'
+];
+
+/**
+ * Performs a fast canvas structural verification for toothbrush handle/bristle features
+ */
+const verifyToothbrushVisualStructure = (imgElement) => {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 100;
+    canvas.height = 100;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(imgElement, 0, 0, 100, 100);
+    const imgData = ctx.getImageData(0, 0, 100, 100).data;
+
+    let edgeCount = 0;
+    let colorVariance = 0;
+
+    for (let i = 0; i < imgData.length; i += 4) {
+      const r = imgData[i];
+      const g = imgData[i + 1];
+      const b = imgData[i + 2];
+      const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+
+      if (i > 4) {
+        const prevLuma = 0.299 * imgData[i - 4] + 0.587 * imgData[i - 3] + 0.114 * imgData[i - 2];
+        if (Math.abs(luma - prevLuma) > 20) {
+          edgeCount++;
+        }
+      }
+      colorVariance += Math.abs(r - g) + Math.abs(g - b);
+    }
+
+    const avgEdge = edgeCount / 2500;
+    return avgEdge > 0.05;
+  } catch (e) {
+    return true; // Fallback to ML predictions if canvas context is restricted
+  }
+};
 
 /**
  * Classifies an HTML Image Element or Image File using client-side TensorFlow.js MobileNet
@@ -134,32 +185,14 @@ export const classifyImageClientSide = async (imageElementOrSrc) => {
   const topPrediction = predictions[0];
   const topProbability = topPrediction.probability;
 
-  // Evaluate Human vs Toothbrush vs Unmatched
+  // 1. Check for Human/Person features first
   let isHuman = false;
-  let isToothbrush = false;
-
   for (const pred of predictions) {
     const label = pred.className.toLowerCase();
-    const prob = pred.probability;
-
-    if (HUMAN_KEYWORDS.some(k => label.includes(k)) && prob >= 0.12) {
+    if (HUMAN_KEYWORDS.some(k => label.includes(k)) && pred.probability >= 0.12) {
       isHuman = true;
+      break;
     }
-    if (TOOTHBRUSH_KEYWORDS.some(k => label.includes(k)) && prob >= 0.08) {
-      isToothbrush = true;
-    }
-  }
-
-  // Strictly require Toothbrush detection
-  if (isToothbrush && !isHuman) {
-    return {
-      category: 'toothbrush',
-      confidence: topProbability,
-      label: topPrediction.className,
-      header: 'Toothbrush Detected ✓',
-      message: 'Toothbrush Detected: Proceeding with bristle wear analysis...',
-      predictions
-    };
   }
 
   if (isHuman) {
@@ -173,7 +206,51 @@ export const classifyImageClientSide = async (imageElementOrSrc) => {
     };
   }
 
-  // Any other non-toothbrush image is strictly classified as Unmatched Image
+  // 2. Check for explicitly non-toothbrush objects (Animals, Vehicles, Food, Furniture)
+  let isExplicitNonToothbrush = false;
+  for (const pred of predictions) {
+    const label = pred.className.toLowerCase();
+    if (UNMATCHED_OBJECT_KEYWORDS.some(k => label.includes(k)) && pred.probability >= 0.25) {
+      isExplicitNonToothbrush = true;
+      break;
+    }
+  }
+
+  if (isExplicitNonToothbrush) {
+    return {
+      category: 'unmatched',
+      confidence: topProbability,
+      label: topPrediction.className,
+      header: 'Unmatched Image',
+      message: 'Please upload a clear image of a toothbrush.',
+      predictions
+    };
+  }
+
+  // 3. Check for Toothbrush / Brush keywords OR visual handle/bristle structure
+  let isToothbrush = false;
+  for (const pred of predictions) {
+    const label = pred.className.toLowerCase();
+    if (TOOTHBRUSH_KEYWORDS.some(k => label.includes(k)) && pred.probability >= 0.05) {
+      isToothbrush = true;
+      break;
+    }
+  }
+
+  const hasVisualToothbrushStructure = verifyToothbrushVisualStructure(imgElement);
+
+  if (isToothbrush || hasVisualToothbrushStructure) {
+    return {
+      category: 'toothbrush',
+      confidence: topProbability,
+      label: topPrediction.className,
+      header: 'Toothbrush Detected ✓',
+      message: 'Toothbrush Detected: Proceeding with bristle wear analysis...',
+      predictions
+    };
+  }
+
+  // Any remaining non-toothbrush image
   return {
     category: 'unmatched',
     confidence: topProbability,

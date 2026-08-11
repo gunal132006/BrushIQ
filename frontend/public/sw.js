@@ -1,6 +1,6 @@
 /* BrushIQ PWA Service Worker with Dynamic Cache Busting & Auto-Update Strategy */
 
-const CACHE_NAME = 'brushiq-v1.0.6-2026-08-10-v4';
+const CACHE_NAME = 'brushiq-v1.0.7-2026-08-10-v5';
 
 // Install event: Force immediate activation
 self.addEventListener('install', (event) => {

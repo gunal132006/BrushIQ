@@ -98,3 +98,8 @@ data class DashboardRecentScanDto(
 )
 
 data class GenericMessageResponse(val message: String)
+
+data class ErrorResponseDto(
+    val code: String? = null,
+    val message: String? = null
+)

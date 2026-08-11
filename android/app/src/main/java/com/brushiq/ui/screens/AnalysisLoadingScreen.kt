@@ -13,6 +13,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.NoPhotography
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -45,6 +47,7 @@ fun AnalysisLoadingScreen(
     val stepIndex by viewModel.processingStep.collectAsState()
     val progressPercent by viewModel.processingProgress.collectAsState()
     val errorState by viewModel.errorState.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
     
     val scrollState = rememberScrollState()
     val context = LocalContext.current
@@ -63,6 +66,9 @@ fun AnalysisLoadingScreen(
         topBar = {
             AppHeader(
                 title = when (errorState) {
+                    ScanErrorType.TOOTHBRUSH_NOT_DETECTED -> "Toothbrush Not Detected"
+                    ScanErrorType.MULTIPLE_TOOTHBRUSHES -> "Multiple Toothbrushes"
+                    ScanErrorType.IMAGE_QUALITY_ERROR -> "Image Quality Issue"
                     ScanErrorType.UPLOAD_FAILED -> "Upload Error"
                     ScanErrorType.ANALYSIS_FAILED -> "Analysis Error"
                     else -> "AI Diagnostic Sequence"
@@ -77,6 +83,45 @@ fun AnalysisLoadingScreen(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             when (errorState) {
+                ScanErrorType.TOOTHBRUSH_NOT_DETECTED -> {
+                    ValidationFailureUI(
+                        title = "Toothbrush Not Detected",
+                        message = errorMessage ?: "Toothbrush not detected. Please scan only a toothbrush.",
+                        icon = Icons.Default.NoPhotography,
+                        onTryAgain = {
+                            viewModel.retake()
+                            navController.navigate("scan") {
+                                popUpTo("scan") { inclusive = true }
+                            }
+                        }
+                    )
+                }
+                ScanErrorType.MULTIPLE_TOOTHBRUSHES -> {
+                    ValidationFailureUI(
+                        title = "Multiple Toothbrushes Detected",
+                        message = errorMessage ?: "Multiple toothbrushes detected. Please scan only one toothbrush.",
+                        icon = Icons.Default.Warning,
+                        onTryAgain = {
+                            viewModel.retake()
+                            navController.navigate("scan") {
+                                popUpTo("scan") { inclusive = true }
+                            }
+                        }
+                    )
+                }
+                ScanErrorType.IMAGE_QUALITY_ERROR -> {
+                    ValidationFailureUI(
+                        title = "Image Quality Issue",
+                        message = errorMessage ?: "Image quality check failed. Please ensure proper lighting and focus.",
+                        icon = Icons.Default.Warning,
+                        onTryAgain = {
+                            viewModel.retake()
+                            navController.navigate("scan") {
+                                popUpTo("scan") { inclusive = true }
+                            }
+                        }
+                    )
+                }
                 ScanErrorType.UPLOAD_FAILED -> {
                     UploadFailureUI(
                         onRetry = {
@@ -276,6 +321,62 @@ fun AnalysisLoadingScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ValidationFailureUI(
+    title: String,
+    message: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onTryAgain: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(90.dp)
+                .background(Error.copy(alpha = 0.12f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Error,
+                modifier = Modifier.size(48.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        PrimaryButton(
+            text = "TRY AGAIN",
+            onClick = onTryAgain
+        )
     }
 }
 

@@ -118,11 +118,11 @@ fun ScanDetailsScreen(
                 .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(scrollState)
         ) {
-            // Scan Image Placeholder with overlay tabs
+            // Scan Image Placeholder
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(260.dp)
+                    .height(200.dp)
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
@@ -132,87 +132,6 @@ fun ScanDetailsScreen(
                         )
                     )
             ) {
-                // Canvas overlay based on selected tab
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .semantics {
-                            contentDescription =
-                                "AI diagnostic overlay showing bristle wear analysis with ${scan.condition} condition"
-                        }
-                ) {
-                    val w = size.width
-                    val h = size.height
-
-                    when (selectedOverlayTab) {
-                        0 -> {
-                            // Density heatmap
-                            for (i in 0..12) {
-                                for (j in 0..8) {
-                                    val cx = w * (i / 12f)
-                                    val cy = h * (j / 8f)
-                                    val intensity = (scan.wearPercentage / 100.0 * (1.0 - (i + j) / 20.0)).toFloat().coerceIn(0.05f, 0.6f)
-                                    drawCircle(
-                                        color = conditionColor.copy(alpha = intensity),
-                                        radius = 18f,
-                                        center = Offset(cx, cy)
-                                    )
-                                }
-                            }
-                        }
-                        1 -> {
-                            // AI detection boxes
-                            val boxColor = conditionColor.copy(alpha = 0.4f)
-                            drawRect(boxColor, topLeft = Offset(w * 0.15f, h * 0.2f), size = androidx.compose.ui.geometry.Size(w * 0.3f, h * 0.35f), style = Stroke(2f))
-                            drawRect(boxColor, topLeft = Offset(w * 0.55f, h * 0.3f), size = androidx.compose.ui.geometry.Size(w * 0.3f, h * 0.3f), style = Stroke(2f))
-                            drawLine(PrimaryMain.copy(alpha = 0.3f), Offset(0f, h * 0.5f), Offset(w, h * 0.5f), strokeWidth = 1f)
-                            drawLine(PrimaryMain.copy(alpha = 0.3f), Offset(w * 0.5f, 0f), Offset(w * 0.5f, h), strokeWidth = 1f)
-                        }
-                        2 -> {
-                            // Wear grid
-                            val cols = 6
-                            val rows = 4
-                            for (i in 0 until cols) {
-                                for (j in 0 until rows) {
-                                    val cellW = w / cols
-                                    val cellH = h / rows
-                                    val wearLevel = (scan.wearPercentage / 100 * ((i + j + 1).toFloat() / (cols + rows))).toFloat()
-                                    drawRect(
-                                        color = conditionColor.copy(alpha = wearLevel.coerceIn(0.05f, 0.5f)),
-                                        topLeft = Offset(i * cellW + 2, j * cellH + 2),
-                                        size = androidx.compose.ui.geometry.Size(cellW - 4, cellH - 4)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Tab selector overlaid at bottom
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(12.dp)
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f), CircleShape)
-                        .padding(horizontal = 4.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    overlayTabs.forEachIndexed { index, tab ->
-                        Surface(
-                            color = if (selectedOverlayTab == index) PrimaryMain else Color.Transparent,
-                            shape = CircleShape,
-                            onClick = { selectedOverlayTab = index }
-                        ) {
-                            Text(
-                                text = tab,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Bold),
-                                color = if (selectedOverlayTab == index) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-
                 // Scan date badge
                 Surface(
                     modifier = Modifier

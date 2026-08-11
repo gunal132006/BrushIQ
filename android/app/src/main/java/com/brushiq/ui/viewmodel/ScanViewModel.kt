@@ -24,7 +24,10 @@ enum class ScanState {
 enum class ScanErrorType {
     CAMERA_INITIALIZATION,
     UPLOAD_FAILED,
-    ANALYSIS_FAILED
+    ANALYSIS_FAILED,
+    TOOTHBRUSH_NOT_DETECTED,
+    MULTIPLE_TOOTHBRUSHES,
+    IMAGE_QUALITY_ERROR
 }
 
 @HiltViewModel
@@ -50,13 +53,16 @@ class ScanViewModel @Inject constructor(
     private val _errorState = MutableStateFlow<ScanErrorType?>(null)
     val errorState: StateFlow<ScanErrorType?> = _errorState
 
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage
+
     val processingSteps = listOf(
         "Loading Image",
+        "Validating Image Quality",
+        "Running Object Detection",
+        "Verifying Toothbrush Count",
         "Segmenting Bristles",
-        "Detecting Bristle Spread",
-        "Measuring Density",
-        "Calculating Health Score",
-        "Predicting Remaining Life",
+        "Measuring Wear Metrics",
         "Generating Recommendation"
     )
 
@@ -64,12 +70,16 @@ class ScanViewModel @Inject constructor(
         _capturedImageUri.value = uri
         _scanState.value = ScanState.IMAGE_PREVIEW
         _errorState.value = null
+        _errorMessage.value = null
+        _mockResult.value = null
     }
 
     fun retake() {
         _capturedImageUri.value = null
         _scanState.value = ScanState.CAMERA_PREVIEW
         _errorState.value = null
+        _errorMessage.value = null
+        _mockResult.value = null
     }
 
     fun setCameraError() {
@@ -102,10 +112,11 @@ class ScanViewModel @Inject constructor(
         viewModelScope.launch {
             _scanState.value = ScanState.AI_PROCESSING
             _errorState.value = null
+            _errorMessage.value = null
+            _mockResult.value = null
             _processingStep.value = 0
             _processingProgress.value = 0
             
-            // 1. Retrieve captured URI
             val uri = _capturedImageUri.value
             if (uri == null) {
                 _errorState.value = ScanErrorType.UPLOAD_FAILED
@@ -116,67 +127,75 @@ class ScanViewModel @Inject constructor(
             _processingStep.value = 0
             for (p in 0..15 step 5) {
                 _processingProgress.value = p
-                delay(100)
+                delay(80)
             }
 
-            // Resolve file from URI
             val imageFile = uriToFile(context, uri)
             if (imageFile == null) {
                 _errorState.value = ScanErrorType.UPLOAD_FAILED
                 return@launch
             }
 
-            // Stage 1: Segmenting Bristles
+            // Stage 1: Validating Image Quality
             _processingStep.value = 1
             for (p in 16..30 step 5) {
+                _processingProgress.value = p
+                delay(80)
+            }
+
+            // Stage 2: Object Detection (Network request)
+            _processingStep.value = 2
+            _processingProgress.value = 35
+
+            val resultResource = scanRepository.analyzeScan(imageFile)
+
+            for (p in 36..60 step 5) {
                 _processingProgress.value = p
                 delay(100)
             }
 
-            // Stage 2: Detecting Bristle Spread (Perform Network Upload/Analysis)
-            _processingStep.value = 2
-            _processingProgress.value = 35
-
-            // Call real backend API service
-            val resultResource = scanRepository.analyzeScan(imageFile)
-
-            // Animate progress up to 75% while awaiting/processing
-            for (p in 36..75 step 5) {
-                _processingProgress.value = p
-                delay(150)
-            }
-
             when (resultResource) {
                 is Resource.Success -> {
-                    // Complete AI analysis states progression
-                    _processingStep.value = 3 // Measuring Density
-                    delay(200)
-                    _processingProgress.value = 80
+                    _processingStep.value = 3 // Verifying Toothbrush Count
+                    delay(150)
+                    _processingProgress.value = 75
                     
-                    _processingStep.value = 4 // Calculating Health Score
-                    delay(200)
-                    _processingProgress.value = 90
+                    _processingStep.value = 4 // Segmenting Bristles
+                    delay(150)
+                    _processingProgress.value = 85
                     
-                    _processingStep.value = 5 // Predicting Remaining Life
-                    delay(200)
+                    _processingStep.value = 5 // Measuring Wear Metrics
+                    delay(150)
                     _processingProgress.value = 95
                     
                     _processingStep.value = 6 // Generating Recommendation
-                    delay(200)
+                    delay(150)
                     _processingProgress.value = 100
 
                     _mockResult.value = resultResource.data
                     onComplete()
                 }
                 is Resource.Error -> {
-                    // If server throws a 500 (e.g. Jimp failure or active analysis fail), show AI Diagnostic Error.
-                    // Otherwise, show network upload failed error.
-                    val isServerException = resultResource.exception is retrofit2.HttpException &&
-                            (resultResource.exception as retrofit2.HttpException).code() == 500
-                    if (isServerException) {
-                        _errorState.value = ScanErrorType.ANALYSIS_FAILED
+                    val msg = resultResource.message ?: ""
+                    android.util.Log.e("AI_SCAN_ERROR", "Analysis failed with message: $msg", resultResource.exception)
+
+                    if (msg.contains("TOOTHBRUSH_NOT_DETECTED")) {
+                        _errorState.value = ScanErrorType.TOOTHBRUSH_NOT_DETECTED
+                        _errorMessage.value = "Toothbrush not detected. Please scan only a toothbrush."
+                    } else if (msg.contains("MULTIPLE_TOOTHBRUSHES")) {
+                        _errorState.value = ScanErrorType.MULTIPLE_TOOTHBRUSHES
+                        _errorMessage.value = "Multiple toothbrushes detected. Please scan only one toothbrush."
+                    } else if (msg.contains("IMAGE_QUALITY_ERROR") || msg.contains("blurry") || msg.contains("dark") || msg.contains("overexposed")) {
+                        _errorState.value = ScanErrorType.IMAGE_QUALITY_ERROR
+                        _errorMessage.value = msg.substringAfter("Bad Request: ")
                     } else {
-                        _errorState.value = ScanErrorType.UPLOAD_FAILED
+                        val isServerException = resultResource.exception is retrofit2.HttpException &&
+                                (resultResource.exception as retrofit2.HttpException).code() == 500
+                        if (isServerException) {
+                            _errorState.value = ScanErrorType.ANALYSIS_FAILED
+                        } else {
+                            _errorState.value = ScanErrorType.UPLOAD_FAILED
+                        }
                     }
                 }
                 is Resource.Loading -> {}

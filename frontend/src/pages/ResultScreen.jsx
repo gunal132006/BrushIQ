@@ -351,38 +351,21 @@ const ResultScreen = () => {
           darkMode ? 'bg-slate-900 border-slate-800 text-white shadow-inner' : 'bg-white border-slate-100 shadow-md shadow-slate-100/50'
         }`}>
           <span className="absolute top-3 left-3 text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-            {showDebugVisual ? '[01] DIAGNOSTIC OVERLAY' : '[01] TARGET CAPTURE'}
+            [01] TARGET CAPTURE
           </span>
           
           <div className="w-28 h-28 rounded-xl overflow-hidden border dark:border-slate-800 border-slate-100 bg-slate-950 mt-4 relative shadow-md">
             <img 
               src={
-                showDebugVisual && analysis.debugImageUrl
-                  ? (analysis.debugImageUrl.startsWith('/') ? `${import.meta.env.VITE_BASE_URL || 'https://brushiq-backend.onrender.com'}${analysis.debugImageUrl}` : analysis.debugImageUrl)
-                  : (analysis.imageUrl && analysis.imageUrl.startsWith('/') ? `${import.meta.env.VITE_BASE_URL || 'https://brushiq-backend.onrender.com'}${analysis.imageUrl}` : (analysis.imageUrl || '/illustrations/drying.png'))
+                analysis.imageUrl && analysis.imageUrl.startsWith('/') 
+                  ? `${import.meta.env.VITE_BASE_URL || 'https://brushiq-backend.onrender.com'}${analysis.imageUrl}` 
+                  : (analysis.imageUrl || '/illustrations/drying.png')
               } 
-              alt={showDebugVisual ? "AI Diagnostic Overlay" : "Scan capture"} 
+              alt="Scan capture" 
               className="w-full h-full object-cover" 
             />
-            {!showDebugVisual && <div className="laser-line" />}
+            <div className="laser-line" />
           </div>
-          
-          {analysis.debugImageUrl && (
-            <button
-              type="button"
-              onClick={() => setShowDebugVisual(!showDebugVisual)}
-              className={`mt-3.5 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border flex items-center gap-1 transition-all duration-200 active:scale-95 cursor-pointer ${
-                showDebugVisual
-                  ? 'bg-teal-500 border-teal-400 text-white shadow-md shadow-teal-500/25'
-                  : darkMode
-                    ? 'bg-slate-950 border-slate-800 text-slate-350 hover:bg-slate-900'
-                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 shadow-sm'
-              }`}
-            >
-              <Activity className="w-3 h-3" />
-              {showDebugVisual ? 'Show Raw Photo' : 'Show AI Overlay'}
-            </button>
-          )}
         </div>
 
         {/* Circular Indicator & Health Score */}
