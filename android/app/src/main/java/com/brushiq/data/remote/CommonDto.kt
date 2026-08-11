@@ -40,6 +40,7 @@ data class ToothbrushDto(
 data class ScanDto(
     val id: String?,
     val toothbrushId: String?,
+    val familyMemberId: String? = null,
     val imageUrl: String?,
     val wearPercentage: Double?,
     val healthScore: Double?,

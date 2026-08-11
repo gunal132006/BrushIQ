@@ -10,6 +10,7 @@ interface ScanRepository {
     suspend fun analyzeScan(imageFile: File): Resource<ScanReport>
     suspend fun saveScan(
         toothbrushId: String,
+        familyMemberId: String? = null,
         imageUrl: String,
         wearPercentage: Double,
         healthScore: Double,

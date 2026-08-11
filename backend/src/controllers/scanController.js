@@ -73,6 +73,7 @@ exports.analyzeScan = async (req, res) => {
 exports.saveScan = async (req, res) => {
   const {
     toothbrushId: inputToothbrushId,
+    familyMemberId: inputFamilyMemberId,
     imageUrl,
     wearPercentage,
     healthScore,
@@ -87,81 +88,91 @@ exports.saveScan = async (req, res) => {
     aiRecommendation,
   } = req.body;
 
-  console.log('[SAVE REPORT] request received:');
-  console.log('  userId:', req.user ? req.user.id : 'UNAUTHENTICATED');
-  console.log('  inputToothbrushId:', inputToothbrushId || '(none)');
-  console.log('  imageUrl:', imageUrl || '(none)');
-  console.log('  wearPercentage:', wearPercentage);
-  console.log('  healthScore:', healthScore);
+  const authenticatedUserId = req.user ? req.user.id : null;
+  console.log('[SAVE SCAN]');
+  console.log('authenticatedUserId =', authenticatedUserId);
+  console.log('familyMemberId =', inputFamilyMemberId || '(none)');
+  console.log('requestedToothbrushId =', inputToothbrushId || '(none)');
 
   if (!imageUrl) {
-    console.log('[SAVE REPORT] validation result: FAILED (missing imageUrl)');
+    console.log('[SAVE SCAN] relationship verification = FAIL (missing imageUrl)');
     return res.status(400).json({ message: 'Missing required scan image URL' });
   }
 
   try {
-    let toothbrushId = inputToothbrushId;
-    let familyMemberId = null;
+    let verifiedToothbrushId = inputToothbrushId;
+    let verifiedFamilyMemberId = inputFamilyMemberId;
 
-    // 1. Verify input toothbrushId if provided
-    if (toothbrushId && toothbrushId.trim() !== '') {
-      const checkBrush = await db.query(
-        `SELECT t.id, t.family_member_id FROM toothbrushes t
-         JOIN family_members f ON t.family_member_id = f.id
-         WHERE t.id = $1 AND f.user_id = $2`,
-        [toothbrushId, req.user.id]
-      );
+    // 1. If explicit toothbrushId was provided, verify it belongs to authenticated user (and familyMemberId if provided)
+    if (verifiedToothbrushId && verifiedToothbrushId.trim() !== '') {
+      let query = `
+        SELECT t.id AS toothbrush_id, t.family_member_id
+        FROM toothbrushes t
+        JOIN family_members fm ON fm.id = t.family_member_id
+        WHERE t.id = $1 AND fm.user_id = $2
+      `;
+      let params = [verifiedToothbrushId, authenticatedUserId];
 
-      if (checkBrush.rows.length > 0) {
-        familyMemberId = checkBrush.rows[0].family_member_id;
-      } else {
-        console.log(`[SAVE REPORT] Provided toothbrushId ${toothbrushId} not found for user. Finding fallback.`);
-        toothbrushId = null;
+      if (verifiedFamilyMemberId && verifiedFamilyMemberId.trim() !== '') {
+        query += ` AND fm.id = $3`;
+        params.push(verifiedFamilyMemberId);
       }
-    }
 
-    // 2. Fallback: Lookup any existing toothbrush for user if input was missing or invalid
-    if (!toothbrushId) {
-      const existingBrush = await db.query(
-        `SELECT t.id, t.family_member_id FROM toothbrushes t
-         JOIN family_members f ON t.family_member_id = f.id
-         WHERE f.user_id = $1
-         ORDER BY t.created_at ASC LIMIT 1`,
-        [req.user.id]
+      const checkRes = await db.query(query, params);
+
+      if (checkRes.rows.length > 0) {
+        verifiedToothbrushId = checkRes.rows[0].toothbrush_id;
+        verifiedFamilyMemberId = checkRes.rows[0].family_member_id;
+      } else {
+        console.log('[SAVE SCAN] relationship verification = FAIL (toothbrushId not found for user/member)');
+        return res.status(400).json({
+          code: 'INVALID_TOOTHBRUSH',
+          message: 'Selected toothbrush does not belong to the authenticated user or specified family member.'
+        });
+      }
+    } else if (verifiedFamilyMemberId && verifiedFamilyMemberId.trim() !== '') {
+      // 2. If toothbrushId was NOT provided, but familyMemberId WAS provided, find or create toothbrush for THAT family member
+      const checkMember = await db.query(
+        `SELECT id FROM family_members WHERE id = $1 AND user_id = $2`,
+        [verifiedFamilyMemberId, authenticatedUserId]
       );
 
-      if (existingBrush.rows.length > 0) {
-        toothbrushId = existingBrush.rows[0].id;
-        familyMemberId = existingBrush.rows[0].family_member_id;
-        console.log(`[SAVE REPORT] Auto-selected existing user toothbrushId: ${toothbrushId}`);
-      } else {
-        // 3. Auto-create primary family member and toothbrush if user has none
-        console.log('[SAVE REPORT] User has no family member/toothbrush. Auto-creating defaults.');
-        let memberRes = await db.query(
-          `SELECT id FROM family_members WHERE user_id = $1 ORDER BY created_at ASC LIMIT 1`,
-          [req.user.id]
-        );
-        
-        if (memberRes.rows.length === 0) {
-          memberRes = await db.query(
-            `INSERT INTO family_members (user_id, name, age, gender, relationship)
-             VALUES ($1, 'Primary Member', 25, 'Unspecified', 'Self')
-             RETURNING id`,
-            [req.user.id]
-          );
-        }
-        familyMemberId = memberRes.rows[0].id;
+      if (checkMember.rows.length === 0) {
+        console.log('[SAVE SCAN] relationship verification = FAIL (familyMemberId not found)');
+        return res.status(400).json({
+          code: 'INVALID_FAMILY_MEMBER',
+          message: 'Family member not found for user.'
+        });
+      }
 
-        const newBrushRes = await db.query(
+      const memberBrush = await db.query(
+        `SELECT id FROM toothbrushes WHERE family_member_id = $1 ORDER BY created_at DESC LIMIT 1`,
+        [verifiedFamilyMemberId]
+      );
+
+      if (memberBrush.rows.length > 0) {
+        verifiedToothbrushId = memberBrush.rows[0].id;
+      } else {
+        const newBrush = await db.query(
           `INSERT INTO toothbrushes (family_member_id, brand, model, color, type, purchase_date)
-           VALUES ($1, 'Oral-B', 'Pro Series', 'Blue', 'Electric', CURRENT_DATE)
+           VALUES ($1, 'BrushIQ Pro', 'Sonic Series', 'Blue', 'Electric', CURRENT_DATE)
            RETURNING id`,
-          [familyMemberId]
+          [verifiedFamilyMemberId]
         );
-        toothbrushId = newBrushRes.rows[0].id;
-        console.log(`[SAVE REPORT] Created default toothbrushId: ${toothbrushId} for familyMemberId: ${familyMemberId}`);
+        verifiedToothbrushId = newBrush.rows[0].id;
       }
+    } else {
+      // 3. Neither toothbrushId nor familyMemberId provided -> RETURN TOOTHBRUSH_SELECTION_REQUIRED (NO silent fallback to arbitrary toothbrush!)
+      console.log('[SAVE SCAN] relationship verification = FAIL (missing toothbrushId and familyMemberId)');
+      return res.status(400).json({
+        code: 'TOOTHBRUSH_SELECTION_REQUIRED',
+        message: 'Please select a toothbrush before saving the report.'
+      });
     }
+
+    console.log('[SAVE SCAN] verifiedToothbrushId =', verifiedToothbrushId);
+    console.log('[SAVE SCAN] verifiedFamilyMemberId =', verifiedFamilyMemberId);
+    console.log('[SAVE SCAN] relationship verification = PASS');
 
     // Sanitize numerical metrics to prevent PostgreSQL NOT NULL or NaN violations
     const safeWearPercentage = Number.isFinite(Number(wearPercentage)) ? Number(wearPercentage) : 0.0;
@@ -178,18 +189,6 @@ exports.saveScan = async (req, res) => {
     const safeDetectedIssues = Array.isArray(detectedIssues) ? detectedIssues : [];
     const safeAiRecommendation = aiRecommendation || 'Routine check recommended. Maintain proper 2-minute brushing twice daily.';
 
-    console.log('[SAVE REPORT] validation result: PASSED');
-    console.log('[SAVE REPORT] final parameters:', {
-      toothbrushId,
-      familyMemberId,
-      imageUrl,
-      wearPercentage: safeWearPercentage,
-      healthScore: safeHealthScore,
-      remainingLifeDays: safeRemainingLifeDays,
-      condition: safeCondition,
-      confidenceScore: safeConfidenceScore
-    });
-
     // Save scan to database
     const result = await db.query(
       `INSERT INTO scans (
@@ -205,7 +204,7 @@ exports.saveScan = async (req, res) => {
                 detected_issues as "detectedIssues", ai_recommendation as "aiRecommendation", 
                 scan_date as "scanDate"`,
       [
-        toothbrushId,
+        verifiedToothbrushId,
         imageUrl,
         safeWearPercentage,
         safeHealthScore,
@@ -222,8 +221,7 @@ exports.saveScan = async (req, res) => {
     );
 
     const savedScan = result.rows[0];
-    console.log('[SAVE REPORT] database result: SUCCESS');
-    console.log('[SAVE REPORT] saved record ID:', savedScan.id);
+    console.log('[SAVE SCAN] insertedScanId =', savedScan.id);
 
     // Auto-create/update reminder
     let reminderType = 'Weekly';
@@ -245,20 +243,23 @@ exports.saveScan = async (req, res) => {
 
     await db.query(
       'UPDATE reminders SET is_completed = TRUE WHERE toothbrush_id = $1 AND is_completed = FALSE',
-      [toothbrushId]
+      [verifiedToothbrushId]
     );
 
-    if (familyMemberId) {
+    if (verifiedFamilyMemberId) {
       await db.query(
         `INSERT INTO reminders (family_member_id, toothbrush_id, scan_id, type, next_reminder_date, message)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        [familyMemberId, toothbrushId, savedScan.id, reminderType, nextReminderDate, reminderMessage]
+        [verifiedFamilyMemberId, verifiedToothbrushId, savedScan.id, reminderType, nextReminderDate, reminderMessage]
       );
     }
 
-    res.status(201).json(savedScan);
+    res.status(201).json({
+      ...savedScan,
+      familyMemberId: verifiedFamilyMemberId
+    });
   } catch (err) {
-    console.error('[SAVE REPORT] database result: ERROR', err);
+    console.error('[SAVE SCAN] database result: ERROR', err);
     res.status(500).json({ message: 'Server error saving scan result', error: err.message });
   }
 };

@@ -76,8 +76,11 @@ fun MemberDossierScreen(
     var showAssignModal by remember { mutableStateOf(false) }
     var chartTab by remember { mutableStateOf(ChartViewType.MONTHLY) }
 
-    LaunchedEffect(memberId) {
+    val memberToothbrush = toothbrushes.find { it.familyMemberId == memberId }
+
+    LaunchedEffect(memberId, memberToothbrush?.id) {
         viewModel.syncAllData()
+        viewModel.setSelectedContext(familyMemberId = memberId, toothbrushId = memberToothbrush?.id)
     }
 
     if (currentMember == null) {
@@ -87,7 +90,6 @@ fun MemberDossierScreen(
         return
     }
 
-    val memberToothbrush = toothbrushes.find { it.familyMemberId == memberId }
     val memberReminders = reminders.filter { it.familyMemberId == memberId }
     
     // Member specific scans (or fallback mock list)
@@ -251,7 +253,10 @@ fun MemberDossierScreen(
                     description = "Perform a visual analysis to compile clinical wear reports.",
                     icon = Icons.Default.ImageSearch,
                     buttonText = "Scan Now",
-                    onAction = { navController.navigate("scan") }
+                    onAction = {
+                        viewModel.setSelectedContext(familyMemberId = memberId, toothbrushId = memberToothbrush?.id)
+                        navController.navigate("scan")
+                    }
                 )
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

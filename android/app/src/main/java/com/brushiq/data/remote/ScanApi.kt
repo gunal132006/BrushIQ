@@ -5,6 +5,7 @@ import retrofit2.http.*
 
 data class SaveScanRequest(
     val toothbrushId: String,
+    val familyMemberId: String? = null,
     val imageUrl: String,
     val wearPercentage: Double,
     val healthScore: Double,

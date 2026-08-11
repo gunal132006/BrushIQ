@@ -107,7 +107,10 @@ fun FamilyScreen(
                                 healthScore = member.healthScore?.toInt(),
                                 toothbrushName = member.toothbrushBrand?.let { "$it ${member.toothbrushModel}" },
                                 profilePhotoUrl = member.profilePhotoUrl,
-                                onClick = { navController.navigate("member_dossier/${member.id}") },
+                                onClick = {
+                                    viewModel?.setSelectedContext(familyMemberId = member.id, toothbrushId = member.toothbrushId)
+                                    navController.navigate("member_dossier/${member.id}")
+                                },
                                 onEdit = { navController.navigate("edit_member/${member.id}") },
                                 onDelete = { memberToDelete = member }
                             )

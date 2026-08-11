@@ -196,8 +196,20 @@ class BrushIQRepositoryImpl @Inject constructor(
         aiRecommendation: String
     ): ScanReport {
         return scanRepository.saveScan(
-            toothbrushId, imageUrl, wearPercentage, healthScore, remainingLifeDays, condition,
-            confidenceScore, bristleSpreading, bristleBending, bristleDamage, brushingFrequency, detectedIssues, aiRecommendation
+            toothbrushId = toothbrushId,
+            familyMemberId = null,
+            imageUrl = imageUrl,
+            wearPercentage = wearPercentage,
+            healthScore = healthScore,
+            remainingLifeDays = remainingLifeDays,
+            condition = condition,
+            confidenceScore = confidenceScore,
+            bristleSpreading = bristleSpreading,
+            bristleBending = bristleBending,
+            bristleDamage = bristleDamage,
+            brushingFrequency = brushingFrequency,
+            detectedIssues = detectedIssues,
+            aiRecommendation = aiRecommendation
         ).getOrThrow()
     }
 

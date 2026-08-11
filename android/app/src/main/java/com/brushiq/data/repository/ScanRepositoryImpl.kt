@@ -112,6 +112,7 @@ class ScanRepositoryImpl @Inject constructor(
 
     override suspend fun saveScan(
         toothbrushId: String,
+        familyMemberId: String?,
         imageUrl: String,
         wearPercentage: Double,
         healthScore: Double,
@@ -126,8 +127,20 @@ class ScanRepositoryImpl @Inject constructor(
         aiRecommendation: String
     ): Resource<ScanReport> {
         val req = SaveScanRequest(
-            toothbrushId, imageUrl, wearPercentage, healthScore, remainingLifeDays, condition,
-            confidenceScore, bristleSpreading, bristleBending, bristleDamage, brushingFrequency, detectedIssues, aiRecommendation
+            toothbrushId = toothbrushId,
+            familyMemberId = familyMemberId,
+            imageUrl = imageUrl,
+            wearPercentage = wearPercentage,
+            healthScore = healthScore,
+            remainingLifeDays = remainingLifeDays,
+            condition = condition,
+            confidenceScore = confidenceScore,
+            bristleSpreading = bristleSpreading,
+            bristleBending = bristleBending,
+            bristleDamage = bristleDamage,
+            brushingFrequency = brushingFrequency,
+            detectedIssues = detectedIssues,
+            aiRecommendation = aiRecommendation
         )
         val res = safeApiCall { scanApi.saveScan(req) }
         return when (res) {

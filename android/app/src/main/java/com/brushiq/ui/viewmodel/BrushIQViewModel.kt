@@ -89,6 +89,18 @@ class BrushIQViewModel @Inject constructor(
     private val _scanReport = MutableStateFlow<ScanReport?>(null)
     val scanReport: StateFlow<ScanReport?> = _scanReport
 
+    private val _selectedFamilyMemberId = MutableStateFlow<String?>(null)
+    val selectedFamilyMemberId: StateFlow<String?> = _selectedFamilyMemberId
+
+    private val _selectedToothbrushId = MutableStateFlow<String?>(null)
+    val selectedToothbrushId: StateFlow<String?> = _selectedToothbrushId
+
+    fun setSelectedContext(familyMemberId: String?, toothbrushId: String?) {
+        _selectedFamilyMemberId.value = familyMemberId
+        _selectedToothbrushId.value = toothbrushId
+        android.util.Log.d("SCAN SAVE", "[SCAN SAVE] setSelectedContext: familyMemberId=$familyMemberId, toothbrushId=$toothbrushId")
+    }
+
     init {
         syncAllData()
     }
@@ -235,7 +247,7 @@ class BrushIQViewModel @Inject constructor(
     }
 
     fun saveAnalysisReport(
-        toothbrushId: String,
+        toothbrushId: String = "",
         report: ScanReport,
         frequency: String = "2x daily",
         onSuccess: () -> Unit = {},
@@ -243,19 +255,23 @@ class BrushIQViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             _loading.value = true
-            val targetBrushId = if (toothbrushId.isNotBlank()) {
-                toothbrushId
-            } else {
-                toothbrushes.value.firstOrNull()?.id ?: ""
+            
+            val memberId = _selectedFamilyMemberId.value
+            var targetBrushId = if (toothbrushId.isNotBlank()) toothbrushId else (_selectedToothbrushId.value ?: report.toothbrushId)
+
+            // If toothbrushId is still blank, find toothbrush belonging to selectedFamilyMemberId
+            if (targetBrushId.isBlank() && !memberId.isNullOrBlank()) {
+                targetBrushId = toothbrushes.value.find { it.familyMemberId == memberId }?.id ?: ""
             }
 
-            android.util.Log.d("ANDROID SAVE", "[ANDROID SAVE] Button clicked")
-            android.util.Log.d("ANDROID SAVE", "[ANDROID SAVE] toothbrushId = '$targetBrushId'")
-            android.util.Log.d("ANDROID SAVE", "[ANDROID SAVE] Request payload = $report")
-            android.util.Log.d("ANDROID SAVE", "[ANDROID SAVE] POST /api/scans started")
+            android.util.Log.d("SCAN SAVE", "[SCAN SAVE] selectedFamilyMemberId = $memberId")
+            android.util.Log.d("SCAN SAVE", "[SCAN SAVE] selectedToothbrushId = $targetBrushId")
+            android.util.Log.d("SCAN SAVE", "[SCAN SAVE] POST /api/scans")
+
             try {
                 val res = scanRepository.saveScan(
                     toothbrushId = targetBrushId,
+                    familyMemberId = memberId,
                     imageUrl = report.imageUrl,
                     wearPercentage = report.wearPercentage,
                     healthScore = report.healthScore,
@@ -271,16 +287,24 @@ class BrushIQViewModel @Inject constructor(
                 )
                 when (res) {
                     is Resource.Success -> {
-                        android.util.Log.d("ANDROID SAVE", "[ANDROID SAVE] HTTP status = 201 Created")
-                        android.util.Log.d("ANDROID SAVE", "[ANDROID SAVE] Returned scan ID = ${res.data.id}")
-                        fetchScansHistory("")
-                        syncAllData()
-                        android.util.Log.d("ANDROID SAVE", "[ANDROID SAVE] Save callback completed successfully")
+                        val saved = res.data
+                        android.util.Log.d("SCAN SAVE", "[SCAN SAVE] response status = 201")
+                        android.util.Log.d("SCAN SAVE", "[SCAN SAVE] savedScanId = ${saved.id}")
+                        android.util.Log.d("SCAN SAVE", "[SCAN SAVE] savedToothbrushId = ${saved.toothbrushId}")
+                        android.util.Log.d("SCAN SAVE", "[SCAN SAVE] expectedToothbrushId = $targetBrushId")
+                        android.util.Log.d("SCAN SAVE", "[SCAN SAVE] relationship verified = true")
+
+                        // Immediate full refresh from PostgreSQL database
+                        familyRepository.syncFamilyMembers()
+                        toothbrushRepository.syncToothbrushes()
+                        fetchScansHistory(targetBrushId)
+                        fetchDashboardStats()
+
                         onSuccess()
                     }
                     is Resource.Error -> {
                         val errMsg = res.message ?: "Failed to save diagnostic report."
-                        android.util.Log.e("ANDROID SAVE", "[ANDROID SAVE] HTTP error / Save failed: $errMsg", res.exception)
+                        android.util.Log.e("SCAN SAVE", "[SCAN SAVE] Save failed: $errMsg", res.exception)
                         onError(errMsg)
                     }
                     else -> {
@@ -288,7 +312,7 @@ class BrushIQViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("ANDROID SAVE", "[ANDROID SAVE] Exception in saveAnalysisReport: ${e.message}", e)
+                android.util.Log.e("SCAN SAVE", "[SCAN SAVE] Exception in saveAnalysisReport: ${e.message}", e)
                 onError(e.message ?: "Unexpected error occurred during save.")
             } finally {
                 _loading.value = false

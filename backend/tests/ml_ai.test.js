@@ -1,26 +1,10 @@
 const path = require('path');
-const fs = require('fs');
 const mlAnalyzer = require('../src/services/ai/mlAnalyzer');
 const analyzer = require('../src/services/ai/analyzer');
 
 describe('Machine Learning Model & Image Analysis Pipeline', () => {
-  const sampleImagePath = path.join(__dirname, 'ml-test-toothbrush.png');
-
-  beforeAll(() => {
-    // Create a 1x1 dummy test image file for testing
-    if (!fs.existsSync(sampleImagePath)) {
-      const dummyPngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-      fs.writeFileSync(sampleImagePath, Buffer.from(dummyPngBase64, 'base64'));
-    }
-  });
-
-  afterAll(() => {
-    if (fs.existsSync(sampleImagePath)) {
-      try {
-        fs.unlinkSync(sampleImagePath);
-      } catch (e) {}
-    }
-  });
+  jest.setTimeout(30000);
+  const sampleImagePath = path.join(__dirname, 'fixtures', 'single_toothbrush.jpg');
 
   test('mlAnalyzer returns valid softmax probabilities and top class', async () => {
     const result = await mlAnalyzer.predict(sampleImagePath);

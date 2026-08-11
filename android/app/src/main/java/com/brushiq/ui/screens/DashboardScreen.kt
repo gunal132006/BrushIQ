@@ -37,6 +37,9 @@ fun DashboardScreen(
     val loading by (viewModel?.loading ?: MutableStateFlow(false)).collectAsState()
     val authState by (authViewModel?.authState ?: MutableStateFlow(com.brushiq.ui.viewmodel.AuthState.Idle)).collectAsState()
 
+    val familyMembers by (viewModel?.familyMembers ?: kotlinx.coroutines.flow.MutableStateFlow(emptyList())).collectAsState()
+    val toothbrushes by (viewModel?.toothbrushes ?: kotlinx.coroutines.flow.MutableStateFlow(emptyList())).collectAsState()
+
     // Trigger sync on dashboard load
     LaunchedEffect(Unit) {
         viewModel?.syncAllData()
@@ -122,7 +125,12 @@ fun DashboardScreen(
                             Surface(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clickable { navController.navigate("scan") },
+                                    .clickable {
+                                        val firstMem = familyMembers.firstOrNull()
+                                        val firstBrush = toothbrushes.firstOrNull { it.familyMemberId == firstMem?.id } ?: toothbrushes.firstOrNull()
+                                        viewModel?.setSelectedContext(familyMemberId = firstMem?.id, toothbrushId = firstBrush?.id)
+                                        navController.navigate("scan")
+                                    },
                                 color = Color.White,
                                 shape = BrushIQShapes.medium
                             ) {
