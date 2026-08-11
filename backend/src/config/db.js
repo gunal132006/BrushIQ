@@ -104,10 +104,16 @@ async function queryPgOnly(text, params) {
   return query(text, params);
 }
 
+async function ensurePgConnected() {
+  if (pgConnected) return true;
+  return await checkDbConnection();
+}
+
 module.exports = {
   query,
   queryPgOnly,
   isPgConnected: () => pgConnected,
+  ensurePgConnected,
   setPgConnected: (val) => { pgConnected = val; },
   pool,
   checkDbConnection,

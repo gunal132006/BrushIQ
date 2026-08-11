@@ -5,6 +5,7 @@ const db = require('../config/db');
 const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/jwt');
 
 exports.googleLogin = async (req, res) => {
+  console.log('[AUTH] Request received: POST /api/auth/google');
   console.log('[GoogleLogin] Starting Google login request evaluation...');
   const googleClientId = process.env.GOOGLE_CLIENT_ID;
 
@@ -16,20 +17,27 @@ exports.googleLogin = async (req, res) => {
     });
   }
 
-  // 2. Check PostgreSQL availability
+  // 2. Check PostgreSQL availability (with on-demand re-check)
   if (!db.isPgConnected()) {
+    await db.ensurePgConnected();
+  }
+  if (!db.isPgConnected()) {
+    console.log('[DATABASE] Connection status: DISCONNECTED');
     console.log('[GoogleLogin] Branch Taken: PostgreSQL DB disconnected -> HTTP 503');
     return res.status(503).json({
       message: 'PostgreSQL database service unavailable'
     });
   }
+  console.log('[DATABASE] Connection status: CONNECTED');
 
   // 3. Extract and validate idToken input
   const { idToken } = req.body;
   if (!idToken || typeof idToken !== 'string' || !idToken.trim()) {
+    console.log('[GOOGLE AUTH] ID token received: NO');
     console.log('[GoogleLogin] Branch Taken: idToken missing from request body -> HTTP 400');
     return res.status(400).json({ message: 'ID token is required' });
   }
+  console.log('[GOOGLE AUTH] ID token received: YES');
 
   try {
     // 4. Verify ID Token using Google's official OAuth2Client
@@ -41,8 +49,10 @@ exports.googleLogin = async (req, res) => {
         idToken: idToken.trim(),
         audience: googleClientId.trim(),
       });
+      console.log('[GOOGLE AUTH] Token verification: PASS');
       console.log('[GoogleLogin] verifyIdToken() execution succeeded!');
     } catch (verifyErr) {
+      console.error('[GOOGLE AUTH] Token verification: FAIL');
       console.error('[GoogleLogin] Branch Taken: verifyIdToken() failed -> HTTP 401:', verifyErr.message);
       return res.status(401).json({ message: 'Invalid or expired Google ID token' });
     }
@@ -71,6 +81,7 @@ exports.googleLogin = async (req, res) => {
     );
 
     if (byGoogleId.rows.length > 0) {
+      console.log('[GOOGLE AUTH] Database lookup: PASS');
       console.log('[GoogleLogin] Found existing user by google_id. Updating last_login...');
       const updateRes = await db.queryPgOnly(
         `UPDATE users 
@@ -90,6 +101,7 @@ exports.googleLogin = async (req, res) => {
       );
 
       if (byEmail.rows.length > 0) {
+        console.log('[GOOGLE AUTH] Database lookup: PASS');
         console.log('[GoogleLogin] Found existing user by email. Linking Google account...');
         const existingId = byEmail.rows[0].id;
         const linkRes = await db.queryPgOnly(
@@ -112,6 +124,7 @@ exports.googleLogin = async (req, res) => {
           [fullName, email, googleId, avatarUrl]
         );
         user = insertRes.rows[0];
+        console.log('[GOOGLE AUTH] Database lookup: PASS');
       }
     }
 
@@ -136,6 +149,7 @@ exports.googleLogin = async (req, res) => {
     });
 
   } catch (err) {
+    console.error('[GOOGLE AUTH] Database lookup: FAIL');
     if (err.code === 'PG_UNAVAILABLE' || !db.isPgConnected()) {
       console.error('[GoogleLogin] Branch Taken: Catch block PG_UNAVAILABLE -> HTTP 503');
       return res.status(503).json({ message: 'PostgreSQL database service unavailable' });
@@ -221,6 +235,7 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
+  console.log('[AUTH] Request received: POST /api/auth/login');
   const { username, email, password } = req.body;
   const loginIdentifier = username || email;
 
@@ -228,10 +243,16 @@ exports.login = async (req, res) => {
     return res.status(400).json({ message: 'Please enter all fields' });
   }
 
-  // Check PostgreSQL availability
+  // Check PostgreSQL availability (with on-demand re-check)
   if (!db.isPgConnected()) {
+    await db.ensurePgConnected();
+  }
+  if (!db.isPgConnected()) {
+    console.log('[DATABASE] Connection status: DISCONNECTED');
+    console.log('[AUTH] Login result: DATABASE_ERROR');
     return res.status(503).json({ message: 'PostgreSQL database service unavailable' });
   }
+  console.log('[DATABASE] Connection status: CONNECTED');
 
   try {
     const sanitizedUsername = loginIdentifier.trim().toLowerCase();
@@ -243,20 +264,27 @@ exports.login = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      console.log('[AUTH] Database lookup: FAIL (user not found)');
+      console.log('[AUTH] Login result: INVALID_CREDENTIALS');
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    console.log('[AUTH] Database lookup: PASS');
     const user = result.rows[0];
 
     if (!user.password_hash) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      console.log('[AUTH] Login result: INVALID_CREDENTIALS (no password hash)');
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      console.log('[AUTH] Login result: INVALID_CREDENTIALS (password mismatch)');
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
+
+    console.log('[AUTH] Login result: SUCCESS');
 
     // Sign JWT
     const payload = { user: { id: user.id } };

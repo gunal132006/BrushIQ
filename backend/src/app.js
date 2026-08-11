@@ -96,7 +96,10 @@ app.use('/api/system', require('./routes/system'));
 // Health Routes
 app.get('/health', async (req, res) => {
   const db = require('./config/db');
-  const connected = db.isPgConnected();
+  let connected = db.isPgConnected();
+  if (!connected) {
+    connected = await db.ensurePgConnected();
+  }
   res.status(connected ? 200 : 503).json({
     status: 'UP',
     database: connected ? 'CONNECTED' : 'DISCONNECTED'
@@ -105,7 +108,10 @@ app.get('/health', async (req, res) => {
 
 app.get('/api/health', async (req, res) => {
   const db = require('./config/db');
-  const connected = db.isPgConnected();
+  let connected = db.isPgConnected();
+  if (!connected) {
+    connected = await db.ensurePgConnected();
+  }
   res.status(connected ? 200 : 503).json({
     status: 'UP',
     database: connected ? 'CONNECTED' : 'DISCONNECTED'
