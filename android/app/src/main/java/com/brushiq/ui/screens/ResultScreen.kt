@@ -171,8 +171,9 @@ fun ResultScreen(
                             .weight(0.8f),
                         contentAlignment = Alignment.Center
                     ) {
+                        val healthScoreClamped = (report.healthScore.toFloat() / 100f).coerceIn(0f, 1f)
                         val animatedScore by animateFloatAsState(
-                            targetValue = report.healthScore.toFloat() / 100f,
+                            targetValue = healthScoreClamped,
                             animationSpec = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
                             label = "healthScore"
                         )
@@ -184,16 +185,31 @@ fun ResultScreen(
                                     contentDescription = "Circular Health Progress indicator representing score of ${report.healthScore.toInt()}%"
                                 }
                         ) {
-                            drawCircle(
+                            val strokeWidth = 8.dp.toPx()
+                            val inset = strokeWidth / 2f
+                            val arcSize = androidx.compose.ui.geometry.Size(size.width - strokeWidth, size.height - strokeWidth)
+                            val arcTopLeft = androidx.compose.ui.geometry.Offset(inset, inset)
+
+                            // 1. Background Track
+                            drawArc(
                                 color = conditionColor.copy(alpha = 0.12f),
-                                style = Stroke(width = 8.dp.toPx())
+                                startAngle = 0f,
+                                sweepAngle = 360f,
+                                useCenter = false,
+                                topLeft = arcTopLeft,
+                                size = arcSize,
+                                style = Stroke(width = strokeWidth)
                             )
+
+                            // 2. Active Progress Arc (starts at 12 o'clock = -90f, clockwise)
                             drawArc(
                                 color = conditionColor,
                                 startAngle = -90f,
                                 sweepAngle = 360f * animatedScore,
                                 useCenter = false,
-                                style = Stroke(width = 8.dp.toPx(), cap = StrokeCap.Round)
+                                topLeft = arcTopLeft,
+                                size = arcSize,
+                                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                             )
                         }
 
