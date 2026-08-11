@@ -241,13 +241,23 @@ exports.validateToothbrushObject = async (imagePath) => {
   console.log(`[TOOTHBRUSH COUNT] Count: ${toothbrushCount}`);
 
   if (toothbrushCount === 0) {
+    const nonToothbrushObjs = rawPredictions.filter(p => p.class !== 'toothbrush' && p.score >= 0.40).sort((a, b) => b.score - a.score);
+    if (nonToothbrushObjs.length > 0) {
+      const topObj = nonToothbrushObjs[0];
+      console.log(`[OBJECT DETECTION] Object: ${topObj.class}`);
+      console.log(`[OBJECT DETECTION] Confidence: ${(topObj.score * 100).toFixed(0)}%`);
+      console.log('[AI VALIDATION] REJECTED — NON-TOOTHBRUSH OBJECT');
+      console.log(`[AI VALIDATION] Detected object = ${topObj.class}`);
+      throw new Error(`NON_TOOTHBRUSH_OBJECT:${topObj.class}`);
+    }
+
     console.log('[AI VALIDATION] REJECTED — NOT A TOOTHBRUSH');
-    throw new Error('TOOTHBRUSH_NOT_DETECTED: Toothbrush not detected. Please scan only a single toothbrush.');
+    throw new Error('TOOTHBRUSH_NOT_DETECTED: Toothbrush not detected. Please scan only a toothbrush.');
   }
 
   if (toothbrushCount > 1) {
     console.log('[AI VALIDATION] REJECTED — MULTIPLE TOOTHBRUSHES');
-    throw new Error('MULTIPLE_TOOTHBRUSHES: Multiple toothbrushes detected. Please scan a single toothbrush.');
+    throw new Error('MULTIPLE_TOOTHBRUSHES: Multiple toothbrushes detected. Please scan only one toothbrush.');
   }
 
   const confidenceScore = parseFloat((toothbrushes[0].score * 100).toFixed(1));

@@ -28,11 +28,13 @@ enum class ScanErrorType {
     ANALYSIS_FAILED,
     TOOTHBRUSH_NOT_DETECTED,
     MULTIPLE_TOOTHBRUSHES,
-    IMAGE_QUALITY_ERROR
+    IMAGE_QUALITY_ERROR,
+    NON_TOOTHBRUSH_OBJECT
 }
 
 data class ApiErrorPayload(
     val code: String = "",
+    val detectedObject: String = "",
     val message: String = "",
     val rawBody: String = ""
 )
@@ -63,6 +65,9 @@ class ScanViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
+    private val _detectedObject = MutableStateFlow<String?>(null)
+    val detectedObject: StateFlow<String?> = _detectedObject
+
     val processingSteps = listOf(
         "Loading Image",
         "Validating Image Quality",
@@ -78,6 +83,7 @@ class ScanViewModel @Inject constructor(
         _scanState.value = ScanState.IMAGE_PREVIEW
         _errorState.value = null
         _errorMessage.value = null
+        _detectedObject.value = null
         _mockResult.value = null
     }
 
@@ -86,6 +92,7 @@ class ScanViewModel @Inject constructor(
         _scanState.value = ScanState.CAMERA_PREVIEW
         _errorState.value = null
         _errorMessage.value = null
+        _detectedObject.value = null
         _mockResult.value = null
     }
 
@@ -117,6 +124,7 @@ class ScanViewModel @Inject constructor(
 
     private fun parseApiErrorPayload(exception: Throwable?, rawMessage: String?): ApiErrorPayload {
         var code = ""
+        var detectedObject = ""
         var message = ""
         var bodyStr = rawMessage ?: ""
 
@@ -142,6 +150,9 @@ class ScanViewModel @Inject constructor(
                     if (json.has("code")) {
                         code = json.optString("code", "")
                     }
+                    if (json.has("detectedObject")) {
+                        detectedObject = json.optString("detectedObject", "")
+                    }
                     if (json.has("message")) {
                         message = json.optString("message", "")
                     }
@@ -151,13 +162,14 @@ class ScanViewModel @Inject constructor(
 
         if (code.isBlank()) {
             when {
+                bodyStr.contains("NON_TOOTHBRUSH_OBJECT") -> code = "NON_TOOTHBRUSH_OBJECT"
                 bodyStr.contains("TOOTHBRUSH_NOT_DETECTED") -> code = "TOOTHBRUSH_NOT_DETECTED"
                 bodyStr.contains("MULTIPLE_TOOTHBRUSHES") -> code = "MULTIPLE_TOOTHBRUSHES"
                 bodyStr.contains("IMAGE_QUALITY_ERROR") || bodyStr.contains("blurry") || bodyStr.contains("dark") || bodyStr.contains("overexposed") -> code = "IMAGE_QUALITY_ERROR"
             }
         }
 
-        return ApiErrorPayload(code = code, message = message, rawBody = bodyStr)
+        return ApiErrorPayload(code = code, detectedObject = detectedObject, message = message, rawBody = bodyStr)
     }
 
     fun startAiAnalysis(context: Context, onComplete: () -> Unit) {
@@ -165,6 +177,7 @@ class ScanViewModel @Inject constructor(
             _scanState.value = ScanState.AI_PROCESSING
             _errorState.value = null
             _errorMessage.value = null
+            _detectedObject.value = null
             _mockResult.value = null
             _processingStep.value = 0
             _processingProgress.value = 0
@@ -235,11 +248,17 @@ class ScanViewModel @Inject constructor(
                     val payload = parseApiErrorPayload(exception, rawMsg)
 
                     android.util.Log.d("SCAN ERROR", "[SCAN ERROR] HTTP status = $httpCode")
-                    android.util.Log.d("SCAN ERROR", "[SCAN ERROR] response body = ${payload.rawBody}")
-                    android.util.Log.d("SCAN ERROR", "[SCAN ERROR] parsed code = ${payload.code}")
+                    android.util.Log.d("SCAN ERROR", "[SCAN ERROR] code = ${payload.code}")
+                    android.util.Log.d("SCAN ERROR", "[SCAN ERROR] detectedObject = ${payload.detectedObject}")
 
                     val mappedType = when {
-                        // 1. Explicit validation error codes (HTTP 400 validation failures)
+                        // 1. NON_TOOTHBRUSH_OBJECT (Specific detected object like laptop, phone, person, bottle)
+                        payload.code == "NON_TOOTHBRUSH_OBJECT" || rawMsg.contains("NON_TOOTHBRUSH_OBJECT") -> {
+                            _detectedObject.value = payload.detectedObject
+                            _errorMessage.value = if (payload.message.isNotBlank()) payload.message else "Please scan only a toothbrush."
+                            ScanErrorType.NON_TOOTHBRUSH_OBJECT
+                        }
+                        // 2. Explicit validation error codes
                         payload.code == "TOOTHBRUSH_NOT_DETECTED" || rawMsg.contains("TOOTHBRUSH_NOT_DETECTED") -> {
                             _errorMessage.value = if (payload.message.isNotBlank()) payload.message else "Toothbrush not detected. Please scan only a toothbrush."
                             ScanErrorType.TOOTHBRUSH_NOT_DETECTED
@@ -252,22 +271,22 @@ class ScanViewModel @Inject constructor(
                             _errorMessage.value = if (payload.message.isNotBlank()) payload.message else "Image quality check failed. Please ensure proper lighting and focus."
                             ScanErrorType.IMAGE_QUALITY_ERROR
                         }
-                        // 2. HTTP 400 catch-all (Any HTTP 400 Bad Request MUST map to validation error, NEVER to upload failure!)
+                        // 3. HTTP 400 catch-all
                         httpCode == 400 -> {
                             _errorMessage.value = if (payload.message.isNotBlank()) payload.message else "Toothbrush not detected. Please scan only a toothbrush."
                             ScanErrorType.TOOTHBRUSH_NOT_DETECTED
                         }
-                        // 3. HTTP 500 Server Error
+                        // 4. HTTP 500 Server Error
                         httpCode >= 500 -> {
                             _errorMessage.value = "Server error during AI analysis. Please try again later."
                             ScanErrorType.ANALYSIS_FAILED
                         }
-                        // 4. Genuine Network/IO infrastructure failure (no internet, timeout, connection refused)
+                        // 5. Genuine Network/IO infrastructure failure
                         exception is java.io.IOException || exception is java.net.SocketTimeoutException || exception is java.net.UnknownHostException -> {
                             _errorMessage.value = "BrushIQ could not upload your image to the diagnostics engine. Please check your internet connection and try again."
                             ScanErrorType.UPLOAD_FAILED
                         }
-                        // 5. Catch-all fallback
+                        // 6. Catch-all fallback
                         else -> {
                             _errorMessage.value = "Analysis failed. Please try again."
                             ScanErrorType.ANALYSIS_FAILED

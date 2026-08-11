@@ -101,5 +101,6 @@ data class GenericMessageResponse(val message: String)
 
 data class ErrorResponseDto(
     val code: String? = null,
+    val detectedObject: String? = null,
     val message: String? = null
 )

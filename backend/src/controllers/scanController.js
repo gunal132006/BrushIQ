@@ -27,17 +27,35 @@ exports.analyzeScan = async (req, res) => {
   } catch (err) {
     console.error('[AI VALIDATION] Error in scan analysis:', err.message);
 
+    if (err.message && err.message.startsWith('NON_TOOTHBRUSH_OBJECT:')) {
+      const detectedObj = err.message.substring(22).trim() || 'object';
+      let formattedObj = detectedObj;
+      if (detectedObj === 'cell phone' || detectedObj === 'mobile phone') {
+        formattedObj = 'Phone';
+      } else if (detectedObj === 'potted plant') {
+        formattedObj = 'Plant';
+      } else {
+        formattedObj = detectedObj.charAt(0).toUpperCase() + detectedObj.slice(1);
+      }
+
+      return res.status(400).json({
+        code: 'NON_TOOTHBRUSH_OBJECT',
+        detectedObject: detectedObj,
+        message: `${formattedObj} detected. Please scan only a toothbrush.`
+      });
+    }
+
     if (err.message && err.message.startsWith('TOOTHBRUSH_NOT_DETECTED:')) {
       return res.status(400).json({
         code: 'TOOTHBRUSH_NOT_DETECTED',
-        message: 'Toothbrush not detected. Please scan only a single toothbrush.'
+        message: 'Toothbrush not detected. Please scan only a toothbrush.'
       });
     }
 
     if (err.message && err.message.startsWith('MULTIPLE_TOOTHBRUSHES:')) {
       return res.status(400).json({
         code: 'MULTIPLE_TOOTHBRUSHES',
-        message: 'Multiple toothbrushes detected. Please scan a single toothbrush.'
+        message: 'Multiple toothbrushes detected. Please scan only one toothbrush.'
       });
     }
 

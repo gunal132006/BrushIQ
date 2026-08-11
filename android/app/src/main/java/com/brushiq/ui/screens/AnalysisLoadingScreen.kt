@@ -38,6 +38,23 @@ import com.brushiq.ui.theme.*
 import com.brushiq.ui.viewmodel.ScanErrorType
 import com.brushiq.ui.viewmodel.ScanViewModel
 
+fun formatDetectedObjectTitle(detectedObj: String?): String {
+    if (detectedObj.isNullOrBlank()) return "Object Detected"
+    val clean = detectedObj.lowercase().trim()
+    val name = when {
+        clean == "cell phone" || clean == "mobile phone" || clean == "phone" -> "Phone"
+        clean == "potted plant" || clean == "plant" -> "Plant"
+        clean == "laptop" -> "Laptop"
+        clean == "person" || clean == "human" -> "Person"
+        clean == "bottle" -> "Bottle"
+        clean == "keyboard" -> "Keyboard"
+        clean == "book" -> "Book"
+        clean == "chair" -> "Chair"
+        else -> clean.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+    }
+    return "$name Detected"
+}
+
 @Composable
 fun AnalysisLoadingScreen(
     navController: NavController,
@@ -48,6 +65,7 @@ fun AnalysisLoadingScreen(
     val progressPercent by viewModel.processingProgress.collectAsState()
     val errorState by viewModel.errorState.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val detectedObject by viewModel.detectedObject.collectAsState()
     
     val scrollState = rememberScrollState()
     val context = LocalContext.current
@@ -66,6 +84,7 @@ fun AnalysisLoadingScreen(
         topBar = {
             AppHeader(
                 title = when (errorState) {
+                    ScanErrorType.NON_TOOTHBRUSH_OBJECT -> formatDetectedObjectTitle(detectedObject)
                     ScanErrorType.TOOTHBRUSH_NOT_DETECTED -> "Toothbrush Not Detected"
                     ScanErrorType.MULTIPLE_TOOTHBRUSHES -> "Multiple Toothbrushes"
                     ScanErrorType.IMAGE_QUALITY_ERROR -> "Image Quality Issue"
@@ -83,6 +102,23 @@ fun AnalysisLoadingScreen(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             when (errorState) {
+                ScanErrorType.NON_TOOTHBRUSH_OBJECT -> {
+                    ValidationFailureUI(
+                        title = formatDetectedObjectTitle(detectedObject),
+                        message = "Please scan only a toothbrush.",
+                        icon = Icons.Default.NoPhotography,
+                        onTryAgain = {
+                            viewModel.retake()
+                            navController.navigate("scan") {
+                                popUpTo("scan") { inclusive = true }
+                            }
+                        },
+                        onGoBack = {
+                            viewModel.retake()
+                            navController.popBackStack()
+                        }
+                    )
+                }
                 ScanErrorType.TOOTHBRUSH_NOT_DETECTED -> {
                     ValidationFailureUI(
                         title = "Toothbrush Not Detected",
