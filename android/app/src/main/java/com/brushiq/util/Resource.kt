@@ -13,7 +13,11 @@ suspend inline fun <T> safeApiCall(crossinline call: suspend () -> T): Resource<
         android.util.Log.e("NetworkDiag", "IOException in safeApiCall: ${e.javaClass.simpleName} - ${e.message}", e)
         Resource.Error(e, "Connection error: ${e.message ?: "timeout or no internet"}")
     } catch (e: retrofit2.HttpException) {
-        val errorBody = e.response()?.errorBody()?.string()
+        val errorBody = try {
+            e.response()?.errorBody()?.string()
+        } catch (ex: Exception) {
+            null
+        }
         val code = e.code()
         val url = e.response()?.raw()?.request?.url
         val method = e.response()?.raw()?.request?.method
@@ -21,13 +25,17 @@ suspend inline fun <T> safeApiCall(crossinline call: suspend () -> T): Resource<
         val diagnosticMsg = "HTTP $code $method $url\nResponse: $errorBody"
         android.util.Log.e("NetworkDiag", diagnosticMsg, e)
 
-        val userMsg = when (code) {
-            400 -> "Bad Request: $errorBody"
-            401 -> "Unauthorized. Please log in again."
-            403 -> "Access denied."
-            404 -> "Not Found: $url"
-            500 -> "Server error. Our team is working on it."
-            else -> "Network error ($code): ${e.message()}"
+        val userMsg = if (!errorBody.isNullOrBlank()) {
+            errorBody
+        } else {
+            when (code) {
+                400 -> "Bad Request"
+                401 -> "Unauthorized. Please log in again."
+                403 -> "Access denied."
+                404 -> "Not Found: $url"
+                500 -> "Server error. Our team is working on it."
+                else -> "Network error ($code): ${e.message()}"
+            }
         }
         Resource.Error(e, userMsg)
     } catch (e: Exception) {

@@ -93,6 +93,10 @@ fun AnalysisLoadingScreen(
                             navController.navigate("scan") {
                                 popUpTo("scan") { inclusive = true }
                             }
+                        },
+                        onGoBack = {
+                            viewModel.retake()
+                            navController.popBackStack()
                         }
                     )
                 }
@@ -106,6 +110,10 @@ fun AnalysisLoadingScreen(
                             navController.navigate("scan") {
                                 popUpTo("scan") { inclusive = true }
                             }
+                        },
+                        onGoBack = {
+                            viewModel.retake()
+                            navController.popBackStack()
                         }
                     )
                 }
@@ -119,6 +127,10 @@ fun AnalysisLoadingScreen(
                             navController.navigate("scan") {
                                 popUpTo("scan") { inclusive = true }
                             }
+                        },
+                        onGoBack = {
+                            viewModel.retake()
+                            navController.popBackStack()
                         }
                     )
                 }
@@ -329,7 +341,8 @@ fun ValidationFailureUI(
     title: String,
     message: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onTryAgain: () -> Unit
+    onTryAgain: () -> Unit,
+    onGoBack: (() -> Unit)? = null
 ) {
     Column(
         modifier = Modifier
@@ -377,6 +390,14 @@ fun ValidationFailureUI(
             text = "TRY AGAIN",
             onClick = onTryAgain
         )
+
+        if (onGoBack != null) {
+            Spacer(modifier = Modifier.height(12.dp))
+            SecondaryButton(
+                text = "GO BACK",
+                onClick = onGoBack
+            )
+        }
     }
 }
 

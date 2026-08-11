@@ -12,6 +12,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.io.File
 import javax.inject.Inject
 
@@ -29,6 +30,12 @@ enum class ScanErrorType {
     MULTIPLE_TOOTHBRUSHES,
     IMAGE_QUALITY_ERROR
 }
+
+data class ApiErrorPayload(
+    val code: String = "",
+    val message: String = "",
+    val rawBody: String = ""
+)
 
 @HiltViewModel
 class ScanViewModel @Inject constructor(
@@ -108,6 +115,51 @@ class ScanViewModel @Inject constructor(
         }
     }
 
+    private fun parseApiErrorPayload(exception: Throwable?, rawMessage: String?): ApiErrorPayload {
+        var code = ""
+        var message = ""
+        var bodyStr = rawMessage ?: ""
+
+        if (exception is retrofit2.HttpException) {
+            try {
+                val body = exception.response()?.errorBody()?.string()
+                if (!body.isNullOrBlank()) {
+                    bodyStr = body
+                }
+            } catch (_: Exception) {}
+        }
+
+        if (bodyStr.isNotBlank()) {
+            try {
+                val cleanJson = if (bodyStr.startsWith("Bad Request: ")) {
+                    bodyStr.substringAfter("Bad Request: ").trim()
+                } else {
+                    bodyStr.trim()
+                }
+
+                if (cleanJson.startsWith("{")) {
+                    val json = JSONObject(cleanJson)
+                    if (json.has("code")) {
+                        code = json.optString("code", "")
+                    }
+                    if (json.has("message")) {
+                        message = json.optString("message", "")
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+
+        if (code.isBlank()) {
+            when {
+                bodyStr.contains("TOOTHBRUSH_NOT_DETECTED") -> code = "TOOTHBRUSH_NOT_DETECTED"
+                bodyStr.contains("MULTIPLE_TOOTHBRUSHES") -> code = "MULTIPLE_TOOTHBRUSHES"
+                bodyStr.contains("IMAGE_QUALITY_ERROR") || bodyStr.contains("blurry") || bodyStr.contains("dark") || bodyStr.contains("overexposed") -> code = "IMAGE_QUALITY_ERROR"
+            }
+        }
+
+        return ApiErrorPayload(code = code, message = message, rawBody = bodyStr)
+    }
+
     fun startAiAnalysis(context: Context, onComplete: () -> Unit) {
         viewModelScope.launch {
             _scanState.value = ScanState.AI_PROCESSING
@@ -176,27 +228,54 @@ class ScanViewModel @Inject constructor(
                     onComplete()
                 }
                 is Resource.Error -> {
-                    val msg = resultResource.message ?: ""
-                    android.util.Log.e("AI_SCAN_ERROR", "Analysis failed with message: $msg", resultResource.exception)
+                    val rawMsg = resultResource.message ?: ""
+                    val exception = resultResource.exception
+                    val httpCode = (exception as? retrofit2.HttpException)?.code() ?: 0
 
-                    if (msg.contains("TOOTHBRUSH_NOT_DETECTED")) {
-                        _errorState.value = ScanErrorType.TOOTHBRUSH_NOT_DETECTED
-                        _errorMessage.value = "Toothbrush not detected. Please scan only a toothbrush."
-                    } else if (msg.contains("MULTIPLE_TOOTHBRUSHES")) {
-                        _errorState.value = ScanErrorType.MULTIPLE_TOOTHBRUSHES
-                        _errorMessage.value = "Multiple toothbrushes detected. Please scan only one toothbrush."
-                    } else if (msg.contains("IMAGE_QUALITY_ERROR") || msg.contains("blurry") || msg.contains("dark") || msg.contains("overexposed")) {
-                        _errorState.value = ScanErrorType.IMAGE_QUALITY_ERROR
-                        _errorMessage.value = msg.substringAfter("Bad Request: ")
-                    } else {
-                        val isServerException = resultResource.exception is retrofit2.HttpException &&
-                                (resultResource.exception as retrofit2.HttpException).code() == 500
-                        if (isServerException) {
-                            _errorState.value = ScanErrorType.ANALYSIS_FAILED
-                        } else {
-                            _errorState.value = ScanErrorType.UPLOAD_FAILED
+                    val payload = parseApiErrorPayload(exception, rawMsg)
+
+                    android.util.Log.d("SCAN ERROR", "[SCAN ERROR] HTTP status = $httpCode")
+                    android.util.Log.d("SCAN ERROR", "[SCAN ERROR] response body = ${payload.rawBody}")
+                    android.util.Log.d("SCAN ERROR", "[SCAN ERROR] parsed code = ${payload.code}")
+
+                    val mappedType = when {
+                        // 1. Explicit validation error codes (HTTP 400 validation failures)
+                        payload.code == "TOOTHBRUSH_NOT_DETECTED" || rawMsg.contains("TOOTHBRUSH_NOT_DETECTED") -> {
+                            _errorMessage.value = if (payload.message.isNotBlank()) payload.message else "Toothbrush not detected. Please scan only a toothbrush."
+                            ScanErrorType.TOOTHBRUSH_NOT_DETECTED
+                        }
+                        payload.code == "MULTIPLE_TOOTHBRUSHES" || rawMsg.contains("MULTIPLE_TOOTHBRUSHES") -> {
+                            _errorMessage.value = if (payload.message.isNotBlank()) payload.message else "Multiple toothbrushes detected. Please scan only one toothbrush."
+                            ScanErrorType.MULTIPLE_TOOTHBRUSHES
+                        }
+                        payload.code == "IMAGE_QUALITY_ERROR" || rawMsg.contains("IMAGE_QUALITY_ERROR") || rawMsg.contains("blurry") || rawMsg.contains("dark") -> {
+                            _errorMessage.value = if (payload.message.isNotBlank()) payload.message else "Image quality check failed. Please ensure proper lighting and focus."
+                            ScanErrorType.IMAGE_QUALITY_ERROR
+                        }
+                        // 2. HTTP 400 catch-all (Any HTTP 400 Bad Request MUST map to validation error, NEVER to upload failure!)
+                        httpCode == 400 -> {
+                            _errorMessage.value = if (payload.message.isNotBlank()) payload.message else "Toothbrush not detected. Please scan only a toothbrush."
+                            ScanErrorType.TOOTHBRUSH_NOT_DETECTED
+                        }
+                        // 3. HTTP 500 Server Error
+                        httpCode >= 500 -> {
+                            _errorMessage.value = "Server error during AI analysis. Please try again later."
+                            ScanErrorType.ANALYSIS_FAILED
+                        }
+                        // 4. Genuine Network/IO infrastructure failure (no internet, timeout, connection refused)
+                        exception is java.io.IOException || exception is java.net.SocketTimeoutException || exception is java.net.UnknownHostException -> {
+                            _errorMessage.value = "BrushIQ could not upload your image to the diagnostics engine. Please check your internet connection and try again."
+                            ScanErrorType.UPLOAD_FAILED
+                        }
+                        // 5. Catch-all fallback
+                        else -> {
+                            _errorMessage.value = "Analysis failed. Please try again."
+                            ScanErrorType.ANALYSIS_FAILED
                         }
                     }
+
+                    _errorState.value = mappedType
+                    android.util.Log.d("SCAN ERROR", "[SCAN ERROR] mapped error type = $mappedType")
                 }
                 is Resource.Loading -> {}
             }
