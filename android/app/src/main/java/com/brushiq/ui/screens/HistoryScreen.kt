@@ -44,6 +44,8 @@ fun HistoryScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedConditionFilter by remember { mutableStateOf("All") }
 
+    val isOnline by (viewModel?.isOnline ?: MutableStateFlow(true)).collectAsState()
+
     LaunchedEffect(Unit) {
         viewModel?.fetchScansHistory("")
     }
@@ -86,6 +88,31 @@ fun HistoryScreen(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             
+            // Offline Status Chip
+            if (!isOnline) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    color = Warning.copy(alpha = 0.12f),
+                    shape = BrushIQShapes.medium,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Warning.copy(alpha = 0.25f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Default.FilterList, contentDescription = null, tint = Warning, modifier = Modifier.size(16.dp))
+                        Text(
+                            text = "Last synced recently — Offline Mode",
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+
             // Analytics Summary Panel
             Card(
                 modifier = Modifier
@@ -162,7 +189,7 @@ fun HistoryScreen(
             }
 
             // Timeline Items
-            if (loading && historyItems.isEmpty()) {
+            if (loading && historyItems.isEmpty() && isOnline) {
                 LoadingScreen("Fetching clinical history...")
             } else if (filteredScans.isEmpty()) {
                 HistoryEmptyState(onScanClick = { navController.navigate("scan") })
@@ -178,13 +205,17 @@ fun HistoryScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    // Save selected mock details or scanId in viewModel/navigation
                                     navController.navigate("scan_details/${scan.id}")
                                 }
                         ) {
+                            val subtitleText = when (scan.syncStatus) {
+                                "PENDING" -> "Pending sync • ${scan.condition}"
+                                "FAILED" -> "Sync failed • ${scan.condition}"
+                                else -> scan.condition
+                            }
                             RecentScanItem(
                                 name = "Diagnostic Scan (${if (scan.scanDate.length >= 10) scan.scanDate.substring(0, 10) else scan.scanDate})",
-                                model = scan.condition,
+                                model = subtitleText,
                                 score = scan.healthScore.toInt(),
                                 condition = scan.condition
                             )

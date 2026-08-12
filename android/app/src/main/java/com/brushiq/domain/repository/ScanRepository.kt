@@ -24,5 +24,22 @@ interface ScanRepository {
         detectedIssues: List<String>,
         aiRecommendation: String
     ): Resource<ScanReport>
+    suspend fun saveScanLocallyPending(
+        toothbrushId: String,
+        familyMemberId: String? = null,
+        imageUrl: String,
+        wearPercentage: Double,
+        healthScore: Double,
+        remainingLifeDays: Int,
+        condition: String,
+        confidenceScore: Double,
+        bristleSpreading: Double,
+        bristleBending: Double,
+        bristleDamage: Double,
+        brushingFrequency: String,
+        detectedIssues: List<String>,
+        aiRecommendation: String
+    ): Resource<ScanReport>
+    suspend fun syncPendingScans(): Resource<Int>
     suspend fun getScanDetails(id: String): Resource<ScanReport>
 }

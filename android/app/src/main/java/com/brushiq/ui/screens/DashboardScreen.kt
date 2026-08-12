@@ -40,12 +40,14 @@ fun DashboardScreen(
     val familyMembers by (viewModel?.familyMembers ?: kotlinx.coroutines.flow.MutableStateFlow(emptyList())).collectAsState()
     val toothbrushes by (viewModel?.toothbrushes ?: kotlinx.coroutines.flow.MutableStateFlow(emptyList())).collectAsState()
 
+    val isOnline by (viewModel?.isOnline ?: MutableStateFlow(true)).collectAsState()
+
     // Trigger sync on dashboard load
     LaunchedEffect(Unit) {
         viewModel?.syncAllData()
     }
 
-    if (loading && stats == null) {
+    if (loading && stats == null && isOnline) {
         LoadingScreen("Syncing with clinical engine...")
         return
     }
@@ -58,7 +60,7 @@ fun DashboardScreen(
     
     val avgHealthScore = stats?.avgHealthScore?.toFloat() ?: 0f
     val totalScans = stats?.recentScans?.size ?: 0
-    val registeredBrushes = stats?.totalToothbrushes ?: 0
+    val registeredBrushes = stats?.totalToothbrushes ?: toothbrushes.size
     val pendingAlerts = stats?.pendingReplacements ?: 0
     val recentScans = stats?.recentScans ?: emptyList()
 
@@ -82,6 +84,30 @@ fun DashboardScreen(
             contentPadding = PaddingValues(Dimensions.PaddingMedium),
             verticalArrangement = Arrangement.spacedBy(Dimensions.PaddingMedium)
         ) {
+            // Offline Status Banner
+            if (!isOnline) {
+                item {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Warning.copy(alpha = 0.15f),
+                        shape = BrushIQShapes.medium,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Warning.copy(alpha = 0.3f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Default.CloudOff, contentDescription = null, tint = Warning, modifier = Modifier.size(20.dp))
+                            Text(
+                                text = "Offline — showing last synchronized data",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            }
             // 1. Welcome Header Section
             item {
                 Box(

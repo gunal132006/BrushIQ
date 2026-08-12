@@ -27,6 +27,7 @@ fun ToothbrushScreen(
 ) {
     val toothbrushes by (viewModel?.toothbrushes ?: MutableStateFlow(emptyList())).collectAsState()
     val loading by (viewModel?.loading ?: MutableStateFlow(false)).collectAsState()
+    val isOnline by (viewModel?.isOnline ?: MutableStateFlow(true)).collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel?.syncToothbrushes()
@@ -54,7 +55,7 @@ fun ToothbrushScreen(
             }
         }
     ) { innerPadding ->
-        if (loading && toothbrushes.isEmpty()) {
+        if (loading && toothbrushes.isEmpty() && isOnline) {
             LoadingScreen("Fetching registered toothbrushes...")
         } else if (toothbrushes.isEmpty()) {
             EmptyState(

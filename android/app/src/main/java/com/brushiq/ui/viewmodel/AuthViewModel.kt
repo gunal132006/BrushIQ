@@ -82,9 +82,14 @@ class AuthViewModel @Inject constructor(
                         if (remoteRes is Resource.Success) {
                             _authState.value = AuthState.Success(remoteRes.data)
                         } else if (remoteRes is Resource.Error) {
-                            authRepository.logout()
-                            _isUserLoggedIn.value = false
-                            _authState.value = AuthState.Error(remoteRes.message ?: "Session expired")
+                            val httpCode = (remoteRes.exception as? retrofit2.HttpException)?.code() ?: 0
+                            if (httpCode == 401 || httpCode == 403) {
+                                authRepository.logout()
+                                _isUserLoggedIn.value = false
+                                _authState.value = AuthState.Error(remoteRes.message ?: "Session expired")
+                            } else {
+                                android.util.Log.d("AuthFlow", "Fetch profile network error (offline), maintaining cached login state.")
+                            }
                         }
                     }
                     is Resource.Loading -> {

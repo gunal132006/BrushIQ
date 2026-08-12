@@ -466,7 +466,7 @@ fun UploadFailureUI(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Upload Failed",
+            text = "Internet connection required for AI analysis.",
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
@@ -475,7 +475,7 @@ fun UploadFailureUI(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "BrushIQ could not upload your image to the diagnostics engine. Please check your internet connection and try again.",
+            text = "An active internet connection is required to run the AI bristle diagnostic engine. Please check your connection and try again.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -485,7 +485,7 @@ fun UploadFailureUI(
         Spacer(modifier = Modifier.height(40.dp))
 
         PrimaryButton(
-            text = "Retry Upload",
+            text = "Try Again",
             onClick = onRetry
         )
 

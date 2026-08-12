@@ -36,7 +36,8 @@ class ScanRepositoryImpl @Inject constructor(
                     it.id, it.toothbrushId, it.imageUrl, it.wearPercentage, it.healthScore,
                     it.remainingLifeDays, it.condition, it.confidenceScore, it.bristleSpreading,
                     it.bristleBending, it.bristleDamage, it.brushingFrequency,
-                    it.detectedIssues, it.aiRecommendation, it.scanDate
+                    it.detectedIssues, it.aiRecommendation, it.scanDate,
+                    it.syncStatus, it.syncError
                 )
             }
             Resource.Success(domainList) as Resource<List<ScanReport>>
@@ -64,7 +65,9 @@ class ScanRepositoryImpl @Inject constructor(
                         brushingFrequency = it.brushingFrequency ?: "2x daily",
                         detectedIssues = it.detectedIssues ?: emptyList(),
                         aiRecommendation = it.aiRecommendation ?: "",
-                        scanDate = it.scanDate ?: ""
+                        scanDate = it.scanDate ?: "",
+                        syncStatus = "SYNCED",
+                        syncError = null
                     )
                 }
                 if (toothbrushId.isBlank()) {
@@ -101,7 +104,9 @@ class ScanRepositoryImpl @Inject constructor(
                         brushingFrequency = dto.brushingFrequency ?: "2x daily",
                         detectedIssues = dto.detectedIssues ?: emptyList(),
                         aiRecommendation = dto.aiRecommendation ?: "",
-                        scanDate = dto.scanDate ?: ""
+                        scanDate = dto.scanDate ?: "",
+                        syncStatus = "SYNCED",
+                        syncError = null
                     )
                 )
             }
@@ -161,7 +166,10 @@ class ScanRepositoryImpl @Inject constructor(
                     brushingFrequency = dto.brushingFrequency ?: "2x daily",
                     detectedIssues = dto.detectedIssues ?: emptyList(),
                     aiRecommendation = dto.aiRecommendation ?: "",
-                    scanDate = dto.scanDate ?: ""
+                    scanDate = dto.scanDate ?: "",
+                    syncStatus = "SYNCED",
+                    syncError = null,
+                    familyMemberId = familyMemberId
                 )
                 scanDao.insert(entity)
                 Resource.Success(
@@ -180,13 +188,166 @@ class ScanRepositoryImpl @Inject constructor(
                         brushingFrequency = dto.brushingFrequency ?: "2x daily",
                         detectedIssues = dto.detectedIssues ?: emptyList(),
                         aiRecommendation = dto.aiRecommendation ?: "",
-                        scanDate = dto.scanDate ?: ""
+                        scanDate = dto.scanDate ?: "",
+                        syncStatus = "SYNCED",
+                        syncError = null
                     )
                 )
             }
             is Resource.Error -> Resource.Error(res.exception, res.message)
             is Resource.Loading -> Resource.Loading
         }
+    }
+
+    override suspend fun saveScanLocallyPending(
+        toothbrushId: String,
+        familyMemberId: String?,
+        imageUrl: String,
+        wearPercentage: Double,
+        healthScore: Double,
+        remainingLifeDays: Int,
+        condition: String,
+        confidenceScore: Double,
+        bristleSpreading: Double,
+        bristleBending: Double,
+        bristleDamage: Double,
+        brushingFrequency: String,
+        detectedIssues: List<String>,
+        aiRecommendation: String
+    ): Resource<ScanReport> {
+        val tempId = "temp_scan_${System.currentTimeMillis()}"
+        val currentDate = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US).format(java.util.Date())
+        val entity = ScanEntity(
+            id = tempId,
+            toothbrushId = toothbrushId,
+            imageUrl = imageUrl,
+            wearPercentage = wearPercentage,
+            healthScore = healthScore,
+            remainingLifeDays = remainingLifeDays,
+            condition = condition,
+            confidenceScore = confidenceScore,
+            bristleSpreading = bristleSpreading,
+            bristleBending = bristleBending,
+            bristleDamage = bristleDamage,
+            brushingFrequency = brushingFrequency,
+            detectedIssues = detectedIssues,
+            aiRecommendation = aiRecommendation,
+            scanDate = currentDate,
+            syncStatus = "PENDING",
+            syncError = null,
+            familyMemberId = familyMemberId
+        )
+        scanDao.insert(entity)
+        android.util.Log.d("SYNC", "[SYNC] Scan saved locally with PENDING status. scanId=$tempId, toothbrushId=$toothbrushId")
+        return Resource.Success(
+            ScanReport(
+                id = tempId,
+                toothbrushId = toothbrushId,
+                imageUrl = imageUrl,
+                wearPercentage = wearPercentage,
+                healthScore = healthScore,
+                remainingLifeDays = remainingLifeDays,
+                condition = condition,
+                confidenceScore = confidenceScore,
+                bristleSpreading = bristleSpreading,
+                bristleBending = bristleBending,
+                bristleDamage = bristleDamage,
+                brushingFrequency = brushingFrequency,
+                detectedIssues = detectedIssues,
+                aiRecommendation = aiRecommendation,
+                scanDate = currentDate,
+                syncStatus = "PENDING",
+                syncError = null
+            )
+        )
+    }
+
+    override suspend fun syncPendingScans(): Resource<Int> {
+        val pendingList = scanDao.getPendingScans()
+        android.util.Log.d("SYNC", "[SYNC] Pending scans = ${pendingList.size}")
+        if (pendingList.isEmpty()) {
+            return Resource.Success(0)
+        }
+
+        var syncedCount = 0
+        for (scan in pendingList) {
+            android.util.Log.d("SYNC", "[SYNC] Starting sync")
+            android.util.Log.d("SYNC", "[SYNC] scanId = ${scan.id}")
+            android.util.Log.d("SYNC", "[SYNC] toothbrushId = ${scan.toothbrushId}")
+            android.util.Log.d("SYNC", "[SYNC] familyMemberId = ${scan.familyMemberId}")
+
+            if (scan.toothbrushId.isBlank()) {
+                android.util.Log.e("SYNC", "[SYNC] FAILED — permanent failure (missing toothbrushId)")
+                scanDao.updateSyncStatus(scan.id, "FAILED", "Missing server toothbrushId relationship")
+                continue
+            }
+
+            val req = SaveScanRequest(
+                toothbrushId = scan.toothbrushId,
+                familyMemberId = scan.familyMemberId,
+                imageUrl = scan.imageUrl,
+                wearPercentage = scan.wearPercentage,
+                healthScore = scan.healthScore,
+                remainingLifeDays = scan.remainingLifeDays,
+                condition = scan.condition,
+                confidenceScore = scan.confidenceScore,
+                bristleSpreading = scan.bristleSpreading,
+                bristleBending = scan.bristleBending,
+                bristleDamage = scan.bristleDamage,
+                brushingFrequency = scan.brushingFrequency,
+                detectedIssues = scan.detectedIssues,
+                aiRecommendation = scan.aiRecommendation
+            )
+
+            val res = safeApiCall { scanApi.saveScan(req) }
+            when (res) {
+                is Resource.Success -> {
+                    val dto = res.data
+                    val serverId = dto.id ?: scan.id
+                    android.util.Log.d("SYNC", "[SYNC] HTTP status = 201")
+                    android.util.Log.d("SYNC", "[SYNC] SYNCED")
+
+                    scanDao.deleteById(scan.id)
+                    val syncedEntity = ScanEntity(
+                        id = serverId,
+                        toothbrushId = dto.toothbrushId ?: scan.toothbrushId,
+                        imageUrl = dto.imageUrl ?: scan.imageUrl,
+                        wearPercentage = dto.wearPercentage ?: scan.wearPercentage,
+                        healthScore = dto.healthScore ?: scan.healthScore,
+                        remainingLifeDays = dto.remainingLifeDays ?: scan.remainingLifeDays,
+                        condition = dto.condition ?: scan.condition,
+                        confidenceScore = dto.confidenceScore ?: scan.confidenceScore,
+                        bristleSpreading = dto.bristleSpreading ?: scan.bristleSpreading,
+                        bristleBending = dto.bristleBending ?: scan.bristleBending,
+                        bristleDamage = dto.bristleDamage ?: scan.bristleDamage,
+                        brushingFrequency = dto.brushingFrequency ?: scan.brushingFrequency,
+                        detectedIssues = dto.detectedIssues ?: scan.detectedIssues,
+                        aiRecommendation = dto.aiRecommendation ?: scan.aiRecommendation,
+                        scanDate = dto.scanDate ?: scan.scanDate,
+                        syncStatus = "SYNCED",
+                        syncError = null,
+                        familyMemberId = scan.familyMemberId
+                    )
+                    scanDao.insert(syncedEntity)
+                    syncedCount++
+                }
+                is Resource.Error -> {
+                    val exception = res.exception
+                    val httpCode = (exception as? retrofit2.HttpException)?.code() ?: 0
+                    android.util.Log.d("SYNC", "[SYNC] HTTP status = $httpCode")
+
+                    if (httpCode in 400..499) {
+                        android.util.Log.e("SYNC", "[SYNC] FAILED — permanent failure")
+                        val errorMsg = res.message ?: "Permanent validation error ($httpCode)"
+                        scanDao.updateSyncStatus(scan.id, "FAILED", errorMsg)
+                    } else {
+                        android.util.Log.d("SYNC", "[SYNC] PENDING — temporary failure")
+                    }
+                }
+                is Resource.Loading -> {}
+            }
+        }
+        return Resource.Success(syncedCount)
     }
 
     override suspend fun getScanDetails(id: String): Resource<ScanReport> {
@@ -197,7 +358,8 @@ class ScanRepositoryImpl @Inject constructor(
                     cached.id, cached.toothbrushId, cached.imageUrl, cached.wearPercentage, cached.healthScore,
                     cached.remainingLifeDays, cached.condition, cached.confidenceScore, cached.bristleSpreading,
                     cached.bristleBending, cached.bristleDamage, cached.brushingFrequency,
-                    cached.detectedIssues, cached.aiRecommendation, cached.scanDate
+                    cached.detectedIssues, cached.aiRecommendation, cached.scanDate,
+                    cached.syncStatus, cached.syncError
                 )
             )
         }
@@ -222,7 +384,9 @@ class ScanRepositoryImpl @Inject constructor(
                         brushingFrequency = dto.brushingFrequency ?: "2x daily",
                         detectedIssues = dto.detectedIssues ?: emptyList(),
                         aiRecommendation = dto.aiRecommendation ?: "",
-                        scanDate = dto.scanDate ?: ""
+                        scanDate = dto.scanDate ?: "",
+                        syncStatus = "SYNCED",
+                        syncError = null
                     )
                 )
             }

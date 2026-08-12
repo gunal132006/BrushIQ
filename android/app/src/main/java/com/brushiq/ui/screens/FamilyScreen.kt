@@ -35,6 +35,7 @@ fun FamilyScreen(
 ) {
     val familyMembers by (viewModel?.familyMembers ?: MutableStateFlow(emptyList())).collectAsState()
     val loading by (viewModel?.loading ?: MutableStateFlow(false)).collectAsState()
+    val isOnline by (viewModel?.isOnline ?: MutableStateFlow(true)).collectAsState()
 
     var memberToDelete by remember { mutableStateOf<FamilyMember?>(null) }
 
@@ -75,7 +76,7 @@ fun FamilyScreen(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             when {
-                loading && familyMembers.isEmpty() -> {
+                loading && familyMembers.isEmpty() && isOnline -> {
                     LoadingScreen("Fetching family clinical profiles...")
                 }
                 familyMembers.isEmpty() -> {
@@ -89,6 +90,25 @@ fun FamilyScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        if (!isOnline) {
+                            item {
+                                Surface(
+                                    color = Warning.copy(alpha = 0.12f),
+                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, Warning.copy(alpha = 0.25f))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Box(modifier = Modifier.size(6.dp).background(Warning, CircleShape))
+                                        Text("Offline", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = Warning)
+                                    }
+                                }
+                            }
+                        }
+
                         item {
                             Text(
                                 text = "Track dental hygiene diagnostic histories and manage toothbrush wear levels for each family member.",

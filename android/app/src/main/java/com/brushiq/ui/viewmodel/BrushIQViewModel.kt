@@ -16,8 +16,11 @@ class BrushIQViewModel @Inject constructor(
     private val toothbrushRepository: ToothbrushRepository,
     private val scanRepository: ScanRepository,
     private val tipsRepository: TipsRepository,
-    private val profileRepository: ProfileRepository
+    private val profileRepository: ProfileRepository,
+    private val networkMonitor: com.brushiq.util.NetworkMonitor
 ) : ViewModel() {
+
+    val isOnline: StateFlow<Boolean> = networkMonitor.isOnline
 
     // ------------------------------------
     // State Definitions (Flow Mapping)
@@ -103,6 +106,33 @@ class BrushIQViewModel @Inject constructor(
 
     init {
         syncAllData()
+        observeNetworkChanges()
+    }
+
+    private fun observeNetworkChanges() {
+        viewModelScope.launch {
+            var wasOffline = !networkMonitor.isOnline.value
+            networkMonitor.isOnline.collect { online ->
+                if (online && wasOffline) {
+                    android.util.Log.d("SYNC", "[SYNC] Network transition OFFLINE -> ONLINE detected. Triggering auto sync...")
+                    syncPendingScans()
+                    syncAllData()
+                }
+                wasOffline = !online
+            }
+        }
+    }
+
+    fun syncPendingScans() {
+        viewModelScope.launch {
+            try {
+                scanRepository.syncPendingScans()
+                fetchScansHistory("")
+                fetchDashboardStats()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun syncToothbrushes() {
@@ -128,6 +158,7 @@ class BrushIQViewModel @Inject constructor(
                 tipsRepository.syncTips()
                 fetchDashboardStats()
                 fetchScansHistory("")
+                syncPendingScans()
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
@@ -144,8 +175,31 @@ class BrushIQViewModel @Inject constructor(
             val res = profileRepository.getDashboardData()
             if (res is Resource.Success) {
                 _dashboardStats.value = res.data
+            } else {
+                updateOfflineDashboardStats()
             }
         }
+    }
+
+    private fun updateOfflineDashboardStats() {
+        val mems = familyMembers.value
+        val brushes = toothbrushes.value
+        val scans = scanHistory.value
+        val avgScore = if (scans.isNotEmpty()) scans.map { it.healthScore }.average() else 0.0
+        val pendingAlerts = brushes.count { b ->
+            val bScans = scans.filter { s -> s.toothbrushId == b.id }
+            val lastScan = bScans.maxByOrNull { it.scanDate }
+            val score = lastScan?.healthScore ?: 100.0
+            val cond = lastScan?.condition ?: "Good"
+            score < 50.0 || cond == "Replace Soon" || cond == "Replace Immediately"
+        }
+        _dashboardStats.value = DashboardStats(
+            totalMembers = mems.size,
+            totalToothbrushes = brushes.size,
+            avgHealthScore = avgScore,
+            pendingReplacements = pendingAlerts,
+            recentScans = scans.take(5)
+        )
     }
 
     // ------------------------------------
@@ -250,7 +304,7 @@ class BrushIQViewModel @Inject constructor(
         toothbrushId: String = "",
         report: ScanReport,
         frequency: String = "2x daily",
-        onSuccess: () -> Unit = {},
+        onSuccess: (isOffline: Boolean) -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
         viewModelScope.launch {
@@ -266,63 +320,112 @@ class BrushIQViewModel @Inject constructor(
 
             android.util.Log.d("SCAN SAVE", "[SCAN SAVE] selectedFamilyMemberId = $memberId")
             android.util.Log.d("SCAN SAVE", "[SCAN SAVE] selectedToothbrushId = $targetBrushId")
-            android.util.Log.d("SCAN SAVE", "[SCAN SAVE] POST /api/scans")
 
-            try {
-                val res = scanRepository.saveScan(
-                    toothbrushId = targetBrushId,
-                    familyMemberId = memberId,
-                    imageUrl = report.imageUrl,
-                    wearPercentage = report.wearPercentage,
-                    healthScore = report.healthScore,
-                    remainingLifeDays = report.remainingLifeDays,
-                    condition = report.condition,
-                    confidenceScore = report.confidenceScore,
-                    bristleSpreading = report.bristleSpreading,
-                    bristleBending = report.bristleBending,
-                    bristleDamage = report.bristleDamage,
-                    brushingFrequency = frequency,
-                    detectedIssues = report.detectedIssues,
-                    aiRecommendation = report.aiRecommendation
-                )
-                when (res) {
-                    is Resource.Success -> {
-                        val saved = res.data
-                        android.util.Log.d("SCAN SAVE", "[SCAN SAVE] response status = 201")
-                        android.util.Log.d("SCAN SAVE", "[SCAN SAVE] savedScanId = ${saved.id}")
-                        android.util.Log.d("SCAN SAVE", "[SCAN SAVE] savedToothbrushId = ${saved.toothbrushId}")
-                        android.util.Log.d("SCAN SAVE", "[SCAN SAVE] expectedToothbrushId = $targetBrushId")
-                        android.util.Log.d("SCAN SAVE", "[SCAN SAVE] relationship verified = true")
+            val online = networkMonitor.isOnline.value
+            if (online) {
+                android.util.Log.d("SCAN SAVE", "[SCAN SAVE] POST /api/scans (Online)")
+                try {
+                    val res = scanRepository.saveScan(
+                        toothbrushId = targetBrushId,
+                        familyMemberId = memberId,
+                        imageUrl = report.imageUrl,
+                        wearPercentage = report.wearPercentage,
+                        healthScore = report.healthScore,
+                        remainingLifeDays = report.remainingLifeDays,
+                        condition = report.condition,
+                        confidenceScore = report.confidenceScore,
+                        bristleSpreading = report.bristleSpreading,
+                        bristleBending = report.bristleBending,
+                        bristleDamage = report.bristleDamage,
+                        brushingFrequency = frequency,
+                        detectedIssues = report.detectedIssues,
+                        aiRecommendation = report.aiRecommendation
+                    )
+                    when (res) {
+                        is Resource.Success -> {
+                            val saved = res.data
+                            android.util.Log.d("SCAN SAVE", "[SCAN SAVE] response status = 201")
+                            android.util.Log.d("SCAN SAVE", "[SCAN SAVE] savedScanId = ${saved.id}")
+                            android.util.Log.d("SCAN SAVE", "[SCAN SAVE] savedToothbrushId = ${saved.toothbrushId}")
 
-                        // Immediate full refresh from PostgreSQL database
-                        familyRepository.syncFamilyMembers()
-                        toothbrushRepository.syncToothbrushes()
-                        fetchScansHistory(targetBrushId)
-                        fetchDashboardStats()
+                            familyRepository.syncFamilyMembers()
+                            toothbrushRepository.syncToothbrushes()
+                            fetchScansHistory(targetBrushId)
+                            fetchDashboardStats()
 
-                        onSuccess()
+                            onSuccess(false)
+                        }
+                        is Resource.Error -> {
+                            // Fallback to offline save if network error
+                            if (res.exception is java.io.IOException) {
+                                savePendingLocally(targetBrushId, memberId, report, frequency, onSuccess, onError)
+                            } else {
+                                val errMsg = res.message ?: "Failed to save diagnostic report."
+                                android.util.Log.e("SCAN SAVE", "[SCAN SAVE] Save failed: $errMsg", res.exception)
+                                onError(errMsg)
+                            }
+                        }
+                        else -> onError("Unknown response state")
                     }
-                    is Resource.Error -> {
-                        val errMsg = res.message ?: "Failed to save diagnostic report."
-                        android.util.Log.e("SCAN SAVE", "[SCAN SAVE] Save failed: $errMsg", res.exception)
-                        onError(errMsg)
+                } catch (e: Exception) {
+                    if (e is java.io.IOException) {
+                        savePendingLocally(targetBrushId, memberId, report, frequency, onSuccess, onError)
+                    } else {
+                        android.util.Log.e("SCAN SAVE", "[SCAN SAVE] Exception in saveAnalysisReport: ${e.message}", e)
+                        onError(e.message ?: "Unexpected error occurred during save.")
                     }
-                    else -> {
-                        onError("Unknown response state")
-                    }
+                } finally {
+                    _loading.value = false
                 }
-            } catch (e: Exception) {
-                android.util.Log.e("SCAN SAVE", "[SCAN SAVE] Exception in saveAnalysisReport: ${e.message}", e)
-                onError(e.message ?: "Unexpected error occurred during save.")
-            } finally {
+            } else {
+                savePendingLocally(targetBrushId, memberId, report, frequency, onSuccess, onError)
                 _loading.value = false
             }
         }
     }
 
+    private suspend fun savePendingLocally(
+        targetBrushId: String,
+        memberId: String?,
+        report: ScanReport,
+        frequency: String,
+        onSuccess: (isOffline: Boolean) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val res = scanRepository.saveScanLocallyPending(
+            toothbrushId = targetBrushId,
+            familyMemberId = memberId,
+            imageUrl = report.imageUrl,
+            wearPercentage = report.wearPercentage,
+            healthScore = report.healthScore,
+            remainingLifeDays = report.remainingLifeDays,
+            condition = report.condition,
+            confidenceScore = report.confidenceScore,
+            bristleSpreading = report.bristleSpreading,
+            bristleBending = report.bristleBending,
+            bristleDamage = report.bristleDamage,
+            brushingFrequency = frequency,
+            detectedIssues = report.detectedIssues,
+            aiRecommendation = report.aiRecommendation
+        )
+        if (res is Resource.Success) {
+            fetchScansHistory("")
+            updateOfflineDashboardStats()
+            onSuccess(true)
+        } else {
+            onError("Failed to save report locally.")
+        }
+    }
+
     fun fetchScansHistory(toothbrushId: String = "") {
         viewModelScope.launch {
-            scanRepository.syncScansHistory(toothbrushId)
+            try {
+                if (networkMonitor.isOnline.value) {
+                    scanRepository.syncScansHistory(toothbrushId)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
             scanRepository.getScansHistory(toothbrushId).collect { res ->
                 if (res is Resource.Success) {
                     _scanHistory.value = res.data

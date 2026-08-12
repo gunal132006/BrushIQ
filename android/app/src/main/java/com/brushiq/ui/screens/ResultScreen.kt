@@ -263,11 +263,16 @@ fun ResultScreen(
                             toothbrushId = report.toothbrushId,
                             report = report,
                             frequency = "2x daily",
-                            onSuccess = {
+                            onSuccess = { isOffline ->
                                 isSaving = false
                                 isSaved = true
-                                android.util.Log.d("SAVE", "[SAVE] Save successful confirmed by backend!")
-                                Toast.makeText(context, "Diagnostic report saved successfully!", Toast.LENGTH_SHORT).show()
+                                if (isOffline) {
+                                    android.util.Log.d("SAVE", "[SAVE] Saved locally as PENDING")
+                                    Toast.makeText(context, "Saved locally\nWill sync when internet connection returns.", Toast.LENGTH_LONG).show()
+                                } else {
+                                    android.util.Log.d("SAVE", "[SAVE] Save successful confirmed by backend!")
+                                    Toast.makeText(context, "Diagnostic report saved successfully!", Toast.LENGTH_SHORT).show()
+                                }
                                 navController.navigate("dashboard") {
                                     popUpTo("dashboard") { inclusive = true }
                                 }

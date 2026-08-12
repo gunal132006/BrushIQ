@@ -21,7 +21,9 @@ object DatabaseModule {
             context,
             BrushIQDatabase::class.java,
             "brushiq_db"
-        ).fallbackToDestructiveMigration().build()
+        )
+        .addMigrations(com.brushiq.data.local.MIGRATION_3_4)
+        .build()
     }
 
     @Provides

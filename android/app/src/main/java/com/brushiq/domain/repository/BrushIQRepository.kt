@@ -56,7 +56,9 @@ data class ScanReport(
     val brushingFrequency: String,
     val detectedIssues: List<String>,
     val aiRecommendation: String,
-    val scanDate: String
+    val scanDate: String,
+    val syncStatus: String = "SYNCED",
+    val syncError: String? = null
 )
 
 data class Reminder(

@@ -61,41 +61,39 @@ fun SplashScreen(
             false
         }
         
-        android.util.Log.d("AuthFlow", "Splash: Health check success/failure = $isHealthy")
-        
-        if (!isHealthy) {
-            android.util.Log.e("AuthFlow", "Splash: Startup check: BrushIQ server unreachable")
-            isServerUnreachable = true
-            
-            if (isDebug) {
-                android.util.Log.d("AuthFlow", "Splash: Bypassing health-check failure in debug build")
-            } else {
-                android.widget.Toast.makeText(
-                    context, 
-                    "BrushIQ server is unreachable. Some features may be offline.", 
-                    android.widget.Toast.LENGTH_LONG
-                ).show()
-                delay(1500)
-            }
-        } else {
-            android.util.Log.d("AuthFlow", "Splash: BrushIQ server reachable. Verifying credentials...")
-            progressMessage.value = "Verifying credentials..."
-            delay(800)
-        }
-        
         // Verify credentials with local storage
         val isLoggedIn = authViewModel?.isUserLoggedIn?.value ?: false
         android.util.Log.d("AuthFlow", "Splash: Local session isLoggedIn = $isLoggedIn")
         
-        if (isLoggedIn) {
-            android.util.Log.d("AuthFlow", "Splash: Local session active. Navigating to Dashboard...")
-            navController.navigate("dashboard") {
-                popUpTo("splash") { inclusive = true }
+        if (!isHealthy) {
+            android.util.Log.e("AuthFlow", "Splash: Startup check: BrushIQ server unreachable")
+            if (isLoggedIn) {
+                android.util.Log.d("AuthFlow", "Splash: Offline mode active with cached session. Navigating to Dashboard...")
+                android.widget.Toast.makeText(
+                    context, 
+                    "Offline — showing cached data.", 
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+                navController.navigate("dashboard") {
+                    popUpTo("splash") { inclusive = true }
+                }
+            } else {
+                isServerUnreachable = true
             }
         } else {
-            android.util.Log.d("AuthFlow", "Splash: No active local session. Navigating to LoginScreen...")
-            navController.navigate("login") {
-                popUpTo("splash") { inclusive = true }
+            android.util.Log.d("AuthFlow", "Splash: BrushIQ server reachable. Verifying credentials...")
+            progressMessage.value = "Verifying credentials..."
+            delay(500)
+            if (isLoggedIn) {
+                android.util.Log.d("AuthFlow", "Splash: Local session active. Navigating to Dashboard...")
+                navController.navigate("dashboard") {
+                    popUpTo("splash") { inclusive = true }
+                }
+            } else {
+                android.util.Log.d("AuthFlow", "Splash: No active local session. Navigating to LoginScreen...")
+                navController.navigate("login") {
+                    popUpTo("splash") { inclusive = true }
+                }
             }
         }
     }

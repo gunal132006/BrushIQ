@@ -1,6 +1,8 @@
 package com.brushiq.data.local
 
 import androidx.room.*
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 
 // ------------------------------------
@@ -62,7 +64,10 @@ data class ScanEntity(
     val brushingFrequency: String,
     val detectedIssues: List<String>, // Stored as JSON using TypeConverter
     val aiRecommendation: String,
-    val scanDate: String
+    val scanDate: String,
+    val syncStatus: String = "SYNCED", // SYNCED, PENDING, FAILED
+    val syncError: String? = null,
+    val familyMemberId: String? = null
 )
 
 @Entity(tableName = "reminders")
@@ -167,11 +172,20 @@ interface ScanDao {
     @Query("SELECT * FROM scans WHERE id = :id")
     suspend fun getById(id: String): ScanEntity?
 
+    @Query("SELECT * FROM scans WHERE syncStatus = 'PENDING'")
+    suspend fun getPendingScans(): List<ScanEntity>
+
+    @Query("UPDATE scans SET syncStatus = :status, syncError = :error WHERE id = :id")
+    suspend fun updateSyncStatus(id: String, status: String, error: String?)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(scans: List<ScanEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(scan: ScanEntity)
+
+    @Query("DELETE FROM scans WHERE id = :id")
+    suspend fun deleteById(id: String)
 
     @Query("DELETE FROM scans")
     suspend fun clearAll()
@@ -229,8 +243,16 @@ interface BookmarkedTipDao {
 }
 
 // ------------------------------------
-// Database Wrapper
+// Database Wrapper & Migrations
 // ------------------------------------
+
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE scans ADD COLUMN syncStatus TEXT NOT NULL DEFAULT 'SYNCED'")
+        db.execSQL("ALTER TABLE scans ADD COLUMN syncError TEXT DEFAULT NULL")
+        db.execSQL("ALTER TABLE scans ADD COLUMN familyMemberId TEXT DEFAULT NULL")
+    }
+}
 
 @Database(
     entities = [
@@ -242,7 +264,7 @@ interface BookmarkedTipDao {
         TipEntity::class,
         BookmarkedTipEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -255,3 +277,4 @@ abstract class BrushIQDatabase : RoomDatabase() {
     abstract fun tipDao(): TipDao
     abstract fun bookmarkedTipDao(): BookmarkedTipDao
 }
+
