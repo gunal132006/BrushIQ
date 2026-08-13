@@ -14,8 +14,10 @@ async function sendPasswordResetEmail({ to, fullName, resetUrl }) {
     return false;
   }
 
-  const resend = new Resend(apiKey.trim());
-  const from = process.env.MAIL_FROM || 'BrushIQ Support <onboarding@resend.dev>';
+  const rawFrom = process.env.MAIL_FROM ? process.env.MAIL_FROM.trim() : '';
+  const from = (rawFrom && !rawFrom.toLowerCase().includes('gmail.com')) 
+    ? rawFrom 
+    : 'BrushIQ Support <onboarding@resend.dev>';
   const recipientName = fullName ? fullName : 'BrushIQ User';
 
   const mailPayload = {
