@@ -14,6 +14,8 @@ async function sendPasswordResetEmail({ to, fullName, resetUrl }) {
     return false;
   }
 
+  const resendClient = new Resend(apiKey.trim());
+
   const rawFrom = process.env.MAIL_FROM ? process.env.MAIL_FROM.trim() : '';
   const from = (rawFrom && !rawFrom.toLowerCase().includes('gmail.com')) 
     ? rawFrom 
@@ -54,7 +56,7 @@ async function sendPasswordResetEmail({ to, fullName, resetUrl }) {
 
   try {
     console.log('[EMAIL] Resend API send attempt started');
-    const { data, error } = await resend.emails.send(mailPayload);
+    const { data, error } = await resendClient.emails.send(mailPayload);
 
     if (error) {
       console.error('[EMAIL] Resend send failed:', error.message || error);
