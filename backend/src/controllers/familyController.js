@@ -182,3 +182,12 @@ exports.deleteFamilyMember = async (req, res) => {
     res.status(500).json({ message: 'Server error deleting family profile' });
   }
 };
+
+exports.uploadProfilePhoto = async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'No image file provided' });
+  }
+
+  const photoUrl = `/uploads/${req.file.filename}`;
+  res.json({ photoUrl });
+};

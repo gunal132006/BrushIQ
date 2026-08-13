@@ -30,6 +30,7 @@ const authLimiter = rateLimit({
   skipSuccessfulRequests: true, // Successful logins/signups DO NOT consume failed attempt quota
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
   handler: handleRateLimitExceeded('Too many authentication attempts. Please try again later.')
 });
 
@@ -40,6 +41,7 @@ const apiLimiter = rateLimit({
   skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
   handler: handleRateLimitExceeded('Too many API requests from this IP. Please slow down.')
 });
 

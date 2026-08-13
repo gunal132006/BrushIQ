@@ -1,8 +1,10 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { OAuth2Client } = require('google-auth-library');
 const db = require('../config/db');
 const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/jwt');
+const mailerService = require('../services/mailerService');
 
 exports.googleLogin = async (req, res) => {
   console.log('[AUTH] Request received: POST /api/auth/google');
@@ -311,30 +313,246 @@ exports.login = async (req, res) => {
 };
 
 exports.forgotPassword = async (req, res) => {
-  const { email, phone } = req.body;
+  console.log('[AUTH] Forgot password request received');
+  const { email } = req.body;
 
-  if (!email && !phone) {
-    return res.status(400).json({ message: 'Please provide email or phone number' });
+  if (!email || typeof email !== 'string' || !email.trim()) {
+    return res.status(400).json({ message: 'Please provide a valid email address' });
+  }
+
+  const sanitizedEmail = email.trim().toLowerCase();
+
+  try {
+    if (!db.isPgConnected()) {
+      await db.ensurePgConnected();
+    }
+    if (!db.isPgConnected()) {
+      return res.status(503).json({ message: 'PostgreSQL database service unavailable' });
+    }
+
+    // Account enumeration protection: Always return standard generic message
+    const successMsg = 'If an account exists for this email, a password reset link has been sent.';
+
+    const userRes = await db.query('SELECT id, email, full_name FROM users WHERE LOWER(email) = $1', [sanitizedEmail]);
+    console.log('[AUTH] Email lookup completed');
+
+    if (userRes.rows.length === 0) {
+      console.log('[AUTH] Password reset requested for non-existent email');
+      return res.json({ message: successMsg });
+    }
+
+    const user = userRes.rows[0];
+
+    // Generate cryptographically secure random token (32 bytes = 64 hex chars)
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    
+    // Set 1-hour expiration
+    const expiresAt = new Date(Date.now() + 3600 * 1000);
+
+    console.log('[AUTH] Reset token generated');
+
+    // Invalidate existing tokens for this user
+    await db.query('UPDATE password_reset_tokens SET used = TRUE WHERE user_id = $1', [user.id]);
+
+    // Store token hash in PostgreSQL
+    await db.query(
+      `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at, used) VALUES ($1, $2, $3, FALSE)`,
+      [user.id, tokenHash, expiresAt]
+    );
+
+    // Build reset URL
+    const baseUrl = process.env.RESET_PASSWORD_URL || `http://localhost:${process.env.PORT || 5000}/api/auth/reset-password-page`;
+    const resetUrl = `${baseUrl}?token=${rawToken}`;
+
+    // Attempt email delivery via mailerService
+    console.log('[EMAIL] Mailer invocation started');
+    const emailSent = await mailerService.sendPasswordResetEmail({
+      to: user.email,
+      fullName: user.full_name,
+      resetUrl
+    });
+
+    if (emailSent) {
+      console.log('[EMAIL] Password reset email sent successfully');
+      return res.json({ message: successMsg });
+    } else {
+      console.error('[EMAIL] Password reset email delivery failed');
+      return res.status(500).json({ message: "We couldn't send the recovery email. Please try again." });
+    }
+
+  } catch (err) {
+    console.error('Forgot password error:', err.message || err);
+    return res.status(500).json({ message: "We couldn't send the recovery email. Please try again." });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  console.log('[AUTH] Request received: POST /api/auth/reset-password');
+  const { token, newPassword } = req.body;
+
+  if (!token || typeof token !== 'string' || !token.trim()) {
+    return res.status(400).json({ message: 'Reset token is required' });
+  }
+  if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 10) {
+    return res.status(400).json({ message: 'Password must be at least 10 characters long' });
   }
 
   try {
-    const username = (email || phone).trim().toLowerCase();
-    const result = await db.query(
-      'SELECT id, email, phone FROM users WHERE LOWER(email) = $1 OR phone = $2',
-      [username, (email || phone).trim()]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(400).json({ message: 'User not found' });
+    if (!db.isPgConnected()) {
+      await db.ensurePgConnected();
+    }
+    if (!db.isPgConnected()) {
+      return res.status(503).json({ message: 'PostgreSQL database service unavailable' });
     }
 
-    return res.json({
-      message: `Password reset instructions have been sent to ${email || phone}. Please check your inbox/messages.`,
-    });
+    const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+
+    // Find valid, unexpired, unused token
+    const tokenRes = await db.query(
+      `SELECT id, user_id, expires_at, used 
+       FROM password_reset_tokens 
+       WHERE token_hash = $1 AND used = FALSE AND expires_at > CURRENT_TIMESTAMP`,
+      [tokenHash]
+    );
+
+    if (tokenRes.rows.length === 0) {
+      console.log('[AUTH] Invalid, expired, or already used reset token');
+      return res.status(400).json({ message: 'Invalid or expired password reset token' });
+    }
+
+    const tokenRow = tokenRes.rows[0];
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+    // Update user password in PostgreSQL
+    await db.query('UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [newPasswordHash, tokenRow.user_id]);
+
+    // Immediately invalidate token (single-use)
+    await db.query('UPDATE password_reset_tokens SET used = TRUE WHERE id = $1', [tokenRow.id]);
+
+    console.log('[AUTH] Password reset successful for user_id:', tokenRow.user_id);
+    return res.json({ message: 'Password updated successfully' });
+
   } catch (err) {
-    console.error('Forgot password error:', err.message);
-    return res.status(500).json({ message: 'Server error during forgot password request' });
+    console.error('Reset password error:', err.message || err);
+    return res.status(500).json({ message: 'Server error resetting password' });
   }
+};
+
+exports.renderResetPasswordPage = async (req, res) => {
+  const { token } = req.query;
+  if (!token) {
+    return res.status(400).send('<h2>Invalid Link</h2><p>No reset token provided.</p>');
+  }
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BrushIQ — Reset Password</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0B1120; color: #E2E8F0; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+    .card { background: #1E293B; border: 1px solid #334155; border-radius: 16px; padding: 32px; max-width: 420px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+    h1 { color: #38BDF8; font-size: 24px; font-weight: 800; margin-top: 0; }
+    p { color: #94A3B8; font-size: 14px; line-height: 1.5; margin-bottom: 24px; }
+    .form-group { text-align: left; margin-bottom: 16px; }
+    label { font-size: 12px; font-weight: 700; color: #CBD5E1; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px; }
+    input { width: 100%; padding: 12px 14px; background: #0F172A; border: 1px solid #475569; border-radius: 8px; color: #F8FAFC; font-size: 15px; box-sizing: border-box; outline: none; transition: border 0.2s; }
+    input:focus { border-color: #38BDF8; }
+    button { width: 100%; padding: 14px; background: #38BDF8; color: #0F172A; border: none; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; margin-top: 12px; transition: background 0.2s; }
+    button:hover { background: #0284C7; color: #FFF; }
+    .msg { margin-top: 16px; font-size: 14px; padding: 10px; border-radius: 6px; display: none; }
+    .msg.error { background: rgba(239, 68, 68, 0.15); color: #FCA5A5; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .msg.success { background: rgba(34, 197, 94, 0.15); color: #86EFAC; border: 1px solid rgba(34, 197, 94, 0.3); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>BrushIQ</h1>
+    <p>Set a new password for your BrushIQ account.</p>
+    
+    <div id="msgBox" class="msg"></div>
+
+    <form id="resetForm">
+      <input type="hidden" id="token" value="${token}">
+      <div class="form-group">
+        <label for="newPassword">New Password</label>
+        <input type="password" id="newPassword" placeholder="Minimum 10 characters" required minlength="10">
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" placeholder="Re-enter password" required minlength="10">
+      </div>
+      <button type="submit" id="submitBtn">Update Password</button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('resetForm');
+    const msgBox = document.getElementById('msgBox');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = document.getElementById('token').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (newPassword !== confirmPassword) {
+        msgBox.className = 'msg error';
+        msgBox.textContent = 'Passwords do not match.';
+        msgBox.style.display = 'block';
+        return;
+      }
+
+      if (newPassword.length < 10) {
+        msgBox.className = 'msg error';
+        msgBox.textContent = 'Password must be at least 10 characters long.';
+        msgBox.style.display = 'block';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Updating...';
+      msgBox.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, newPassword })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          msgBox.className = 'msg success';
+          msgBox.innerHTML = '<strong>Password Updated!</strong><br/>Your password has been changed successfully. You can now open BrushIQ and sign in with your new password.';
+          msgBox.style.display = 'block';
+          form.style.display = 'none';
+        } else {
+          msgBox.className = 'msg error';
+          msgBox.textContent = data.message || 'Failed to reset password.';
+          msgBox.style.display = 'block';
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Update Password';
+        }
+      } catch (err) {
+        msgBox.className = 'msg error';
+        msgBox.textContent = 'Network error. Please try again.';
+        msgBox.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Update Password';
+      }
+    });
+  </script>
+</body>
+</html>`;
+  res.setHeader('Content-Type', 'text/html');
+  return res.send(html);
 };
 
 exports.changePassword = async (req, res) => {

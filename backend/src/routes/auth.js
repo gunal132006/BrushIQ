@@ -24,6 +24,16 @@ router.post('/google', authLimiter, authController.googleLogin);
 // @access  Public
 router.post('/forgot-password', authLimiter, authController.forgotPassword);
 
+// @route   POST api/auth/reset-password
+// @desc    Reset password using valid token
+// @access  Public
+router.post('/reset-password', authLimiter, authController.resetPassword);
+
+// @route   GET api/auth/reset-password-page
+// @desc    Serve HTML password reset page
+// @access  Public
+router.get('/reset-password-page', authController.renderResetPasswordPage);
+
 // @route   POST api/auth/change-password
 // @desc    Update current user password
 // @access  Private

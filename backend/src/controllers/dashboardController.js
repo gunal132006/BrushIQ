@@ -74,7 +74,18 @@ exports.getDashboardData = async (req, res) => {
     );
     const pendingReplacements = parseInt(pendingReplacementsRes.rows[0]?.count || 0, 10);
 
-    // 5. Recent Scans (last 5 scans)
+    // 5. Total Scans (all completed scans across all family members/toothbrushes for this user)
+    const totalScansRes = await db.query(
+      `SELECT COUNT(*)::int as count 
+       FROM scans s
+       JOIN toothbrushes t ON s.toothbrush_id = t.id
+       JOIN family_members f ON t.family_member_id = f.id
+       WHERE f.user_id = $1`,
+      [userId]
+    );
+    const totalScans = parseInt(totalScansRes.rows[0]?.count || 0, 10);
+
+    // 6. Recent Scans (last 5 scans)
     const recentScansRes = await db.query(
       `SELECT s.id, s.image_url as "imageUrl", 
               s.wear_percentage::float as "wearPercentage", 
@@ -104,6 +115,7 @@ exports.getDashboardData = async (req, res) => {
     return res.json({
       totalMembers,
       totalToothbrushes,
+      totalScans,
       avgHealthScore,
       pendingReplacements,
       recentScans,

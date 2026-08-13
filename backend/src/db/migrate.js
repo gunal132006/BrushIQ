@@ -87,11 +87,22 @@ CREATE TABLE IF NOT EXISTS tips (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash VARCHAR(255) NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    used BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_family_members_user ON family_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_toothbrushes_family ON toothbrushes(family_member_id);
 CREATE INDEX IF NOT EXISTS idx_scans_toothbrush ON scans(toothbrush_id);
 CREATE INDEX IF NOT EXISTS idx_reminders_family ON reminders(family_member_id);
 CREATE INDEX IF NOT EXISTS idx_reminders_brush ON reminders(toothbrush_id);
+CREATE INDEX IF NOT EXISTS idx_reset_tokens_user ON password_reset_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_reset_tokens_hash ON password_reset_tokens(token_hash);
 `;
 
 async function ensureSchema() {

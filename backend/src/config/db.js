@@ -52,12 +52,32 @@ const dbConfig = connectionString
 const pool = new Pool(dbConfig);
 let pgConnected = false;
 
+async function ensureResetTokensTable(client) {
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          token_hash VARCHAR(255) NOT NULL,
+          expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+          used BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_reset_tokens_user ON password_reset_tokens(user_id);
+      CREATE INDEX IF NOT EXISTS idx_reset_tokens_hash ON password_reset_tokens(token_hash);
+    `);
+  } catch (err) {
+    console.error('[POSTGRESQL ERROR] Failed to verify password_reset_tokens table:', err.message);
+  }
+}
+
 // Strict PostgreSQL connection test
 async function checkDbConnection() {
   try {
     const client = await pool.connect();
     try {
       await client.query('SELECT 1');
+      await ensureResetTokensTable(client);
       pgConnected = true;
       console.log('[POSTGRESQL] Connection established successfully.');
       return true;
