@@ -1,48 +1,24 @@
-const nodemailer = require('nodemailer');
-
-// Create reusable transporter object using SMTP transport
-function createTransporter() {
-  const host = process.env.MAIL_HOST || 'smtp.gmail.com';
-  const port = parseInt(process.env.MAIL_PORT || '587');
-  const user = process.env.MAIL_USER;
-  const pass = process.env.MAIL_PASSWORD;
-
-  if (!user || !pass) {
-    console.warn('[EMAIL WARNING] MAIL_USER or MAIL_PASSWORD environment variables are missing.');
-    return null;
-  }
-
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465, // true for 465, false for other ports
-    auth: {
-      user,
-      pass
-    },
-    tls: {
-      rejectUnauthorized: false
-    }
-  });
-}
+const { Resend } = require('resend');
 
 /**
- * Sends a password reset email to the specified user
+ * Sends a password reset email to the specified user using Resend HTTPS API
  * @param {Object} options - { to, fullName, resetUrl }
  * @returns {Promise<boolean>} true if sent successfully, false otherwise
  */
 async function sendPasswordResetEmail({ to, fullName, resetUrl }) {
-  const from = process.env.MAIL_FROM || 'BrushIQ Support <no-reply@brushiq.com>';
+  console.log('[EMAIL] Mailer invocation started');
 
-  const transporter = createTransporter();
-  if (!transporter) {
-    console.error('[EMAIL ERROR] Transporter cannot be created due to missing SMTP credentials.');
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey || !apiKey.trim()) {
+    console.error('[EMAIL ERROR] RESEND_API_KEY environment variable is missing.');
     return false;
   }
 
+  const resend = new Resend(apiKey.trim());
+  const from = process.env.MAIL_FROM || 'BrushIQ Support <onboarding@resend.dev>';
   const recipientName = fullName ? fullName : 'BrushIQ User';
 
-  const mailOptions = {
+  const mailPayload = {
     from,
     to,
     subject: 'BrushIQ Password Reset Request',
@@ -75,19 +51,25 @@ async function sendPasswordResetEmail({ to, fullName, resetUrl }) {
   };
 
   try {
-    console.log('[EMAIL] SMTP send attempt started');
-    const info = await transporter.sendMail(mailOptions);
-    console.log('[EMAIL] SMTP provider accepted message');
-    console.log('[EMAIL] Message sent ID:', info.messageId);
+    console.log('[EMAIL] Resend API send attempt started');
+    const { data, error } = await resend.emails.send(mailPayload);
+
+    if (error) {
+      console.error('[EMAIL] Resend send failed:', error.message || error);
+      return false;
+    }
+
+    console.log('[EMAIL] Resend provider accepted message');
+    if (data && data.id) {
+      console.log('[EMAIL] Resend Message ID:', data.id);
+    }
     return true;
   } catch (error) {
-    const safeErrorMsg = error.message ? error.message.replace(/pass(word)?=([^& ]+)/gi, 'pass=***') : 'Unknown SMTP error';
-    console.error('[EMAIL] SMTP error:', safeErrorMsg);
+    console.error('[EMAIL] Resend send failed:', error.message || 'Unknown network error');
     return false;
   }
 }
 
 module.exports = {
-  sendPasswordResetEmail,
-  createTransporter
+  sendPasswordResetEmail
 };
