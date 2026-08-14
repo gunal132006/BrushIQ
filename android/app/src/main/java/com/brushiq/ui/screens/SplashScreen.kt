@@ -52,14 +52,17 @@ fun SplashScreen(
         val isDebug = (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
         android.util.Log.d("AuthFlow", "Splash: Running health check (isDebug = $isDebug)...")
         
+        val startTime = System.currentTimeMillis()
         val isHealthy = try {
-            withTimeoutOrNull(3000) {
+            withTimeoutOrNull(15000) {
                 authViewModel?.checkServerHealth()
             } ?: false
         } catch (e: Exception) {
             android.util.Log.e("AuthFlow", "Splash: Health check exception", e)
             false
         }
+        val duration = System.currentTimeMillis() - startTime
+        android.util.Log.d("AuthFlow", "Splash: Health check finished in ${duration}ms (isHealthy = $isHealthy)")
         
         // Verify credentials with local storage
         val isLoggedIn = authViewModel?.isUserLoggedIn?.value ?: false
@@ -69,11 +72,6 @@ fun SplashScreen(
             android.util.Log.e("AuthFlow", "Splash: Startup check: BrushIQ server unreachable")
             if (isLoggedIn) {
                 android.util.Log.d("AuthFlow", "Splash: Offline mode active with cached session. Navigating to Dashboard...")
-                android.widget.Toast.makeText(
-                    context, 
-                    "Offline — showing cached data.", 
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
                 navController.navigate("dashboard") {
                     popUpTo("splash") { inclusive = true }
                 }
@@ -154,7 +152,13 @@ fun SplashScreen(
                 )
             )
             
-            Spacer(modifier = Modifier.height(64.dp))
+            Text(
+                text = "BrushIQ Debug Build: 2026-08-13 09:36 IST",
+                color = Color.White.copy(alpha = 0.5f),
+                style = MaterialTheme.typography.labelSmall
+            )
+            
+            Spacer(modifier = Modifier.height(56.dp))
             
             if (isServerUnreachable) {
                 Button(

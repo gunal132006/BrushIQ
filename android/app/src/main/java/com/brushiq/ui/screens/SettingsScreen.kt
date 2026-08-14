@@ -150,8 +150,12 @@ fun SettingsScreen(
                 SettingsActionRow(label = "Terms & Conditions", icon = Icons.Default.Description) {
                     navController.navigate("terms_conditions")
                 }
-                SettingsActionRow(label = "Help Center", icon = Icons.Default.HelpCenter) { }
-                SettingsActionRow(label = "Contact Us", icon = Icons.Default.ContactSupport) { }
+                SettingsActionRow(label = "Help Center", icon = Icons.Default.HelpCenter) {
+                    navController.navigate("help_center")
+                }
+                SettingsActionRow(label = "Contact Us", icon = Icons.Default.ContactSupport) {
+                    navController.navigate("contact_us")
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))

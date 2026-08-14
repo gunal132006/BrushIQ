@@ -32,6 +32,26 @@ import com.brushiq.ui.theme.*
 import com.brushiq.ui.viewmodel.BrushIQViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 
+fun formatScanDate(rawDate: String): String {
+    if (rawDate.isBlank()) return "Recently"
+    return try {
+        val clean = rawDate.take(10)
+        val parts = clean.split("-")
+        if (parts.size == 3) {
+            val year = parts[0]
+            val monthNum = parts[1].toIntOrNull() ?: 1
+            val day = parts[2].toIntOrNull() ?: 1
+            val monthNames = arrayOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+            val monthStr = monthNames.getOrElse(monthNum - 1) { "Aug" }
+            "$day $monthStr $year"
+        } else {
+            clean
+        }
+    } catch (_: Exception) {
+        if (rawDate.length >= 10) rawDate.substring(0, 10) else rawDate
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
@@ -62,7 +82,10 @@ fun HistoryScreen(
     val filteredScans = historyItems.filter { scan ->
         val matchesSearch = scan.aiRecommendation.contains(searchQuery, ignoreCase = true) ||
                 scan.condition.contains(searchQuery, ignoreCase = true) ||
-                scan.scanDate.contains(searchQuery, ignoreCase = true)
+                scan.scanDate.contains(searchQuery, ignoreCase = true) ||
+                (scan.memberName?.contains(searchQuery, ignoreCase = true) == true) ||
+                (scan.toothbrushBrand?.contains(searchQuery, ignoreCase = true) == true) ||
+                (scan.toothbrushModel?.contains(searchQuery, ignoreCase = true) == true)
         
         val matchesCondition = when (selectedConditionFilter) {
             "All" -> true
@@ -151,7 +174,7 @@ fun HistoryScreen(
                 }
             }
 
-            // Search input (supports screen reader labels)
+            // Search input
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -159,7 +182,7 @@ fun HistoryScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 6.dp)
                     .semantics {
-                        contentDescription = "Search input field to filter historical scans by recommendation, condition, or date."
+                        contentDescription = "Search input field to filter historical scans by member name, toothbrush model, recommendation, condition, or date."
                     },
                 placeholder = { Text("Search scan records...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = PrimaryMain) },
@@ -200,29 +223,105 @@ fun HistoryScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(filteredScans) { scan ->
-                        // RecentScanItem package points click events to ScanDetailsScreen
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    navController.navigate("scan_details/${scan.id}")
-                                }
-                        ) {
-                            val subtitleText = when (scan.syncStatus) {
-                                "PENDING" -> "Pending sync • ${scan.condition}"
-                                "FAILED" -> "Sync failed • ${scan.condition}"
-                                else -> scan.condition
-                            }
-                            RecentScanItem(
-                                name = "Diagnostic Scan (${if (scan.scanDate.length >= 10) scan.scanDate.substring(0, 10) else scan.scanDate})",
-                                model = subtitleText,
-                                score = scan.healthScore.toInt(),
-                                condition = scan.condition
-                            )
-                        }
+                        ClinicalHistoryCardItem(
+                            scan = scan,
+                            onClick = { navController.navigate("scan_details/${scan.id}") }
+                        )
                     }
                     item { Spacer(modifier = Modifier.height(80.dp)) }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun ClinicalHistoryCardItem(
+    scan: ScanReport,
+    onClick: () -> Unit
+) {
+    val condColor = when (scan.condition) {
+        "Good" -> Success
+        "Moderate Wear" -> Warning
+        "Replace Soon" -> Alert
+        "Replace Immediately" -> Error
+        else -> Warning
+    }
+
+    val memberName = scan.memberName ?: "Unknown Member"
+    val headerTitle = "$memberName — Diagnostic Scan"
+    
+    val brand = scan.toothbrushBrand ?: ""
+    val model = scan.toothbrushModel ?: ""
+    val toothbrushDesc = if (brand.isNotBlank() || model.isNotBlank()) {
+        "$brand $model".trim()
+    } else {
+        "Standard Toothbrush"
+    }
+
+    val formattedDate = formatScanDate(scan.scanDate)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = BrushIQShapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = androidx.compose.foundation.BorderStroke(Dimensions.BorderWidth, MaterialTheme.colorScheme.outline)
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = headerTitle,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
+                )
+            }
+
+            Text(
+                text = toothbrushDesc,
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Text(
+                text = formattedDate,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    color = condColor.copy(alpha = 0.12f),
+                    shape = BrushIQShapes.small
+                ) {
+                    Text(
+                        text = scan.condition.uppercase(),
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = condColor,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+
+                Text(
+                    text = "${scan.healthScore.toInt()}%",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black),
+                    color = condColor
+                )
             }
         }
     }

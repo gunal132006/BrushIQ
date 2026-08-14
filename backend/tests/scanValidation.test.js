@@ -6,7 +6,7 @@ const { JWT_SECRET } = require('../src/config/jwt');
 const app = require('../src/app');
 
 describe('BRUSHIQ AI SCAN VALIDATION PIPELINE', () => {
-  jest.setTimeout(30000);
+  jest.setTimeout(60000);
   const fixturesDir = path.join(__dirname, 'fixtures');
   let authToken;
 

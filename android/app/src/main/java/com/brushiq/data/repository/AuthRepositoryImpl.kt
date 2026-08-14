@@ -33,6 +33,14 @@ class AuthRepositoryImpl @Inject constructor(
     private val preferenceManager: PreferenceManager
 ) : AuthRepository {
 
+    private suspend fun clearLocalCache() {
+        userDao.clear()
+        familyMemberDao.clearAll()
+        toothbrushDao.clearAll()
+        scanDao.clearAll()
+        reminderDao.clearAll()
+    }
+
     override suspend fun register(
         fullName: String,
         email: String?,
@@ -46,6 +54,7 @@ class AuthRepositoryImpl @Inject constructor(
         android.util.Log.d("AuthFlow", "AuthRepositoryImpl.register: received response result: $res")
         return when (res) {
             is Resource.Success -> {
+                clearLocalCache()
                 val authRes = res.data
                 preferenceManager.saveToken(authRes.token)
                 authRes.refreshToken?.let { preferenceManager.saveRefreshToken(it) }
@@ -71,6 +80,7 @@ class AuthRepositoryImpl @Inject constructor(
         android.util.Log.d("AuthFlow", "AuthRepositoryImpl.login: received response result: $res")
         return when (res) {
             is Resource.Success -> {
+                clearLocalCache()
                 val authRes = res.data
                 preferenceManager.saveToken(authRes.token)
                 authRes.refreshToken?.let { preferenceManager.saveRefreshToken(it) }
@@ -94,6 +104,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
         return when (res) {
             is Resource.Success -> {
+                clearLocalCache()
                 val authRes = res.data
                 preferenceManager.saveToken(authRes.token)
                 authRes.refreshToken?.let { preferenceManager.saveRefreshToken(it) }
@@ -112,12 +123,24 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun forgotPassword(email: String?, phone: String?): Resource<String> {
+        val activeBaseUrl = com.brushiq.config.NetworkConfig.getActiveBaseUrl()
+        android.util.Log.d("AUTH", "[AUTH] Forgot password request started")
+        android.util.Log.d("AUTH", "[AUTH] Base URL host = brushiq-backend.onrender.com")
         val res = safeApiCall {
             authApi.forgotPassword(ForgotPasswordRequest(email, phone))
         }
         return when (res) {
-            is Resource.Success -> Resource.Success(res.data.message)
-            is Resource.Error -> Resource.Error(res.exception, res.message)
+            is Resource.Success -> {
+                android.util.Log.d("AUTH", "[AUTH] Forgot password request completed")
+                android.util.Log.d("AUTH", "[AUTH] HTTP status = 200")
+                Resource.Success(res.data.message ?: "If an account exists for this email, a password reset link has been sent.")
+            }
+            is Resource.Error -> {
+                val isTimeout = res.exception is java.net.SocketTimeoutException || res.message?.lowercase()?.contains("timeout") == true
+                android.util.Log.e("AUTH", "[AUTH] Forgot password request failed")
+                android.util.Log.e("AUTH", "[AUTH] Error type = ${if (isTimeout) "timeout" else res.exception.javaClass.simpleName}")
+                Resource.Error(res.exception, res.message)
+            }
             is Resource.Loading -> Resource.Loading
         }
     }
@@ -142,10 +165,31 @@ class AuthRepositoryImpl @Inject constructor(
     override fun isLoggedIn(): Flow<Boolean> = preferenceManager.userToken.map { it != null }
 
     override suspend fun checkHealth(): Resource<String> {
+        val activeBaseUrl = com.brushiq.config.NetworkConfig.getActiveBaseUrl()
+        android.util.Log.d("BrushIQ Startup", "[BrushIQ Startup] Starting health check")
+        android.util.Log.d("BrushIQ Network", "[BrushIQ Network] Base URL: $activeBaseUrl")
+        android.util.Log.d("BrushIQ Network", "[BrushIQ Network] Health URL: ${activeBaseUrl}health")
+
         val res = safeApiCall { authApi.healthCheck() }
         return when (res) {
-            is Resource.Success -> Resource.Success(res.data.message)
-            is Resource.Error -> Resource.Error(res.exception, res.message)
+            is Resource.Success -> {
+                val dto = res.data
+                android.util.Log.d("BrushIQ Network", "[BrushIQ Network] Response parsed - status: ${dto.status}, database: ${dto.database}, message: ${dto.message}")
+                val isHealthy = dto.status?.equals("UP", ignoreCase = true) == true ||
+                                dto.database?.equals("CONNECTED", ignoreCase = true) == true ||
+                                !dto.message.isNullOrBlank()
+                if (isHealthy) {
+                    android.util.Log.d("BrushIQ Startup", "[BrushIQ Startup] Health check SUCCESS")
+                    Resource.Success(dto.status ?: "UP")
+                } else {
+                    android.util.Log.e("BrushIQ Startup", "[BrushIQ Startup] Health check FAILED: status=${dto.status}")
+                    Resource.Error(Exception("Server status: ${dto.status}"), "Server unhealthy")
+                }
+            }
+            is Resource.Error -> {
+                android.util.Log.e("BrushIQ Startup", "[BrushIQ Startup] Health check FAILED: ${res.message}", res.exception)
+                Resource.Error(res.exception, res.message)
+            }
             is Resource.Loading -> Resource.Loading
         }
     }
@@ -153,7 +197,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun checkDatabaseStatus(): Resource<String> {
         val res = safeApiCall { authApi.getDatabaseStatus() }
         return when (res) {
-            is Resource.Success -> Resource.Success(res.data.message)
+            is Resource.Success -> Resource.Success(res.data.message ?: "CONNECTED")
             is Resource.Error -> Resource.Error(res.exception, res.message)
             is Resource.Loading -> Resource.Loading
         }

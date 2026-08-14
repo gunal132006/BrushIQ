@@ -47,13 +47,16 @@ data class ScanDto(
     val remainingLifeDays: Int?,
     val condition: String?,
     val confidenceScore: Double?,
+    val confidence: Double? = null,
     val bristleSpreading: Double?,
     val bristleBending: Double?,
     val bristleDamage: Double?,
     val brushingFrequency: String?,
     val detectedIssues: List<String>?,
     val aiRecommendation: String?,
-    val scanDate: String?
+    val recommendation: String? = null,
+    val scanDate: String? = null,
+    val isToothbrushDetected: Boolean? = null
 )
 
 data class ReminderDto(
@@ -81,6 +84,7 @@ data class TipDto(
 data class DashboardResponse(
     val totalMembers: Int,
     val totalToothbrushes: Int,
+    val totalScans: Int = 0,
     val avgHealthScore: Double,
     val pendingReplacements: Int,
     val recentScans: List<DashboardRecentScanDto>
@@ -98,7 +102,13 @@ data class DashboardRecentScanDto(
     val memberName: String?
 )
 
-data class GenericMessageResponse(val message: String)
+data class HealthResponseDto(
+    val status: String? = null,
+    val database: String? = null,
+    val message: String? = null
+)
+
+data class GenericMessageResponse(val message: String? = null)
 
 data class ErrorResponseDto(
     val code: String? = null,

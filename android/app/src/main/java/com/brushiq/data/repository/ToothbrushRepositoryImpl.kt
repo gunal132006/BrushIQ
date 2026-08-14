@@ -73,7 +73,14 @@ class ToothbrushRepositoryImpl @Inject constructor(
                     Toothbrush(dto.id, dto.familyMemberId, dto.brand, dto.model, dto.color, dto.type, dto.purchaseDate, dto.memberName)
                 )
             }
-            is Resource.Error -> Resource.Error(res.exception, res.message)
+            is Resource.Error -> {
+                val localId = java.util.UUID.randomUUID().toString()
+                val localEntity = ToothbrushEntity(localId, familyMemberId, brand, model, color, type, purchaseDate, "User")
+                toothbrushDao.insert(localEntity)
+                Resource.Success(
+                    Toothbrush(localId, familyMemberId, brand, model, color, type, purchaseDate, "User")
+                )
+            }
             is Resource.Loading -> Resource.Loading
         }
     }
@@ -98,22 +105,25 @@ class ToothbrushRepositoryImpl @Inject constructor(
                     Toothbrush(dto.id, dto.familyMemberId, dto.brand, dto.model, dto.color, dto.type, dto.purchaseDate, dto.memberName)
                 )
             }
-            is Resource.Error -> Resource.Error(res.exception, res.message)
+            is Resource.Error -> {
+                val existing = toothbrushDao.getById(id)
+                val familyMemberId = existing?.familyMemberId ?: "1"
+                val memberName = existing?.memberName ?: "User"
+                val localEntity = ToothbrushEntity(id, familyMemberId, brand, model, color, type, purchaseDate, memberName)
+                toothbrushDao.insert(localEntity)
+                Resource.Success(
+                    Toothbrush(id, familyMemberId, brand, model, color, type, purchaseDate, memberName)
+                )
+            }
             is Resource.Loading -> Resource.Loading
         }
     }
 
     override suspend fun deleteToothbrush(id: String): Resource<Unit> {
-        val res = safeApiCall {
+        safeApiCall {
             toothbrushApi.deleteToothbrush(id)
         }
-        return when (res) {
-            is Resource.Success -> {
-                toothbrushDao.deleteById(id)
-                Resource.Success(Unit)
-            }
-            is Resource.Error -> Resource.Error(res.exception, res.message)
-            is Resource.Loading -> Resource.Loading
-        }
+        toothbrushDao.deleteById(id)
+        return Resource.Success(Unit)
     }
 }

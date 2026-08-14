@@ -274,4 +274,117 @@ describe('Authentication API Endpoints (POST /api/auth/login & POST /api/auth/go
     expect(res.body.user.googleId).toBe('google-sub-12345');
     expect(res.body.user.id).toBe('google-user-uuid');
   });
+
+  // ------------------------------------
+  // FORGOT PASSWORD & RESET PASSWORD TESTS
+  // ------------------------------------
+  test('Forgot Password: Should return HTTP 400 when email is missing or empty', async () => {
+    const res = await request(app)
+      .post('/api/auth/forgot-password')
+      .send({});
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('Please provide a valid email address');
+  });
+
+  test('Forgot Password: Should return generic success for non-existent email without sending email', async () => {
+    const mailerService = require('../src/services/mailerService');
+    jest.spyOn(mailerService, 'sendPasswordResetEmail').mockResolvedValue(true);
+    jest.spyOn(db, 'query').mockResolvedValueOnce({ rows: [] }); // user not found
+
+    const res = await request(app)
+      .post('/api/auth/forgot-password')
+      .send({ email: 'nonexistent@example.com' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toBe('If an account exists for this email, a password reset link has been sent.');
+    expect(mailerService.sendPasswordResetEmail).not.toHaveBeenCalled();
+  });
+
+  test('Forgot Password: Should generate token and call mailerService when user exists', async () => {
+    const mailerService = require('../src/services/mailerService');
+    jest.spyOn(mailerService, 'sendPasswordResetEmail').mockResolvedValue(true);
+
+    const mockUser = { id: 'user-uuid-1', email: 'registered@example.com', full_name: 'Registered User' };
+    jest.spyOn(db, 'query')
+      .mockResolvedValueOnce({ rows: [mockUser] }) // SELECT user
+      .mockResolvedValueOnce({ rows: [] }) // UPDATE existing tokens used = TRUE
+      .mockResolvedValueOnce({ rows: [] }); // INSERT token_hash
+
+    const res = await request(app)
+      .post('/api/auth/forgot-password')
+      .send({ email: 'registered@example.com' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toBe('If an account exists for this email, a password reset link has been sent.');
+    expect(mailerService.sendPasswordResetEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'registered@example.com',
+        fullName: 'Registered User',
+        resetUrl: expect.stringContaining('/api/auth/reset-password-page?token=')
+      })
+    );
+  });
+
+  test('Forgot Password: Should return HTTP 500 when email delivery fails', async () => {
+    const mailerService = require('../src/services/mailerService');
+    jest.spyOn(mailerService, 'sendPasswordResetEmail').mockResolvedValue(false);
+
+    const mockUser = { id: 'user-uuid-1', email: 'registered@example.com', full_name: 'Registered User' };
+    jest.spyOn(db, 'query')
+      .mockResolvedValueOnce({ rows: [mockUser] })
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [] });
+
+    const res = await request(app)
+      .post('/api/auth/forgot-password')
+      .send({ email: 'registered@example.com' });
+
+    expect(res.status).toBe(500);
+    expect(res.body.message).toBe("We couldn't send the recovery email. Please try again.");
+  });
+
+  test('Reset Password: Should return HTTP 400 when token is missing', async () => {
+    const res = await request(app)
+      .post('/api/auth/reset-password')
+      .send({ newPassword: 'NewPassword123!' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('Reset token is required');
+  });
+
+  test('Reset Password: Should return HTTP 400 when newPassword is less than 10 characters', async () => {
+    const res = await request(app)
+      .post('/api/auth/reset-password')
+      .send({ token: 'some-raw-token', newPassword: 'short' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('Password must be at least 10 characters long');
+  });
+
+  test('Reset Password: Should return HTTP 400 when token is invalid or expired', async () => {
+    jest.spyOn(db, 'query').mockResolvedValueOnce({ rows: [] }); // token not found / expired
+
+    const res = await request(app)
+      .post('/api/auth/reset-password')
+      .send({ token: 'invalid-token', newPassword: 'ValidNewPassword123!' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('Invalid or expired password reset token');
+  });
+
+  test('Reset Password: Should update user password and mark token used when token is valid', async () => {
+    const mockTokenRow = { id: 'token-uuid-1', user_id: 'user-uuid-1', used: false };
+    jest.spyOn(db, 'query')
+      .mockResolvedValueOnce({ rows: [mockTokenRow] }) // SELECT token
+      .mockResolvedValueOnce({ rows: [] }) // UPDATE users password_hash
+      .mockResolvedValueOnce({ rows: [] }); // UPDATE password_reset_tokens used = TRUE
+
+    const res = await request(app)
+      .post('/api/auth/reset-password')
+      .send({ token: 'valid-raw-token', newPassword: 'ValidNewPassword123!' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toBe('Password updated successfully');
+  });
 });

@@ -126,6 +126,17 @@ class FamilyRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun uploadProfilePhoto(imageFile: java.io.File): Resource<String> {
+        val requestFile = okhttp3.RequestBody.create(null, imageFile)
+        val body = okhttp3.MultipartBody.Part.createFormData("photo", imageFile.name, requestFile)
+        val res = safeApiCall { familyApi.uploadProfilePhoto(body) }
+        return when (res) {
+            is Resource.Success -> Resource.Success(res.data.photoUrl)
+            is Resource.Error -> Resource.Error(res.exception, res.message)
+            is Resource.Loading -> Resource.Loading
+        }
+    }
+
     override suspend fun deleteFamilyMember(id: String): Resource<Unit> {
         val res = safeApiCall {
             familyApi.deleteFamilyMember(id)

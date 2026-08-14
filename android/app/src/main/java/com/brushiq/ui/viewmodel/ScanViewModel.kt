@@ -212,6 +212,7 @@ class ScanViewModel @Inject constructor(
             _processingStep.value = 2
             _processingProgress.value = 35
 
+            android.util.Log.d("SCAN", "[SCAN] Attempting API upload")
             val resultResource = scanRepository.analyzeScan(imageFile)
 
             for (p in 36..60 step 5) {
@@ -221,6 +222,7 @@ class ScanViewModel @Inject constructor(
 
             when (resultResource) {
                 is Resource.Success -> {
+                    android.util.Log.d("SCAN", "[SCAN] Upload success")
                     _processingStep.value = 3 // Verifying Toothbrush Count
                     delay(150)
                     _processingProgress.value = 75
@@ -245,9 +247,12 @@ class ScanViewModel @Inject constructor(
                     val exception = resultResource.exception
                     val httpCode = (exception as? retrofit2.HttpException)?.code() ?: 0
 
+                    android.util.Log.d("SCAN", "[SCAN] Upload failure")
+                    android.util.Log.d("SCAN", "[SCAN] Actual exception type = ${exception?.javaClass?.name}")
+                    android.util.Log.d("SCAN", "[SCAN] HTTP status = $httpCode")
+
                     val payload = parseApiErrorPayload(exception, rawMsg)
 
-                    android.util.Log.d("SCAN ERROR", "[SCAN ERROR] HTTP status = $httpCode")
                     android.util.Log.d("SCAN ERROR", "[SCAN ERROR] code = ${payload.code}")
                     android.util.Log.d("SCAN ERROR", "[SCAN ERROR] detectedObject = ${payload.detectedObject}")
 
@@ -271,24 +276,29 @@ class ScanViewModel @Inject constructor(
                             _errorMessage.value = if (payload.message.isNotBlank()) payload.message else "Image quality check failed. Please ensure proper lighting and focus."
                             ScanErrorType.IMAGE_QUALITY_ERROR
                         }
-                        // 3. HTTP 400 catch-all
+                        // 3. Auth / Unauthorized / Session Expiry Errors
+                        httpCode == 401 || httpCode == 403 || rawMsg.lowercase().contains("unauthorized") || rawMsg.lowercase().contains("token") -> {
+                            _errorMessage.value = "Session expired or unauthorized. Please log in again."
+                            ScanErrorType.UPLOAD_FAILED
+                        }
+                        // 4. HTTP 400 catch-all validation error
                         httpCode == 400 -> {
                             _errorMessage.value = if (payload.message.isNotBlank()) payload.message else "Toothbrush not detected. Please scan only a toothbrush."
                             ScanErrorType.TOOTHBRUSH_NOT_DETECTED
                         }
-                        // 4. HTTP 500 Server Error
+                        // 5. HTTP 500/502/503 Server Error
                         httpCode >= 500 -> {
-                            _errorMessage.value = "Server error during AI analysis. Please try again later."
+                            _errorMessage.value = "The diagnostic service is temporarily unavailable. Please try again."
                             ScanErrorType.ANALYSIS_FAILED
                         }
-                        // 5. Genuine Network/IO infrastructure failure
-                        exception is java.io.IOException || exception is java.net.SocketTimeoutException || exception is java.net.UnknownHostException -> {
-                            _errorMessage.value = "BrushIQ could not upload your image to the diagnostics engine. Please check your internet connection and try again."
+                        // 6. Genuine Network/IO infrastructure failure (UnknownHost, Connect, Timeout, IO)
+                        exception is java.io.IOException || exception is java.net.SocketTimeoutException || exception is java.net.UnknownHostException || exception is java.net.ConnectException -> {
+                            _errorMessage.value = "Check your internet connection and try again."
                             ScanErrorType.UPLOAD_FAILED
                         }
-                        // 6. Catch-all fallback
+                        // 7. Catch-all fallback
                         else -> {
-                            _errorMessage.value = "Analysis failed. Please try again."
+                            _errorMessage.value = if (payload.message.isNotBlank()) payload.message else "The image could not be analyzed. Please try again."
                             ScanErrorType.ANALYSIS_FAILED
                         }
                     }

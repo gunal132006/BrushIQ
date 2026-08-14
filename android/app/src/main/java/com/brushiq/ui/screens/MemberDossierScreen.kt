@@ -1,6 +1,5 @@
 package com.brushiq.ui.screens
 
-import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -111,6 +110,19 @@ fun MemberDossierScreen(
         )
     }
 
+    val allScans by viewModel.scanHistory.collectAsState()
+    val memberToothbrushIds = remember(toothbrushes, memberId) {
+        toothbrushes.filter { it.familyMemberId == memberId }.map { it.id }.toSet()
+    }
+    val realMemberScans = remember(allScans, memberToothbrushIds) {
+        allScans.filter { it.toothbrushId in memberToothbrushIds }
+    }
+    val memberScanCount = if (realMemberScans.isNotEmpty()) {
+        realMemberScans.size
+    } else {
+        if (currentMember.healthScore != null) mockScanList.size else 0
+    }
+
     Scaffold(
         topBar = {
             AppHeader(
@@ -155,7 +167,16 @@ fun MemberDossierScreen(
                             .background(PrimaryAlpha10),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryMain, modifier = Modifier.size(32.dp))
+                        if (!currentMember.profilePhotoUrl.isNullOrBlank()) {
+                            coil.compose.AsyncImage(
+                                model = currentMember.profilePhotoUrl,
+                                contentDescription = currentMember.name,
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryMain, modifier = Modifier.size(32.dp))
+                        }
                     }
 
                     Spacer(modifier = Modifier.width(16.dp))
@@ -191,7 +212,7 @@ fun MemberDossierScreen(
 
             // 2. Family Member Statistics Panel
             MemberStatsPanel(
-                totalScans = mockScanList.size,
+                totalScans = memberScanCount,
                 avgHealthScore = currentMember.healthScore?.toInt() ?: 0,
                 activeToothbrushes = if (memberToothbrush != null) 1 else 0,
                 pendingReplacements = if (currentMember.healthScore != null && currentMember.healthScore!! < 50) 1 else 0
@@ -341,7 +362,7 @@ fun MemberDossierScreen(
                         type = type,
                         purchaseDate = date
                     )
-                    Toast.makeText(context, "Toothbrush linked and states refreshed!", Toast.LENGTH_SHORT).show()
+                    com.brushiq.util.UiNotificationManager.showSuccess("Toothbrush Linked", "Toothbrush linked to profile successfully.")
                     showAssignModal = false
                 }
             )

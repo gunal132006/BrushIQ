@@ -7,6 +7,7 @@ data class LoginRequest(val username: String, val email: String, val password: S
 data class RegisterRequest(val fullName: String, val email: String?, val phone: String?, val password: String)
 data class GoogleLoginRequest(val idToken: String)
 data class ForgotPasswordRequest(val email: String?, val phone: String?)
+data class ResetPasswordRequest(val token: String, val newPassword: String)
 
 data class AuthResponse(
     val token: String,
@@ -27,8 +28,11 @@ interface AuthApi {
     @POST("auth/forgot-password")
     suspend fun forgotPassword(@Body request: ForgotPasswordRequest): GenericMessageResponse
 
+    @POST("auth/reset-password")
+    suspend fun resetPassword(@Body request: ResetPasswordRequest): GenericMessageResponse
+
     @retrofit2.http.GET("health")
-    suspend fun healthCheck(): GenericMessageResponse
+    suspend fun healthCheck(): HealthResponseDto
 
     @retrofit2.http.GET("system/database-status")
     suspend fun getDatabaseStatus(): GenericMessageResponse

@@ -194,13 +194,25 @@ class AuthViewModel @Inject constructor(
         return false
     }
 
-    fun forgotPassword(email: String?, phone: String?, onResult: (String) -> Unit) {
+    fun forgotPassword(
+        email: String,
+        onSuccess: (String) -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
         viewModelScope.launch {
-            val res = authRepository.forgotPassword(email, phone)
+            _authState.value = AuthState.Loading
+            val res = authRepository.forgotPassword(email, null)
             when (res) {
-                is Resource.Success -> onResult(res.data)
-                is Resource.Error -> onResult(res.message ?: "Request failed")
-                is Resource.Loading -> { /* do nothing */ }
+                is Resource.Success -> {
+                    _authState.value = AuthState.Idle
+                    onSuccess(res.data)
+                }
+                is Resource.Error -> {
+                    _authState.value = AuthState.Idle
+                    val errMsg = res.message ?: "We couldn't send the recovery email. Please try again."
+                    onError(errMsg)
+                }
+                is Resource.Loading -> {}
             }
         }
     }

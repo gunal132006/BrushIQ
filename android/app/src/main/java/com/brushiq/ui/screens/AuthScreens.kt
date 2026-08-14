@@ -69,9 +69,7 @@ fun LoginScreen(
             is AuthState.Error -> {
                 val errorMsg = (authState as AuthState.Error).message
                 android.util.Log.e("AuthFlow", "Login error: $errorMsg")
-                scope.launch {
-                    snackbarHostState.showSnackbar(errorMsg)
-                }
+                com.brushiq.util.UiNotificationManager.showError(errorMsg)
             }
             else -> {}
         }
@@ -331,9 +329,7 @@ fun RegisterScreen(
             is AuthState.Error -> {
                 val errorMsg = (authState as AuthState.Error).message
                 android.util.Log.e("AuthFlow", "Register error: $errorMsg")
-                scope.launch {
-                    snackbarHostState.showSnackbar(errorMsg)
-                }
+                com.brushiq.util.UiNotificationManager.showError(errorMsg)
             }
             else -> {}
         }
@@ -570,7 +566,8 @@ fun ForgotPasswordScreen(
     navController: NavController,
     viewModel: AuthViewModel? = null
 ) {
-    var username by remember { mutableStateOf("") }
+    var emailInput by remember { mutableStateOf("") }
+    var isSubmitting by remember { mutableStateOf(false) }
     var sent by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -594,7 +591,7 @@ fun ForgotPasswordScreen(
         ) {
             if (!sent) {
                 Text(
-                    text = "Enter your registered credentials to recover your account.",
+                    text = "Enter your registered email address to receive password reset instructions.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center
@@ -603,20 +600,46 @@ fun ForgotPasswordScreen(
                 Spacer(modifier = Modifier.height(40.dp))
 
                 OutlinedTextField(
-                    value = username,
-                    onValueChange = { username = it },
-                    label = { Text("Email or Phone") },
+                    value = emailInput,
+                    onValueChange = { emailInput = it },
+                    label = { Text("Email Address") },
                     leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = PrimaryMain) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    enabled = !isSubmitting,
                     shape = BrushIQShapes.large
                 )
                 
                 Spacer(modifier = Modifier.height(32.dp))
 
                 PrimaryButton(
-                    text = "Reset Password",
-                    onClick = { sent = true }
+                    text = if (isSubmitting) "Sending..." else "Reset Password",
+                    isLoading = isSubmitting,
+                    enabled = emailInput.isNotBlank() && !isSubmitting,
+                    onClick = {
+                        if (emailInput.isBlank() || isSubmitting) return@PrimaryButton
+                        isSubmitting = true
+                        viewModel?.forgotPassword(
+                            email = emailInput.trim(),
+                            onSuccess = { msg ->
+                                isSubmitting = false
+                                sent = true
+                            },
+                            onError = { errMsg ->
+                                isSubmitting = false
+                                com.brushiq.util.UiNotificationManager.showError(
+                                    title = "Password Reset Failed",
+                                    message = if (!errMsg.isNullOrBlank()) errMsg else "We couldn't send the recovery email. Please try again."
+                                )
+                            }
+                        ) ?: run {
+                            isSubmitting = false
+                            com.brushiq.util.UiNotificationManager.showError(
+                                title = "Password Reset Failed",
+                                message = "We couldn't send the recovery email. Please try again."
+                            )
+                        }
+                    }
                 )
             } else {
                 Box(
@@ -627,15 +650,18 @@ fun ForgotPasswordScreen(
                 }
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    text = "Recovery Link Sent",
-                    style = MaterialTheme.typography.titleLarge
+                    text = "Recovery Email Sent",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
                 )
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "Please check your inbox for instructions to reset your password.",
+                    text = "If an account exists for this email, a password reset link has been sent. Please check your inbox and spam folder.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 Spacer(modifier = Modifier.height(40.dp))
                 SecondaryButton(

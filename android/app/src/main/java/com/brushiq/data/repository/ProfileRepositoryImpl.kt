@@ -56,6 +56,7 @@ class ProfileRepositoryImpl @Inject constructor(
                 val stats = DashboardStats(
                     totalMembers = dto.totalMembers,
                     totalToothbrushes = dto.totalToothbrushes,
+                    totalScans = dto.totalScans,
                     avgHealthScore = dto.avgHealthScore,
                     pendingReplacements = dto.pendingReplacements,
                     recentScans = dto.recentScans.map {

@@ -126,7 +126,13 @@ class BrushIQViewModel @Inject constructor(
     fun syncPendingScans() {
         viewModelScope.launch {
             try {
-                scanRepository.syncPendingScans()
+                val res = scanRepository.syncPendingScans()
+                if (res is com.brushiq.util.Resource.Success && res.data > 0) {
+                    com.brushiq.util.UiNotificationManager.showSuccess(
+                        title = "Sync Complete",
+                        message = "Your offline reports have been synchronized."
+                    )
+                }
                 fetchScansHistory("")
                 fetchDashboardStats()
             } catch (e: Exception) {
@@ -148,16 +154,27 @@ class BrushIQViewModel @Inject constructor(
         }
     }
 
+    fun clearUserData() {
+        _dashboardStats.value = null
+        _scanHistory.value = emptyList()
+        _personalizedTips.value = emptyList()
+        _scanReport.value = null
+        _selectedFamilyMemberId.value = null
+        _selectedToothbrushId.value = null
+    }
+
     fun syncAllData() {
         viewModelScope.launch {
             _loading.value = true
+            _dashboardStats.value = null
+            _scanHistory.value = emptyList()
             try {
                 familyRepository.syncFamilyMembers()
                 toothbrushRepository.syncToothbrushes()
                 familyRepository.syncReminders()
                 tipsRepository.syncTips()
-                fetchDashboardStats()
                 fetchScansHistory("")
+                fetchDashboardStats()
                 syncPendingScans()
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -196,6 +213,7 @@ class BrushIQViewModel @Inject constructor(
         _dashboardStats.value = DashboardStats(
             totalMembers = mems.size,
             totalToothbrushes = brushes.size,
+            totalScans = scans.size,
             avgHealthScore = avgScore,
             pendingReplacements = pendingAlerts,
             recentScans = scans.take(5)
@@ -310,15 +328,18 @@ class BrushIQViewModel @Inject constructor(
         viewModelScope.launch {
             _loading.value = true
             
-            val memberId = _selectedFamilyMemberId.value
+            val selectedMemberId = _selectedFamilyMemberId.value
             var targetBrushId = if (toothbrushId.isNotBlank()) toothbrushId else (_selectedToothbrushId.value ?: report.toothbrushId)
 
-            // If toothbrushId is still blank, find toothbrush belonging to selectedFamilyMemberId
+            val matchedBrush = toothbrushes.value.find { it.id == targetBrushId }
+            val memberId = matchedBrush?.familyMemberId ?: selectedMemberId
+
+            // If toothbrushId is still blank, find toothbrush belonging to memberId
             if (targetBrushId.isBlank() && !memberId.isNullOrBlank()) {
                 targetBrushId = toothbrushes.value.find { it.familyMemberId == memberId }?.id ?: ""
             }
 
-            android.util.Log.d("SCAN SAVE", "[SCAN SAVE] selectedFamilyMemberId = $memberId")
+            android.util.Log.d("SCAN SAVE", "[SCAN SAVE] resolvedMemberId = $memberId")
             android.util.Log.d("SCAN SAVE", "[SCAN SAVE] selectedToothbrushId = $targetBrushId")
 
             val online = networkMonitor.isOnline.value
@@ -350,7 +371,7 @@ class BrushIQViewModel @Inject constructor(
 
                             familyRepository.syncFamilyMembers()
                             toothbrushRepository.syncToothbrushes()
-                            fetchScansHistory(targetBrushId)
+                            fetchScansHistory("")
                             fetchDashboardStats()
 
                             onSuccess(false)
@@ -429,6 +450,12 @@ class BrushIQViewModel @Inject constructor(
             scanRepository.getScansHistory(toothbrushId).collect { res ->
                 if (res is Resource.Success) {
                     _scanHistory.value = res.data
+                    if (toothbrushId.isBlank()) {
+                        val currentStats = _dashboardStats.value
+                        if (currentStats == null || currentStats.totalScans < res.data.size) {
+                            updateOfflineDashboardStats()
+                        }
+                    }
                 }
             }
         }

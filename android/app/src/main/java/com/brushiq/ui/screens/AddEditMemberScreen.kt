@@ -1,7 +1,13 @@
 package com.brushiq.ui.screens
 
-import android.widget.Toast
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,18 +22,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.brushiq.ui.components.*
 import com.brushiq.ui.theme.*
 import com.brushiq.ui.viewmodel.BrushIQViewModel
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,12 +56,90 @@ fun AddEditMemberScreen(
     var age by remember { mutableStateOf("") }
     var gender by remember { mutableStateOf("Male") }
 
+    // Profile photo states
+    var photoUri by remember { mutableStateOf<Uri?>(null) }
+    var currentPhotoUrl by remember { mutableStateOf<String?>(null) }
+    var showSourceDialog by remember { mutableStateOf(false) }
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
+
     // Dropdown States
     var relMenuExpanded by remember { mutableStateOf(false) }
     var genMenuExpanded by remember { mutableStateOf(false) }
 
     val relationshipsList = listOf("Dad", "Mom", "Spouse", "Child", "Sibling", "Grandparent", "Other")
     val gendersList = listOf("Male", "Female", "Other")
+
+    // Activity Launchers for Photo Picker & Camera
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            photoUri = uri
+        }
+    }
+
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && tempCameraUri != null) {
+            photoUri = tempCameraUri
+        }
+    }
+
+    fun launchCamera() {
+        try {
+            val tempFile = File.createTempFile("profile_capture_", ".jpg", context.cacheDir).apply {
+                createNewFile()
+            }
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                tempFile
+            )
+            tempCameraUri = uri
+            takePictureLauncher.launch(uri)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            com.brushiq.util.UiNotificationManager.showWarning("Camera Error", "Unable to open camera.")
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            launchCamera()
+        } else {
+            com.brushiq.util.UiNotificationManager.showWarning(
+                "Permission Denied",
+                "Camera permission is required to capture a photo."
+            )
+        }
+    }
+
+    fun checkAndLaunchCamera() {
+        val permissionCheck = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+        if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+            launchCamera()
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    // Helper to persist Uri locally
+    fun saveUriToLocalFile(uri: Uri): String? {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+            val file = File(context.filesDir, "profile_${System.currentTimeMillis()}.jpg")
+            file.outputStream().use { output ->
+                inputStream.copyTo(output)
+            }
+            file.absolutePath
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
 
     // Load data if editing
     LaunchedEffect(memberId, familyMembers) {
@@ -63,8 +150,53 @@ fun AddEditMemberScreen(
                 relationship = member.relationship
                 age = member.age.toString()
                 gender = member.gender
+                currentPhotoUrl = member.profilePhotoUrl
             }
         }
+    }
+
+    // Photo Source Choice Dialog
+    if (showSourceDialog) {
+        AlertDialog(
+            onDismissRequest = { showSourceDialog = false },
+            title = { Text("Profile Photo", fontWeight = FontWeight.Bold) },
+            text = { Text("Select photo source for family profile") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSourceDialog = false
+                        checkAndLaunchCamera()
+                    }
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.PhotoCamera, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Take Photo")
+                    }
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(
+                        onClick = {
+                            showSourceDialog = false
+                            galleryLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        }
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Choose from Gallery")
+                        }
+                    }
+                    TextButton(onClick = { showSourceDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -88,7 +220,7 @@ fun AddEditMemberScreen(
                 .padding(Dimensions.PaddingMedium),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Profile photo placeholder
+            // Profile photo picker avatar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -98,16 +230,50 @@ fun AddEditMemberScreen(
                 Box(
                     modifier = Modifier
                         .size(96.dp)
-                        .clip(CircleShape)
-                        .background(PrimaryAlpha10),
-                    contentAlignment = Alignment.Center
+                        .clickable { showSourceDialog = true }
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.CameraAlt,
-                        contentDescription = "Change photo placeholder",
-                        tint = PrimaryMain,
-                        modifier = Modifier.size(32.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(96.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryAlpha10)
+                            .border(2.dp, PrimaryMain.copy(alpha = 0.3f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val displayPhoto = photoUri ?: currentPhotoUrl
+                        if (displayPhoto != null) {
+                            AsyncImage(
+                                model = displayPhoto,
+                                contentDescription = "Profile Photo",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = "Change photo placeholder",
+                                tint = PrimaryMain,
+                                modifier = Modifier.size(36.dp)
+                            )
+                        }
+                    }
+
+                    // Edit badge overlay
+                    Surface(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .align(Alignment.BottomEnd),
+                        shape = CircleShape,
+                        color = PrimaryMain,
+                        shadowElevation = 4.dp
+                    ) {
+                        Icon(
+                            imageVector = if (photoUri != null || !currentPhotoUrl.isNullOrBlank()) Icons.Default.Edit else Icons.Default.Add,
+                            contentDescription = "Edit photo",
+                            tint = Color.White,
+                            modifier = Modifier.padding(6.dp)
+                        )
+                    }
                 }
             }
 
@@ -214,10 +380,16 @@ fun AddEditMemberScreen(
                 onClick = {
                     val ageVal = age.toIntOrNull()
                     if (name.isBlank()) {
-                        Toast.makeText(context, "Please enter a profile name.", Toast.LENGTH_SHORT).show()
+                        com.brushiq.util.UiNotificationManager.showWarning("Name Required", "Please enter a profile name.")
                     } else if (ageVal == null || ageVal <= 0 || ageVal > 125) {
-                        Toast.makeText(context, "Please enter a valid age.", Toast.LENGTH_SHORT).show()
+                        com.brushiq.util.UiNotificationManager.showWarning("Invalid Age", "Please enter a valid age.")
                     } else {
+                        val finalPhotoUrl = if (photoUri != null) {
+                            saveUriToLocalFile(photoUri!!) ?: currentPhotoUrl
+                        } else {
+                            currentPhotoUrl
+                        }
+
                         if (isEdit && memberId != null) {
                             viewModel.updateFamilyMember(
                                 id = memberId,
@@ -225,18 +397,18 @@ fun AddEditMemberScreen(
                                 age = ageVal,
                                 gender = gender,
                                 relationship = relationship,
-                                profilePhotoUrl = null
+                                profilePhotoUrl = finalPhotoUrl
                             )
-                            Toast.makeText(context, "Clinical profile updated successfully!", Toast.LENGTH_SHORT).show()
+                            com.brushiq.util.UiNotificationManager.showSuccess("Profile Updated", "Clinical profile updated successfully!")
                         } else {
                             viewModel.addFamilyMember(
                                 name = name.trim(),
                                 age = ageVal,
                                 gender = gender,
                                 relationship = relationship,
-                                profilePhotoUrl = null
+                                profilePhotoUrl = finalPhotoUrl
                             )
-                            Toast.makeText(context, "Family profile created successfully!", Toast.LENGTH_SHORT).show()
+                            com.brushiq.util.UiNotificationManager.showSuccess("Profile Created", "Family profile created successfully!")
                         }
                         navController.popBackStack()
                     }

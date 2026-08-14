@@ -75,7 +75,10 @@ const HUMAN_KEYWORDS = [
   'person', 'human', 'man', 'woman', 'child', 'boy', 'girl', 'baby', 'infant',
   'face', 'head', 'groom', 'bride', 'skin', 'wig', 'hair', 'beard', 'mustache',
   'suit', 'jersey', 't-shirt', 'jean', 'sweater', 'jacket', 'coat', 'dress',
-  'bikini', 'pajama', 'trench', 'cardigan', 'vest', 'neck', 'shoulder', 'hand', 'arm'
+  'bikini', 'pajama', 'trench', 'cardigan', 'vest', 'neck', 'shoulder', 'hand', 'arm',
+  'lip', 'mouth', 'eye', 'nose', 'cheek', 'forehead', 'miniskirt', 'pajamas',
+  'brassiere', 'cloak', 'kimono', 'stole', 'academic gown', 'scuba suit', 'bathing cap',
+  'sunhat', 'sombrero', 'bonnet', 'feather boa'
 ];
 
 /**
@@ -99,42 +102,7 @@ const UNMATCHED_OBJECT_KEYWORDS = [
   'laptop', 'computer', 'screen', 'monitor', 'keyboard', 'mouse', 'phone', 'television'
 ];
 
-/**
- * Performs a fast canvas structural verification for toothbrush handle/bristle features
- */
-const verifyToothbrushVisualStructure = (imgElement) => {
-  try {
-    const canvas = document.createElement('canvas');
-    canvas.width = 100;
-    canvas.height = 100;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(imgElement, 0, 0, 100, 100);
-    const imgData = ctx.getImageData(0, 0, 100, 100).data;
 
-    let edgeCount = 0;
-    let colorVariance = 0;
-
-    for (let i = 0; i < imgData.length; i += 4) {
-      const r = imgData[i];
-      const g = imgData[i + 1];
-      const b = imgData[i + 2];
-      const luma = 0.299 * r + 0.587 * g + 0.114 * b;
-
-      if (i > 4) {
-        const prevLuma = 0.299 * imgData[i - 4] + 0.587 * imgData[i - 3] + 0.114 * imgData[i - 2];
-        if (Math.abs(luma - prevLuma) > 20) {
-          edgeCount++;
-        }
-      }
-      colorVariance += Math.abs(r - g) + Math.abs(g - b);
-    }
-
-    const avgEdge = edgeCount / 2500;
-    return avgEdge > 0.05;
-  } catch (e) {
-    return true; // Fallback to ML predictions if canvas context is restricted
-  }
-};
 
 /**
  * Classifies an HTML Image Element or Image File using client-side TensorFlow.js MobileNet
@@ -189,7 +157,7 @@ export const classifyImageClientSide = async (imageElementOrSrc) => {
   let isHuman = false;
   for (const pred of predictions) {
     const label = pred.className.toLowerCase();
-    if (HUMAN_KEYWORDS.some(k => label.includes(k)) && pred.probability >= 0.12) {
+    if (HUMAN_KEYWORDS.some(k => label.includes(k)) && pred.probability >= 0.05) {
       isHuman = true;
       break;
     }
@@ -201,7 +169,7 @@ export const classifyImageClientSide = async (imageElementOrSrc) => {
       confidence: topProbability,
       label: topPrediction.className,
       header: 'Human Detected',
-      message: 'This image contains a human. Please upload a toothbrush image for analysis.',
+      message: 'Person detected. Please scan only a toothbrush.',
       predictions
     };
   }
@@ -210,7 +178,7 @@ export const classifyImageClientSide = async (imageElementOrSrc) => {
   let isExplicitNonToothbrush = false;
   for (const pred of predictions) {
     const label = pred.className.toLowerCase();
-    if (UNMATCHED_OBJECT_KEYWORDS.some(k => label.includes(k)) && pred.probability >= 0.25) {
+    if (UNMATCHED_OBJECT_KEYWORDS.some(k => label.includes(k)) && pred.probability >= 0.15) {
       isExplicitNonToothbrush = true;
       break;
     }
@@ -227,7 +195,7 @@ export const classifyImageClientSide = async (imageElementOrSrc) => {
     };
   }
 
-  // 3. Check for Toothbrush / Brush keywords OR visual handle/bristle structure
+  // 3. Check for Toothbrush / Brush keywords
   let isToothbrush = false;
   for (const pred of predictions) {
     const label = pred.className.toLowerCase();
@@ -237,9 +205,7 @@ export const classifyImageClientSide = async (imageElementOrSrc) => {
     }
   }
 
-  const hasVisualToothbrushStructure = verifyToothbrushVisualStructure(imgElement);
-
-  if (isToothbrush || hasVisualToothbrushStructure) {
+  if (isToothbrush) {
     return {
       category: 'toothbrush',
       confidence: topProbability,
@@ -250,7 +216,7 @@ export const classifyImageClientSide = async (imageElementOrSrc) => {
     };
   }
 
-  // Any remaining non-toothbrush image
+  // Any remaining non-toothbrush image or uncertain detection
   return {
     category: 'unmatched',
     confidence: topProbability,

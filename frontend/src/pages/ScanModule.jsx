@@ -20,9 +20,12 @@ const ScanModule = () => {
   const [currentCheckpoint, setCurrentCheckpoint] = useState(0);
   const [error, setError] = useState('');
 
-  // Client-Side TensorFlow.js Classification State
-  const [mlStatus, setMlStatus] = useState('idle'); // 'idle' | 'classifying' | 'human' | 'toothbrush' | 'other'
+  // Client-Side TensorFlow.js Classification & Backend Validation State
+  const [mlStatus, setMlStatus] = useState('idle'); // 'idle' | 'classifying' | 'human' | 'toothbrush' | 'unmatched'
   const [mlResult, setMlResult] = useState(null);
+  const [detectionValidated, setDetectionValidated] = useState(false);
+  const [scanApiResult, setScanApiResult] = useState(null);
+  const scanRequestIdRef = useRef(0);
 
   // Inline Modals State
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
@@ -330,6 +333,122 @@ const ScanModule = () => {
     };
   }, []);
 
+  const resetScanState = () => {
+    const nextId = ++scanRequestIdRef.current;
+    setDetectionValidated(false);
+    setMlStatus('idle');
+    setMlResult(null);
+    setScanApiResult(null);
+    setError('');
+    setAnalyzing(false);
+    setCurrentCheckpoint(0);
+    return nextId;
+  };
+
+  const validateToothbrushWithBackend = async (fileOrSrc, requestId) => {
+    let targetFile = fileOrSrc;
+    if (!(targetFile instanceof File) && typeof fileOrSrc === 'string' && fileOrSrc.startsWith('data:')) {
+      try {
+        const arr = fileOrSrc.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        targetFile = new File([u8arr], 'toothbrush-scan.jpg', { type: mime });
+      } catch (e) {}
+    }
+
+    if (!targetFile || !(targetFile instanceof File)) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('image', targetFile);
+      const res = await scanService.analyzeScan(formData);
+
+      if (requestId !== scanRequestIdRef.current) {
+        console.log('[ScanModule Backend] Ignoring stale async backend result for request #', requestId);
+        return;
+      }
+
+      if (res.data && res.data.isToothbrushDetected) {
+        setMlStatus('toothbrush');
+        setDetectionValidated(true);
+        setError('');
+        setScanApiResult(res.data);
+      } else {
+        setMlStatus('unmatched');
+        setDetectionValidated(false);
+        setError('Toothbrush not detected. Please scan only a toothbrush.');
+      }
+    } catch (err) {
+      if (requestId !== scanRequestIdRef.current) return;
+      setDetectionValidated(false);
+      const errMsg = err.response?.data?.message || 'Unable to analyze this image. Please try again with a clear toothbrush image.';
+      const detectedObj = err.response?.data?.detectedObject;
+
+      setError(errMsg);
+
+      if (detectedObj === 'person' || detectedObj === 'human' || errMsg.toLowerCase().includes('person') || errMsg.toLowerCase().includes('human')) {
+        setMlStatus('human');
+        setMlResult({
+          category: 'human',
+          header: 'Human Detected',
+          message: errMsg,
+          label: detectedObj || 'Person'
+        });
+      } else {
+        setMlStatus('unmatched');
+        setMlResult({
+          category: 'unmatched',
+          header: 'Unmatched Image',
+          message: errMsg,
+          label: detectedObj || 'Unknown'
+        });
+      }
+    }
+  };
+
+  const runClientClassification = async (fileOrSrc, requestId) => {
+    if (!fileOrSrc) return;
+    setMlStatus('classifying');
+    setMlResult(null);
+    setError('');
+    setDetectionValidated(false);
+
+    try {
+      const classification = await classifyImageClientSide(fileOrSrc);
+
+      if (requestId !== scanRequestIdRef.current) {
+        console.log('[ScanModule ML] Ignoring stale async result for request #', requestId);
+        return;
+      }
+
+      setMlResult(classification);
+
+      // Section 2A: If client classifier detects HUMAN, reject immediately
+      if (classification.category === 'human') {
+        setMlStatus('human');
+        setDetectionValidated(false);
+        setError(classification.message || 'Person detected. Please scan only a toothbrush.');
+        return false;
+      }
+
+      // Section 2B & 2C: If potential toothbrush OR unmatched/uncertain, send to backend validation.
+      // mlStatus remains 'classifying' until backend validation completes.
+      validateToothbrushWithBackend(fileOrSrc, requestId);
+      return true;
+    } catch (err) {
+      if (requestId !== scanRequestIdRef.current) return;
+      console.warn('[Client ML Warning] Client-side classification error:', err);
+      // Prefer sending to backend validation even if client-side classifier fails
+      validateToothbrushWithBackend(fileOrSrc, requestId);
+      return false;
+    }
+  };
+
   const captureFrame = () => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
@@ -342,18 +461,22 @@ const ScanModule = () => {
 
       canvas.toBlob((blob) => {
         const file = new File([blob], 'captured-toothbrush.jpg', { type: 'image/jpeg' });
+        const requestId = resetScanState();
+
         setFileToUpload(file);
-        
         const dataUrl = canvas.toDataURL('image/jpeg');
         setCapturedImage(dataUrl);
         stopCamera();
+
+        runClientClassification(file, requestId);
       }, 'image/jpeg');
     }
   };
 
   const handleFileChange = (e) => {
-    setError('');
+    const requestId = resetScanState();
     stopCamera();
+
     const file = e.target.files[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
@@ -362,7 +485,9 @@ const ScanModule = () => {
       setFileToUpload(file);
       const reader = new FileReader();
       reader.onload = (event) => {
-        setCapturedImage(event.target.result);
+        const dataUrl = event.target.result;
+        setCapturedImage(dataUrl);
+        runClientClassification(file, requestId);
       };
       reader.readAsDataURL(file);
     }
@@ -372,40 +497,42 @@ const ScanModule = () => {
     if (!selectedBrushId) {
       return setError('Please select a toothbrush');
     }
-    if (!fileToUpload) {
+    if (!fileToUpload && !capturedImage) {
       return setError('Please capture or upload an image');
     }
 
+    // SECTION 5 & 8 SAFETY CHECK:
+    if (
+      mlStatus !== 'toothbrush' ||
+      detectionValidated !== true ||
+      error
+    ) {
+      if (mlStatus === 'human' || error?.includes('Person')) {
+        return setError('Person detected. Please scan only a toothbrush.');
+      }
+      return setError('Please upload or scan a valid toothbrush image.');
+    }
+
+    const currentRequestId = scanRequestIdRef.current;
+
+    if (scanApiResult) {
+      if (currentRequestId !== scanRequestIdRef.current) return;
+      navigate('/result', {
+        state: {
+          analysis: scanApiResult,
+          toothbrushId: selectedBrushId,
+          brushingFrequency,
+          memberName: familyMembers.find(m => m.id === selectedMemberId)?.name
+        }
+      });
+      return;
+    }
+
+    // Fallback in case scanApiResult is pending
     setError('');
     setAnalyzing(true);
     setCurrentCheckpoint(0);
-    setMlStatus('classifying');
-    setMlResult(null);
 
-    // Step 1: Execute Client-Side TensorFlow.js MobileNet Model Inference in Browser
-    try {
-      const classification = await classifyImageClientSide(fileToUpload || capturedImage);
-      setMlResult(classification);
-
-      if (classification.category === 'human') {
-        setMlStatus('human');
-        setAnalyzing(false);
-        return; // STOP! Do NOT run bristle wear detection
-      }
-
-      if (classification.category === 'unmatched' || classification.category === 'other') {
-        setMlStatus('unmatched');
-        setAnalyzing(false);
-        return; // STOP! Do NOT run bristle wear detection
-      }
-
-      setMlStatus('toothbrush');
-    } catch (err) {
-      console.warn('[Client ML Warning] Client-side classification error, proceeding to backend analysis:', err);
-      setMlStatus('toothbrush');
-    }
-
-    // Step 2: Ensure valid image File object exists
     let targetFile = fileToUpload;
     if (!targetFile && capturedImage && capturedImage.startsWith('data:')) {
       try {
@@ -418,9 +545,7 @@ const ScanModule = () => {
           u8arr[n] = bstr.charCodeAt(n);
         }
         targetFile = new File([u8arr], 'toothbrush-scan.jpg', { type: mime });
-      } catch (e) {
-        console.error('Error constructing File from dataURL:', e);
-      }
+      } catch (e) {}
     }
 
     if (!targetFile) {
@@ -428,9 +553,9 @@ const ScanModule = () => {
       return setError('Unable to process image file. Please re-capture or upload a file.');
     }
 
-    // Step 3: Proceed with toothbrush bristle wear diagnostic analysis
     let apiResult = null;
     let apiError = null;
+    let detectedObj = null;
 
     const apiPromise = (async () => {
       try {
@@ -438,26 +563,61 @@ const ScanModule = () => {
         formData.append('image', targetFile);
         const res = await scanService.analyzeScan(formData);
         apiResult = res.data;
-        console.log('[ScanModule Debug] Scan API analysis result:', apiResult);
       } catch (err) {
-        console.error('[ScanModule Error] Scan API analysis error:', err);
         apiError = err.response?.data?.message || 'Unable to analyze this image. Please try again with a clear toothbrush image.';
+        detectedObj = err.response?.data?.detectedObject;
       }
     })();
 
     for (let step = 0; step < 5; step++) {
+      if (currentRequestId !== scanRequestIdRef.current) {
+        setAnalyzing(false);
+        return; // SECTION 9: STALE WEAR ANALYSIS CHECKPOINT ABORT
+      }
       setCurrentCheckpoint(step);
       await new Promise(r => setTimeout(r, 600));
+    }
+
+    if (currentRequestId !== scanRequestIdRef.current) {
+      setAnalyzing(false);
+      return;
     }
     setCurrentCheckpoint(5);
 
     await apiPromise;
 
+    // SECTION 9 WEAR ANALYSIS RACE CONDITION CHECK:
+    if (currentRequestId !== scanRequestIdRef.current) {
+      console.log('[ScanModule Wear Analysis] Ignoring stale wear analysis for request #', currentRequestId);
+      setAnalyzing(false);
+      return;
+    }
+
     setAnalyzing(false);
 
     if (apiError) {
       setError(apiError);
+      setDetectionValidated(false);
+
+      if (detectedObj === 'person' || detectedObj === 'human' || apiError.toLowerCase().includes('person') || apiError.toLowerCase().includes('human')) {
+        setMlStatus('human');
+        setMlResult({
+          category: 'human',
+          header: 'Human Detected',
+          message: apiError,
+          label: detectedObj || 'Person'
+        });
+      } else {
+        setMlStatus('unmatched');
+        setMlResult({
+          category: 'unmatched',
+          header: 'Unmatched Image',
+          message: apiError,
+          label: detectedObj || 'Unknown'
+        });
+      }
     } else if (apiResult) {
+      setDetectionValidated(true);
       navigate('/result', {
         state: {
           analysis: apiResult,
@@ -700,6 +860,14 @@ const ScanModule = () => {
               </span>
             </div>
 
+            {/* Classifying Indicator */}
+            {mlStatus === 'classifying' && (
+              <div className="w-full max-w-sm p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center gap-2 text-xs font-semibold">
+                <div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin shrink-0" />
+                <span>Validating image content...</span>
+              </div>
+            )}
+
             {/* Client-Side TensorFlow.js Classification Feedback Banner */}
             {mlStatus === 'human' && (
               <div className="w-full max-w-sm p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 space-y-1.5 text-center animate-fade-in">
@@ -708,13 +876,8 @@ const ScanModule = () => {
                   <span>Human Detected</span>
                 </div>
                 <p className="text-xs font-semibold leading-relaxed">
-                  {mlResult?.message || 'This image contains a human. Please upload a toothbrush image for analysis.'}
+                  {mlResult?.message || 'Person detected. Please scan only a toothbrush.'}
                 </p>
-                {mlResult?.label && (
-                  <span className="inline-block px-2 py-0.5 bg-amber-200/60 dark:bg-amber-900/60 text-[10px] font-bold rounded-md">
-                    TF.js ML Prediction: {mlResult.label} ({Math.round(mlResult.confidence * 100)}% confidence)
-                  </span>
-                )}
               </div>
             )}
 
@@ -727,15 +890,10 @@ const ScanModule = () => {
                 <p className="text-xs font-semibold leading-relaxed">
                   {mlResult?.message || 'Please upload a clear image of a toothbrush.'}
                 </p>
-                {mlResult?.label && (
-                  <span className="inline-block px-2 py-0.5 bg-rose-200/60 dark:bg-rose-900/60 text-[10px] font-bold rounded-md">
-                    Detected: {mlResult.label} ({Math.round(mlResult.confidence * 100)}% confidence)
-                  </span>
-                )}
               </div>
             )}
 
-            {mlStatus === 'toothbrush' && (
+            {mlStatus === 'toothbrush' && detectionValidated === true && !error && (
               <div className="w-full max-w-sm p-3 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/50 text-teal-800 dark:text-teal-300 space-y-1 text-center animate-fade-in">
                 <div className="flex items-center justify-center gap-2 font-black text-xs">
                   <CheckCircle className="w-4 h-4 text-teal-600 dark:text-teal-400" />
@@ -748,18 +906,20 @@ const ScanModule = () => {
             )}
 
             <div className="flex gap-2">
-              <button
-                onClick={handleStartAnalysis}
-                className="px-4.5 py-2 bg-primary hover:bg-primary-dark text-white font-extrabold rounded-xl text-xs shadow cursor-pointer transition-all duration-200 active:scale-[0.98]"
-              >
-                Analyze Wear
-              </button>
+              {mlStatus === 'toothbrush' && detectionValidated === true && !error && (
+                <button
+                  onClick={handleStartAnalysis}
+                  disabled={analyzing}
+                  className="px-4.5 py-2 bg-primary hover:bg-primary-dark text-white font-extrabold rounded-xl text-xs shadow cursor-pointer transition-all duration-200 active:scale-[0.98] disabled:opacity-50"
+                >
+                  Analyze Wear
+                </button>
+              )}
               <button
                 onClick={() => {
                   setCapturedImage(null);
                   setFileToUpload(null);
-                  setMlStatus('idle');
-                  setMlResult(null);
+                  resetScanState();
                   startCamera();
                 }}
                 className="px-3.5 py-2 border dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold rounded-xl text-xs cursor-pointer transition-all duration-200 active:scale-[0.98]"

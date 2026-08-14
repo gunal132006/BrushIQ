@@ -127,6 +127,9 @@ interface FamilyMemberDao {
     @Query("SELECT * FROM family_members")
     fun getAll(): Flow<List<FamilyMemberEntity>>
 
+    @Query("SELECT * FROM family_members WHERE id = :id")
+    suspend fun getById(id: String): FamilyMemberEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(members: List<FamilyMemberEntity>)
 
@@ -147,6 +150,9 @@ interface ToothbrushDao {
 
     @Query("SELECT * FROM toothbrushes WHERE familyMemberId = :familyMemberId")
     fun getByMember(familyMemberId: String): Flow<List<ToothbrushEntity>>
+
+    @Query("SELECT * FROM toothbrushes WHERE id = :id")
+    suspend fun getById(id: String): ToothbrushEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(brushes: List<ToothbrushEntity>)

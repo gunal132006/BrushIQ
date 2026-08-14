@@ -33,17 +33,9 @@ object NetworkConfig {
      * Centralized Source of Truth for Base API URL.
      */
     fun getActiveBaseUrl(): String {
-        val environment: EnvironmentType
-        val constUrl: String
-
-        constUrl = PROD_BASE_URL
-        environment = if (!BuildConfig.DEBUG) EnvironmentType.PRODUCTION else if (isRunningOnEmulator()) EnvironmentType.EMULATOR_DEBUG else EnvironmentType.PHYSICAL_DEVICE_DEBUG
-
-        // Safe development logging - NO secrets, tokens, or credentials logged
-        Log.d("AuthFlow", "Selected Base URL=[$constUrl]")
-        Log.d("NetworkConfig", "Selected environment = $environment")
+        val constUrl = "https://brushiq-backend.onrender.com/api/"
+        Log.d("AuthFlow", "[AUTH] Base URL host = brushiq-backend.onrender.com")
         Log.d("NetworkConfig", "Base URL = $constUrl")
-
         return constUrl
     }
 }

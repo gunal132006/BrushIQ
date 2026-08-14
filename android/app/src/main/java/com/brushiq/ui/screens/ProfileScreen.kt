@@ -74,12 +74,17 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            val authState by (viewModel?.authState ?: kotlinx.coroutines.flow.MutableStateFlow(com.brushiq.ui.viewmodel.AuthState.Idle)).collectAsState()
+            val user = (authState as? com.brushiq.ui.viewmodel.AuthState.Success)?.user
+            val displayName = user?.fullName ?: "User"
+            val displayEmail = user?.email ?: ""
+
             Text(
-                text = "Gunal S",
+                text = displayName,
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black)
             )
             Text(
-                text = "gunal.s@brushiq.com",
+                text = displayEmail,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

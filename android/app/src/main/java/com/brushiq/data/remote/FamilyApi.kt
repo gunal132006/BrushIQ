@@ -18,6 +18,10 @@ data class ReminderRequest(
     val message: String
 )
 
+data class UploadPhotoResponse(
+    val photoUrl: String
+)
+
 interface FamilyApi {
     @GET("family")
     suspend fun getFamilyMembers(): List<FamilyMemberDto>
@@ -30,6 +34,10 @@ interface FamilyApi {
 
     @DELETE("family/{id}")
     suspend fun deleteFamilyMember(@Path("id") id: String): GenericMessageResponse
+
+    @Multipart
+    @POST("family/upload-photo")
+    suspend fun uploadProfilePhoto(@Part photo: okhttp3.MultipartBody.Part): UploadPhotoResponse
 
     // Reminders
     @GET("reminders")

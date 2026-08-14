@@ -58,7 +58,11 @@ data class ScanReport(
     val aiRecommendation: String,
     val scanDate: String,
     val syncStatus: String = "SYNCED",
-    val syncError: String? = null
+    val syncError: String? = null,
+    val familyMemberId: String? = null,
+    val memberName: String? = null,
+    val toothbrushBrand: String? = null,
+    val toothbrushModel: String? = null
 )
 
 data class Reminder(
@@ -86,6 +90,7 @@ data class Tip(
 data class DashboardStats(
     val totalMembers: Int,
     val totalToothbrushes: Int,
+    val totalScans: Int = 0,
     val avgHealthScore: Double,
     val pendingReplacements: Int,
     val recentScans: List<ScanReport>

@@ -172,6 +172,8 @@ fun AnalysisLoadingScreen(
                 }
                 ScanErrorType.UPLOAD_FAILED -> {
                     UploadFailureUI(
+                        title = "No Internet Connection",
+                        message = errorMessage ?: "Check your internet connection and try again.",
                         onRetry = {
                             viewModel.startAiAnalysis(context) {
                                 navController.navigate("result") {
@@ -184,6 +186,8 @@ fun AnalysisLoadingScreen(
                 }
                 ScanErrorType.ANALYSIS_FAILED -> {
                     AnalysisFailureUI(
+                        title = "Analysis Service Unavailable",
+                        message = errorMessage ?: "The diagnostic service is temporarily unavailable. Please try again.",
                         onRetry = {
                             viewModel.startAiAnalysis(context) {
                                 navController.navigate("result") {
@@ -439,6 +443,8 @@ fun ValidationFailureUI(
 
 @Composable
 fun UploadFailureUI(
+    title: String = "No Internet Connection",
+    message: String = "Check your internet connection and try again.",
     onRetry: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -466,7 +472,7 @@ fun UploadFailureUI(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Internet connection required for AI analysis.",
+            text = title,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
@@ -475,7 +481,7 @@ fun UploadFailureUI(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "An active internet connection is required to run the AI bristle diagnostic engine. Please check your connection and try again.",
+            text = message,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -500,6 +506,8 @@ fun UploadFailureUI(
 
 @Composable
 fun AnalysisFailureUI(
+    title: String = "Analysis Service Unavailable",
+    message: String = "The diagnostic service is temporarily unavailable. Please try again.",
     onRetry: () -> Unit,
     onRetake: () -> Unit
 ) {
@@ -527,7 +535,7 @@ fun AnalysisFailureUI(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "AI Diagnostic Error",
+            text = title,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
@@ -536,7 +544,7 @@ fun AnalysisFailureUI(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "The AI analysis model failed to process the image. The toothbrush bristles might be out of focus, poorly lit, or misaligned. Please retake the photo.",
+            text = message,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

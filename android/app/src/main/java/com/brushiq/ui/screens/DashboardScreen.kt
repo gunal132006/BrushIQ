@@ -27,6 +27,17 @@ import com.brushiq.ui.viewmodel.AuthViewModel
 import com.brushiq.ui.viewmodel.BrushIQViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 
+private fun getUserInitials(name: String?): String {
+    val trimmed = name?.trim() ?: ""
+    if (trimmed.isEmpty()) return "U"
+    val parts = trimmed.split("\\s+".toRegex()).filter { it.isNotEmpty() }
+    return when {
+        parts.size == 1 -> parts[0].take(1).uppercase()
+        parts.size >= 2 -> "${parts.first().take(1)}${parts.last().take(1)}".uppercase()
+        else -> "U"
+    }
+}
+
 @Composable
 fun DashboardScreen(
     navController: NavController,
@@ -52,16 +63,20 @@ fun DashboardScreen(
         return
     }
 
-    val userName = if (authState is com.brushiq.ui.viewmodel.AuthState.Success) {
+    val dbScanHistory by (viewModel?.scanHistory ?: MutableStateFlow(emptyList())).collectAsState()
+
+    val userFullName = if (authState is com.brushiq.ui.viewmodel.AuthState.Success) {
         (authState as com.brushiq.ui.viewmodel.AuthState.Success).user.fullName
     } else {
-        "Gunal S"
+        ""
     }
     
+    val greetingName = if (userFullName.isNotBlank()) userFullName.split("\\s+".toRegex())[0] else "User"
+    val userInitials = getUserInitials(userFullName)
+
     val avgHealthScore = stats?.avgHealthScore?.toFloat() ?: 0f
-    val totalScans = stats?.recentScans?.size ?: 0
+    val totalScans = maxOf(stats?.totalScans ?: 0, dbScanHistory.size)
     val registeredBrushes = stats?.totalToothbrushes ?: toothbrushes.size
-    val pendingAlerts = stats?.pendingReplacements ?: 0
     val recentScans = stats?.recentScans ?: emptyList()
 
     Scaffold(
@@ -127,13 +142,13 @@ fun DashboardScreen(
                                 color = Color.White.copy(alpha = 0.2f)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    Text("GS", color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp)
+                                    Text(userInitials, color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp)
                                 }
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    "Hello, $userName! 👋",
+                                    "Hello, $greetingName! 👋",
                                     color = Color.White,
                                     style = MaterialTheme.typography.titleLarge
                                 )
@@ -196,7 +211,9 @@ fun DashboardScreen(
             // 2. Health & Statistics Row
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Max),
                     horizontalArrangement = Arrangement.spacedBy(Dimensions.PaddingMedium)
                 ) {
                     HealthScoreCard(
@@ -204,43 +221,58 @@ fun DashboardScreen(
                         condition = "Moderate Wear",
                         modifier = Modifier.weight(1f)
                     )
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(Dimensions.PaddingMedium)
-                    ) {
-                        StatCard(
-                            title = "TOTAL SCANS",
-                            value = totalScans.toString(),
-                            icon = Icons.Default.CheckCircle,
-                            iconColor = SecondaryMain
-                        )
-                        StatCard(
-                            title = "ALERTS",
-                            value = pendingAlerts.toString(),
-                            icon = Icons.Default.Warning,
-                            iconColor = if (pendingAlerts > 0) Error else LightTextMuted
-                        )
-                    }
+                    StatCard(
+                        title = "TOTAL SCANS",
+                        value = totalScans.toString(),
+                        icon = Icons.Default.CheckCircle,
+                        iconColor = SecondaryMain,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                    )
                 }
             }
 
             // 3. Active Toothbrush Section
+            val activeBrush = toothbrushes.firstOrNull()
             item {
                 Text(
                     text = "Active Toothbrush",
                     style = MaterialTheme.typography.titleLarge
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                BrushCard(
-                    brand = "Oral-B",
-                    model = "iO Series 9",
-                    type = "Electric",
-                    memberName = "Gunal S",
-                    color = "#000000",
-                    purchaseDate = "Jan 12, 2024",
-                    onEdit = {},
-                    onDelete = {}
-                )
+                if (activeBrush != null) {
+                    BrushCard(
+                        brand = activeBrush.brand,
+                        model = activeBrush.model,
+                        type = activeBrush.type,
+                        memberName = activeBrush.memberName ?: (if (userFullName.isNotBlank()) userFullName else "User"),
+                        color = activeBrush.color,
+                        purchaseDate = activeBrush.purchaseDate,
+                        onEdit = { navController.navigate("toothbrush") },
+                        onDelete = {}
+                    )
+                } else {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { navController.navigate("toothbrush") },
+                        shape = BrushIQShapes.large,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = androidx.compose.foundation.BorderStroke(Dimensions.BorderWidth, MaterialTheme.colorScheme.outline)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("No active toothbrush registered", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Tap to register a toothbrush", style = MaterialTheme.typography.labelMedium, color = PrimaryMain, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
             }
 
             // 4. Section Headers
@@ -261,8 +293,8 @@ fun DashboardScreen(
             } else {
                 items(recentScans.take(3)) { scan ->
                     RecentScanItem(
-                        name = "Member", // Backend DTO might need memberName
-                        model = "Toothbrush",
+                        name = scan.memberName ?: "Member",
+                        model = "${scan.toothbrushBrand ?: "Toothbrush"} ${scan.toothbrushModel ?: ""}".trim(),
                         score = scan.healthScore.toInt(),
                         condition = scan.condition
                     )
@@ -276,18 +308,22 @@ fun DashboardScreen(
 
             // 6. Horizontal Family Scroll
             item {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = 8.dp)
-                ) {
-                    item {
-                        FamilyMemberMiniCard("Dad", 82)
-                    }
-                    item {
-                        FamilyMemberMiniCard("Mom", 45)
-                    }
-                    item {
-                        FamilyMemberMiniCard("Kid", 95)
+                if (familyMembers.isEmpty()) {
+                    Text(
+                        "No family profiles added yet.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 12.dp)
+                    )
+                } else {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(bottom = 8.dp)
+                    ) {
+                        items(familyMembers) { member ->
+                            val memberScore = member.healthScore?.toInt() ?: 100
+                            FamilyMemberMiniCard(member.name, memberScore, member.profilePhotoUrl)
+                        }
                     }
                 }
             }
@@ -359,7 +395,7 @@ fun RecentScanItem(name: String, model: String, score: Int, condition: String) {
 }
 
 @Composable
-fun FamilyMemberMiniCard(name: String, health: Int) {
+fun FamilyMemberMiniCard(name: String, health: Int, profilePhotoUrl: String? = null) {
     val scoreColor = if (health >= 80) Success else if (health >= 50) Warning else Error
     Card(
         modifier = Modifier.width(100.dp),
@@ -376,7 +412,16 @@ fun FamilyMemberMiniCard(name: String, health: Int) {
                 shape = CircleShape,
                 color = PrimaryAlpha10
             ) {
-                Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryMain, modifier = Modifier.padding(8.dp))
+                if (!profilePhotoUrl.isNullOrBlank()) {
+                    coil.compose.AsyncImage(
+                        model = profilePhotoUrl,
+                        contentDescription = name,
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Icon(Icons.Default.Person, contentDescription = null, tint = PrimaryMain, modifier = Modifier.padding(8.dp))
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(name, style = MaterialTheme.typography.labelMedium, maxLines = 1)

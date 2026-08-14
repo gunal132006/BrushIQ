@@ -19,7 +19,9 @@ async function loadModel() {
 }
 
 function jimpToTensor(jimpImg) {
-  const { width, height, data } = jimpImg.bitmap;
+  // Downscale image to 416x416 for MobileNet/COCO-SSD standard receptive field
+  const resized = jimpImg.clone().resize({ w: 416, h: 416 });
+  const { width, height, data } = resized.bitmap;
   const buffer = new Int32Array(width * height * 3);
   let idx = 0;
   for (let y = 0; y < height; y++) {
@@ -71,104 +73,25 @@ function analyzeImageQuality(jimpImg) {
 }
 
 /**
- * Pure Image Content Feature Analysis for Toothbrush Shapes:
- * Scans pixel matrix for slender toothbrush handles (slender dimension <= 45px, major length >= 100px, aspect ratio >= 3.2)
- * attached to a bristle head structure. Filters out human skin, bottles, furniture, and plants.
+ * Calculates human skin ratio in image as backup human detector
  */
-function extractToothbrushImageFeatures(jimpImg) {
+function extractSkinRatio(jimpImg) {
   const w = jimpImg.bitmap.width;
   const h = jimpImg.bitmap.height;
-
-  // Background color estimation from corners
-  let bgR = 0, bgG = 0, bgB = 0, bgCount = 0;
-  const corners = [{x:0, y:0}, {x:w-1, y:0}, {x:0, y:h-1}, {x:w-1, y:h-1}];
-  corners.forEach(c => {
-    const idx = (c.y * w + c.x) * 4;
-    bgR += jimpImg.bitmap.data[idx];
-    bgG += jimpImg.bitmap.data[idx+1];
-    bgB += jimpImg.bitmap.data[idx+2];
-    bgCount++;
-  });
-  bgR /= bgCount; bgG /= bgCount; bgB /= bgCount;
-
-  // Segment foreground pixels (distance from background and skin filtering)
-  const foregroundNonSkin = Array(h).fill(0).map(() => Array(w).fill(0));
+  let skinCount = 0;
+  const total = w * h;
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const idx = (y * w + x) * 4;
       const r = jimpImg.bitmap.data[idx];
-      const g = jimpImg.bitmap.data[idx+1];
-      const b = jimpImg.bitmap.data[idx+2];
-      const dist = Math.sqrt((r-bgR)*(r-bgR) + (g-bgG)*(g-bgG) + (b-bgB)*(b-bgB));
-      
-      // Check for human skin tones (RGB ratio check)
-      const isSkin = (r > 130 && g > 80 && b > 40 && r > g && g > b && Math.abs(r - g) > 15);
-
-      if (dist > 35.0 && !isSkin) {
-        foregroundNonSkin[y][x] = 1;
-      }
+      const g = jimpImg.bitmap.data[idx + 1];
+      const b = jimpImg.bitmap.data[idx + 2];
+      const isSkin = (r > 120 && g > 70 && b > 35 && r > g && g > b && Math.abs(r - g) > 12);
+      if (isSkin) skinCount++;
     }
   }
-
-  const findComponents = (grid) => {
-    const visited = Array(h).fill(0).map(() => Array(w).fill(false));
-    const boxes = [];
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        if (grid[y][x] === 1 && !visited[y][x]) {
-          let minX = x, maxX = x, minY = y, maxY = y, pixelCount = 0;
-          const stack = [{x, y}];
-          visited[y][x] = true;
-
-          while (stack.length > 0) {
-            const pt = stack.pop();
-            pixelCount++;
-            if (pt.x < minX) minX = pt.x;
-            if (pt.x > maxX) maxX = pt.x;
-            if (pt.y < minY) minY = pt.y;
-            if (pt.y > maxY) maxY = pt.y;
-
-            const neighbors = [
-              {x: pt.x+1, y: pt.y}, {x: pt.x-1, y: pt.y},
-              {x: pt.x, y: pt.y+1}, {x: pt.x, y: pt.y-1}
-            ];
-
-            for (const n of neighbors) {
-              if (n.x >= 0 && n.x < w && n.y >= 0 && n.y < h) {
-                if (grid[n.y][n.x] === 1 && !visited[n.y][n.x]) {
-                  visited[n.y][n.x] = true;
-                  stack.push(n);
-                }
-              }
-            }
-          }
-
-          const compW = maxX - minX + 1;
-          const compH = maxY - minY + 1;
-          const majorAxis = Math.max(compW, compH);
-          const minorAxis = Math.min(compW, compH);
-          const aspectRatio = majorAxis / minorAxis;
-
-          // TOOTHBRUSH GEOMETRY CONTRACT:
-          // 1. Minor axis width <= 45px (slender handle)
-          // 2. Major axis length >= 100px (long toothbrush stick)
-          // 3. Aspect ratio >= 3.2 (elongated shape)
-          if (pixelCount > 300 && minorAxis <= 45 && majorAxis >= 100 && aspectRatio >= 3.2) {
-            boxes.push({
-              bbox: [minX, minY, compW, compH],
-              score: 0.85,
-              aspectRatio,
-              pixelCount
-            });
-          }
-        }
-      }
-    }
-    return boxes;
-  };
-
-  return findComponents(foregroundNonSkin);
+  return skinCount / total;
 }
 
 /**
@@ -187,80 +110,90 @@ exports.validateToothbrushObject = async (imagePath) => {
     throw new Error('CV_ERROR: Failed to decode image file. Please upload a valid JPEG or PNG photo.');
   }
 
-  // 1. IMAGE QUALITY VALIDATION (BEFORE OBJECT DETECTION)
-  const quality = analyzeImageQuality(img);
-  console.log(`[IMAGE QUALITY LOG] filename=${path.basename(imagePath)} laplacianVariance=${quality.laplacianVariance.toFixed(1)} avgBrightness=${quality.avgBrightness.toFixed(1)}`);
-
-  if (quality.laplacianVariance < 0.1) {
-    console.log('[AI VALIDATION] REJECTED — IMAGE TOO BLURRY');
-    throw new Error('CV_ERROR: Extremely blurry image detected. Please make sure the camera is focused on the toothbrush bristles.');
-  }
-  if (quality.avgBrightness < 25.0) {
-    console.log('[AI VALIDATION] REJECTED — IMAGE TOO DARK');
-    throw new Error('CV_ERROR: Image is too dark. Please capture the image in a well-lit area.');
-  }
-  if (quality.avgBrightness > 245.0) {
-    console.log('[AI VALIDATION] REJECTED — IMAGE OVEREXPOSED');
-    throw new Error('CV_ERROR: Image is overexposed. Please avoid direct glare or bright light sources.');
-  }
-
-  // 2. REAL OBJECT DETECTION & CLASSIFICATION (ACTUAL IMAGE CONTENT)
+  // 1. PRIMARY NEURAL OBJECT CLASSIFICATION
   const model = await loadModel();
   let rawPredictions = [];
   if (model) {
     try {
       const tensor = jimpToTensor(img);
-      rawPredictions = await model.detect(tensor);
+      // MinScore = 0.20 to capture all object candidate predictions
+      rawPredictions = await model.detect(tensor, 10, 0.20);
       tensor.dispose();
     } catch (err) {
       console.warn('[OBJECT DETECTION] Neural inference error:', err.message);
     }
   }
 
-  let toothbrushes = rawPredictions.filter(p => p.class === 'toothbrush' && p.score >= 0.40);
-
-  // If neural model did not return toothbrush label, run structural feature extraction
-  if (toothbrushes.length === 0) {
-    const structuralDetections = extractToothbrushImageFeatures(img);
-    if (structuralDetections.length > 0) {
-      toothbrushes = structuralDetections.map(d => ({
-        class: 'toothbrush',
-        score: d.score,
-        bbox: d.bbox
-      }));
-    }
+  console.log('[AI DETECTION] All model detections:');
+  if (rawPredictions.length === 0) {
+    console.log('  [AI DETECTION] (none)');
+  } else {
+    rawPredictions.forEach(p => console.log(`  [AI DETECTION] class=${p.class.padEnd(15)} confidence=${(p.score * 100).toFixed(1)}% bbox=${JSON.stringify(p.bbox)}`));
   }
 
-  const detectedClasses = rawPredictions.map(p => `${p.class} (${(p.score * 100).toFixed(0)}%)`);
-  console.log(`[OBJECT DETECTION] Detected objects: ${detectedClasses.length > 0 ? detectedClasses.join(', ') : 'None'}`);
+  // Extract skin ratio as secondary human indicator
+  const skinRatio = extractSkinRatio(img);
+  console.log(`[AI DETECTION] Skin ratio: ${(skinRatio * 100).toFixed(1)}%`);
 
-  const toothbrushCount = toothbrushes.length;
-  const isDetected = toothbrushCount === 1;
+  // Identify candidates
+  const humanObj = rawPredictions.find(p => (p.class === 'person' || p.class === 'human') && p.score >= 0.25);
+  const isHumanDetected = !!humanObj || skinRatio > 0.30;
 
-  console.log(`[TOOTHBRUSH DETECTION] Detected: ${isDetected}`);
-  console.log(`[TOOTHBRUSH COUNT] Count: ${toothbrushCount}`);
+  const neuralToothbrushes = rawPredictions.filter(p => p.class === 'toothbrush' && p.score >= 0.25);
+  const toothbrushCount = neuralToothbrushes.length;
 
+  console.log('[TOOTHBRUSH CANDIDATES]');
+  console.log(`  candidate count = ${toothbrushCount}`);
+  neuralToothbrushes.forEach((t, i) => console.log(`  candidate ${i + 1}: confidence=${(t.score * 100).toFixed(1)}% bbox=${JSON.stringify(t.bbox)}`));
+
+  // 2. EXPLICIT NON-TOOTHBRUSH REJECTION FIRST
+  if (isHumanDetected && toothbrushCount === 0) {
+    console.log('[FINAL OBJECT DECISION] type = PERSON, toothbrushCount = 0');
+    console.log('[AI VALIDATION] REJECTED — HUMAN DETECTED');
+    throw new Error('NON_TOOTHBRUSH_OBJECT:person');
+  }
+
+  const nonToothbrushObjs = rawPredictions.filter(p => p.class !== 'toothbrush' && p.class !== 'person' && p.score >= 0.25).sort((a, b) => b.score - a.score);
+  if (nonToothbrushObjs.length > 0 && toothbrushCount === 0) {
+    const topObj = nonToothbrushObjs[0];
+    console.log(`[FINAL OBJECT DECISION] type = ${topObj.class.toUpperCase()}, toothbrushCount = 0`);
+    console.log(`[AI VALIDATION] REJECTED — NON-TOOTHBRUSH OBJECT (${topObj.class})`);
+    throw new Error(`NON_TOOTHBRUSH_OBJECT:${topObj.class}`);
+  }
+
+  // 3. TOOTHBRUSH COUNT DECISION (ZERO GEOMETRY-ONLY FABRICATED DETECTIONS)
   if (toothbrushCount === 0) {
-    const nonToothbrushObjs = rawPredictions.filter(p => p.class !== 'toothbrush' && p.score >= 0.40).sort((a, b) => b.score - a.score);
-    if (nonToothbrushObjs.length > 0) {
-      const topObj = nonToothbrushObjs[0];
-      console.log(`[OBJECT DETECTION] Object: ${topObj.class}`);
-      console.log(`[OBJECT DETECTION] Confidence: ${(topObj.score * 100).toFixed(0)}%`);
-      console.log('[AI VALIDATION] REJECTED — NON-TOOTHBRUSH OBJECT');
-      console.log(`[AI VALIDATION] Detected object = ${topObj.class}`);
-      throw new Error(`NON_TOOTHBRUSH_OBJECT:${topObj.class}`);
-    }
-
+    console.log('[FINAL OBJECT DECISION] type = UNKNOWN, toothbrushCount = 0');
     console.log('[AI VALIDATION] REJECTED — NOT A TOOTHBRUSH');
     throw new Error('TOOTHBRUSH_NOT_DETECTED: Toothbrush not detected. Please scan only a toothbrush.');
   }
 
   if (toothbrushCount > 1) {
+    console.log(`[FINAL OBJECT DECISION] type = MULTIPLE_TOOTHBRUSHES, toothbrushCount = ${toothbrushCount}`);
     console.log('[AI VALIDATION] REJECTED — MULTIPLE TOOTHBRUSHES');
     throw new Error('MULTIPLE_TOOTHBRUSHES: Multiple toothbrushes detected. Please scan only one toothbrush.');
   }
 
-  const confidenceScore = parseFloat((toothbrushes[0].score * 100).toFixed(1));
+  console.log('[FINAL OBJECT DECISION] type = TOOTHBRUSH, toothbrushCount = 1');
+
+  // 4. TOOTHBRUSH-SPECIFIC IMAGE QUALITY VALIDATION (ONLY FOR CONFIRMED TOOTHBRUSH)
+  const quality = analyzeImageQuality(img);
+  console.log(`[IMAGE QUALITY LOG] filename=${path.basename(imagePath)} laplacianVariance=${quality.laplacianVariance.toFixed(1)} avgBrightness=${quality.avgBrightness.toFixed(1)}`);
+
+  if (quality.laplacianVariance < 0.1) {
+    console.log('[AI VALIDATION] REJECTED — IMAGE TOO BLURRY FOR WEAR ANALYSIS');
+    throw new Error('CV_ERROR: Extremely blurry image detected. Please make sure the camera is focused on the toothbrush bristles.');
+  }
+  if (quality.avgBrightness < 20.0) {
+    console.log('[AI VALIDATION] REJECTED — IMAGE TOO DARK FOR WEAR ANALYSIS');
+    throw new Error('CV_ERROR: Image is too dark. Please capture the image in a well-lit area.');
+  }
+  if (quality.avgBrightness > 250.0) {
+    console.log('[AI VALIDATION] REJECTED — IMAGE OVEREXPOSED FOR WEAR ANALYSIS');
+    throw new Error('CV_ERROR: Image is overexposed. Please avoid direct glare or bright light sources.');
+  }
+
+  const confidenceScore = parseFloat((neuralToothbrushes[0].score * 100).toFixed(1));
   console.log(`[TOOTHBRUSH CONFIDENCE] Confidence: ${confidenceScore}%`);
   console.log('[AI VALIDATION] PASSED — SINGLE TOOTHBRUSH CONFIRMED');
 
@@ -268,7 +201,7 @@ exports.validateToothbrushObject = async (imagePath) => {
     isToothbrushDetected: true,
     toothbrushCount: 1,
     confidenceScore,
-    bbox: toothbrushes[0].bbox,
+    bbox: neuralToothbrushes[0].bbox,
     quality
   };
 };

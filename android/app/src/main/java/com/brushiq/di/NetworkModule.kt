@@ -41,8 +41,10 @@ object NetworkModule {
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
             .addInterceptor(NetworkDebugInterceptor())
-            .connectTimeout(90, TimeUnit.SECONDS)
-            .readTimeout(90, TimeUnit.SECONDS)
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .callTimeout(75, TimeUnit.SECONDS)
             .addInterceptor { chain ->
                 val request = chain.request().newBuilder()
                     .header("User-Agent", "BrushIQ-Android/1.0.0")
@@ -109,14 +111,19 @@ class NetworkDebugInterceptor : Interceptor {
         val method = request.method
         val isAuth = url.contains("/auth/") || url.contains("auth")
 
-        // Read request body safely
+        // Read request body safely (skip memory-buffering binary multipart image uploads)
         var requestBodyString = ""
         try {
             val requestBody = request.body
             if (requestBody != null) {
-                val buffer = Buffer()
-                requestBody.writeTo(buffer)
-                requestBodyString = buffer.readString(Charsets.UTF_8)
+                val contentType = requestBody.contentType()
+                if (contentType?.type == "multipart") {
+                    requestBodyString = "[Multipart Image Upload Payload: ${requestBody.contentLength()} bytes]"
+                } else {
+                    val buffer = Buffer()
+                    requestBody.writeTo(buffer)
+                    requestBodyString = buffer.readString(Charsets.UTF_8)
+                }
             }
         } catch (e: Exception) {
             requestBodyString = "Could not read request body: ${e.message}"

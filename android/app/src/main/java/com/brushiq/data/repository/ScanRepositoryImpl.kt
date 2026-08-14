@@ -18,11 +18,65 @@ import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import com.brushiq.data.local.FamilyMemberDao
+import com.brushiq.data.local.ToothbrushDao
+
 @Singleton
 class ScanRepositoryImpl @Inject constructor(
     private val scanApi: ScanApi,
-    private val scanDao: ScanDao
+    private val scanDao: ScanDao,
+    private val toothbrushDao: ToothbrushDao,
+    private val familyMemberDao: FamilyMemberDao
 ) : ScanRepository {
+
+    private suspend fun mapEntityToDomain(it: ScanEntity): ScanReport {
+        var memberName: String? = null
+        var brand: String? = null
+        var model: String? = null
+
+        val toothbrush = if (it.toothbrushId.isNotBlank()) toothbrushDao.getById(it.toothbrushId) else null
+        if (toothbrush != null) {
+            brand = toothbrush.brand
+            model = toothbrush.model
+            memberName = toothbrush.memberName
+        }
+
+        val memberId = it.familyMemberId ?: toothbrush?.familyMemberId
+        if (!memberId.isNullOrBlank()) {
+            val member = familyMemberDao.getById(memberId)
+            if (member != null && member.name.isNotBlank()) {
+                memberName = member.name
+            }
+        }
+
+        if (memberName.isNullOrBlank()) {
+            memberName = "Unknown Member"
+        }
+
+        return ScanReport(
+            id = it.id,
+            toothbrushId = it.toothbrushId,
+            imageUrl = it.imageUrl,
+            wearPercentage = it.wearPercentage,
+            healthScore = it.healthScore,
+            remainingLifeDays = it.remainingLifeDays,
+            condition = it.condition,
+            confidenceScore = it.confidenceScore,
+            bristleSpreading = it.bristleSpreading,
+            bristleBending = it.bristleBending,
+            bristleDamage = it.bristleDamage,
+            brushingFrequency = it.brushingFrequency,
+            detectedIssues = it.detectedIssues,
+            aiRecommendation = it.aiRecommendation,
+            scanDate = it.scanDate,
+            syncStatus = it.syncStatus,
+            syncError = it.syncError,
+            familyMemberId = memberId,
+            memberName = memberName,
+            toothbrushBrand = brand,
+            toothbrushModel = model
+        )
+    }
 
     override fun getScansHistory(toothbrushId: String): Flow<Resource<List<ScanReport>>> {
         val flow = if (toothbrushId.isBlank()) {
@@ -31,15 +85,7 @@ class ScanRepositoryImpl @Inject constructor(
             scanDao.getByToothbrush(toothbrushId)
         }
         return flow.map { list ->
-            val domainList = list.map {
-                ScanReport(
-                    it.id, it.toothbrushId, it.imageUrl, it.wearPercentage, it.healthScore,
-                    it.remainingLifeDays, it.condition, it.confidenceScore, it.bristleSpreading,
-                    it.bristleBending, it.bristleDamage, it.brushingFrequency,
-                    it.detectedIssues, it.aiRecommendation, it.scanDate,
-                    it.syncStatus, it.syncError
-                )
-            }
+            val domainList = list.map { mapEntityToDomain(it) }
             Resource.Success(domainList) as Resource<List<ScanReport>>
         }.catch { emit(Resource.Error(it)) }
     }
@@ -97,13 +143,13 @@ class ScanRepositoryImpl @Inject constructor(
                         healthScore = dto.healthScore ?: 0.0,
                         remainingLifeDays = dto.remainingLifeDays ?: 0,
                         condition = dto.condition ?: "Good",
-                        confidenceScore = dto.confidenceScore ?: 0.0,
+                        confidenceScore = dto.confidenceScore ?: dto.confidence ?: 95.0,
                         bristleSpreading = dto.bristleSpreading ?: 0.0,
                         bristleBending = dto.bristleBending ?: 0.0,
                         bristleDamage = dto.bristleDamage ?: 0.0,
                         brushingFrequency = dto.brushingFrequency ?: "2x daily",
                         detectedIssues = dto.detectedIssues ?: emptyList(),
-                        aiRecommendation = dto.aiRecommendation ?: "",
+                        aiRecommendation = dto.aiRecommendation ?: dto.recommendation ?: "",
                         scanDate = dto.scanDate ?: "",
                         syncStatus = "SYNCED",
                         syncError = null

@@ -8,6 +8,7 @@ interface FamilyRepository {
     suspend fun syncFamilyMembers(): Resource<Unit>
     suspend fun addFamilyMember(name: String, age: Int, gender: String, relationship: String, profilePhotoUrl: String?): Resource<FamilyMember>
     suspend fun updateFamilyMember(id: String, name: String, age: Int, gender: String, relationship: String, profilePhotoUrl: String?): Resource<FamilyMember>
+    suspend fun uploadProfilePhoto(imageFile: java.io.File): Resource<String>
     suspend fun deleteFamilyMember(id: String): Resource<Unit>
 
     // Reminders

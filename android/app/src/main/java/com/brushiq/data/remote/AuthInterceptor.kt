@@ -11,15 +11,21 @@ class AuthInterceptor @Inject constructor(
     private val preferenceManager: PreferenceManager
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request()
+        val path = request.url.encodedPath
+        if (path.contains("/auth/")) {
+            return chain.proceed(request)
+        }
+
         val token = runBlocking {
             preferenceManager.userToken.first()
         }
         
-        val request = chain.request().newBuilder()
-        if (token != null) {
-            request.addHeader("Authorization", "Bearer $token")
+        val builder = request.newBuilder()
+        if (!token.isNullOrBlank()) {
+            builder.addHeader("Authorization", "Bearer $token")
         }
         
-        return chain.proceed(request.build())
+        return chain.proceed(builder.build())
     }
 }

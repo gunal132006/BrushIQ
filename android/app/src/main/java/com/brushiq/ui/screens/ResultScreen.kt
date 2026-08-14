@@ -2,7 +2,6 @@ package com.brushiq.ui.screens
 
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -254,7 +253,7 @@ fun ResultScreen(
                         if (vm == null) {
                             isSaving = false
                             android.util.Log.e("SAVE", "[SAVE] Exception = BrushIQViewModel is null!")
-                            Toast.makeText(context, "Save Failed: ViewModel not initialized", Toast.LENGTH_LONG).show()
+                            com.brushiq.util.UiNotificationManager.showError("Save Failed", "ViewModel not initialized.")
                             return@PrimaryButton
                         }
 
@@ -268,10 +267,16 @@ fun ResultScreen(
                                 isSaved = true
                                 if (isOffline) {
                                     android.util.Log.d("SAVE", "[SAVE] Saved locally as PENDING")
-                                    Toast.makeText(context, "Saved locally\nWill sync when internet connection returns.", Toast.LENGTH_LONG).show()
+                                    com.brushiq.util.UiNotificationManager.showInfo(
+                                        title = "Saved Locally",
+                                        message = "Your report will sync automatically when internet returns."
+                                    )
                                 } else {
                                     android.util.Log.d("SAVE", "[SAVE] Save successful confirmed by backend!")
-                                    Toast.makeText(context, "Diagnostic report saved successfully!", Toast.LENGTH_SHORT).show()
+                                    com.brushiq.util.UiNotificationManager.showSuccess(
+                                        title = "Report Saved",
+                                        message = "Your diagnostic report has been saved successfully."
+                                    )
                                 }
                                 navController.navigate("dashboard") {
                                     popUpTo("dashboard") { inclusive = true }
@@ -280,7 +285,7 @@ fun ResultScreen(
                             onError = { err ->
                                 isSaving = false
                                 android.util.Log.e("SAVE", "[SAVE] Save failed: $err")
-                                Toast.makeText(context, "Save Failed: $err", Toast.LENGTH_LONG).show()
+                                com.brushiq.util.UiNotificationManager.showError(err)
                             }
                         )
                     },
